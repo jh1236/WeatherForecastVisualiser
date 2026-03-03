@@ -1,65 +1,119 @@
-import Image from "next/image";
+'use client';
 
+import {
+    Circle,
+    FeatureGroup,
+    LayerGroup,
+    LayersControl,
+    MapContainer,
+    Marker,
+    Popup, Rectangle,
+    TileLayer,
+    useMap
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import {LatLng} from "leaflet";
+import {useEffect, useMemo, useState} from "react";
+
+
+function MapCoordinates() {
+    const x: LatLng = useMap().getCenter();
+    return <Marker position={[0, 0]}>
+        <Popup>
+            A pretty CSS3 popup. <br/> Easily customizable.
+        </Popup>
+    </Marker>
+}
+
+const center = [51.505, -0.09]
+const rectangle = [
+    [51.49, -0.08],
+    [51.5, -0.06],
+]
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    const [data, setData] = useState()
+    const [currents, setCurrents] = useState<any[]>([])
+    const [width, setWidth] = useState<number>(0)
+    const [deltas, setDeltas] = useState<number[]>([0, 0])
+    const [start, setStart] = useState<number[]>([0, 0])
+    useEffect(() => {
+        fetch("http://localhost:3000/api/grib2json").then(res =>
+            res.json().then(json => {
+                    console.log(json["grib"]);
+                    setData(json["grib"])
+                    for (const i of json["grib"]) {
+                        const obj = i["header"]
+                        if (obj["discipline"] === 0 && obj["parameterCategory"] === 2 && obj["parameterNumber"] === 2) {
+                            console.log(i["data"])
+                            setStart([obj.la1, obj.lo1]);
+                            setCurrents(i.data);
+                            setDeltas([(obj.la2 - obj.la1) / obj.nx, (obj.lo2 - obj.lo1) / obj.ny]);
+                            setWidth(obj.nx)
+                            break;
+                        }
+                    }
+                }
+            )
+        )
+
+    }, [])
+    return (
+        <>
+            <MapContainer center={[0, 0]} zoom={13} scrollWheelZoom={false} style={{height: '90vh'}}>
+                <LayersControl position="topright">
+                    <LayersControl.Overlay name="Marker with popup">
+                        <Marker position={center}>
+                            <Popup>
+                                A pretty CSS3 popup. <br/> Easily customizable.
+                            </Popup>
+                        </Marker>
+                    </LayersControl.Overlay>
+                    <LayersControl.Overlay checked name="Layer group with circles">
+                        <LayerGroup>
+                            <Circle
+                                center={center}
+                                pathOptions={{fillColor: 'blue'}}
+                                radius={200}
+                            />
+                            <Circle
+                                center={center}
+                                pathOptions={{fillColor: 'red'}}
+                                radius={100}
+                                stroke={false}
+                            />
+                            <LayerGroup>
+                                <Circle
+                                    center={[51.51, -0.08]}
+                                    pathOptions={{color: 'green', fillColor: 'green'}}
+                                    radius={100}
+                                />
+                            </LayerGroup>
+                        </LayerGroup>
+                    </LayersControl.Overlay>
+                    <LayersControl.Overlay name="Feature group">
+                        <LayerGroup pathOptions={{color: 'purple'}}>
+                            {currents.map((item, i) => (
+                                <Rectangle
+                                    bounds={[[start[0] + deltas[0] * (i % width), start[1] + deltas[1] * (Math.floor(i / width))],
+                                        [start[0] + deltas[0] * (i% width + 1), start[1] + deltas[1] * (Math.floor((i / width + 1)))]]}
+                                    key={i}
+                                    pathOptions={{pathColor: 'red', fillColor: 'green'}}/>
+                            ))}
+                        </LayerGroup>
+                    </LayersControl.Overlay>
+                </LayersControl>
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <MapCoordinates></MapCoordinates>
+            </MapContainer>
+            <code style={{height: '10vh', overflow: 'scroll'}}>
+                currents: {JSON.stringify(currents, null, 2)} {'\n'}
+                width: {JSON.stringify(width, null, 2)} {'\n'}
+                deltas: {JSON.stringify(deltas, null, 2)} {'\n'}
+                start: {JSON.stringify(start, null, 2)} {'\n'}
+            </code>
+        </>
+    );
 }
