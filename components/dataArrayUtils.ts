@@ -1,4 +1,6 @@
-import {LatLngBounds} from "leaflet";
+import {LatLng, LatLngBounds} from "leaflet";
+import {WeatherDataPoint, WeatherDataSnapshot} from "@/components/types";
+import {lerp, roundTo} from "@/components/utilities";
 
 export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): LatLngBounds {
     const east = Math.min(in1.getEast(), in2.getEast())
@@ -8,60 +10,170 @@ export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): La
     return new LatLngBounds([[north, east], [south, west]])
 }
 
-export function unflattenArray<T>(arr: T[], x: number): T[][] {
-    const out: T[][] = []
+export function containsEntireArea(bigSquare: LatLngBounds, smallSquare: LatLngBounds): boolean {
+    return bigSquare.getWest() <= smallSquare.getWest() && bigSquare.getEast() >= smallSquare.getEast() && bigSquare.getSouth() <= smallSquare.getSouth() && bigSquare.getNorth() >= smallSquare.getNorth()
+}
+
+
+export function addDataToWeatherSnapshot(weatherSnapshot: WeatherDataSnapshot, dataKey: 'windU' | 'windV' | 'current', arr: number[], dim: [number, number], dataBounds: LatLngBounds) {
+    const deltaLat = (dataBounds.getNorth() - dataBounds.getSouth()) / dim[0]
+    const deltaLong = (dataBounds.getEast() - dataBounds.getWest()) / dim [1]
+
     for (let i = 0; i < arr.length; i++) {
-        if (i % x === 0) {
-            out.push([])
+        const startLat = roundTo(dataBounds.getSouth() + deltaLat * Math.floor(i / dim[1]), 6)
+        const startLong = roundTo(dataBounds.getWest() + deltaLong * Math.floor(i % dim[1]), 6)
+        if (!(startLat in weatherSnapshot.data)) {
+            weatherSnapshot.data[startLat] = {}
         }
-        out[out.length - 1].push(arr[i])
-    }
-    return out
-}
-
-function averageConvolve(arr: number[][], strideX: number, strideY: number): number[][] {
-    const out: number[][] = []
-    const kernelX = Math.ceil(strideX / 2);
-    const kernelY = Math.ceil(strideY / 2);
-    //TODO: maybe use a library impl; this seems inefficient
-    for (let y = 0; y < arr.length; y += strideY) {
-        y = Math.floor(y);
-        out.push([])
-        for (let x = 0; x < arr[y].length; x += strideX) {
-            x = Math.floor(x);
-            let count = 0
-            let sum = 0
-            for (let innerY = -kernelY; innerY < kernelY; innerY += 1) {
-                if (y + innerY < 0 || y + innerY >= arr.length) continue;
-                for (let innerX = -kernelX; innerX < kernelX; innerX += 1) {
-                    if (x + innerX < 0 || x + innerX >= arr[y + innerY].length) continue;
-                    count++
-                    sum += arr[y + innerY][x + innerX]
-                }
+        if (!(startLong in weatherSnapshot.data[startLat])) {
+            weatherSnapshot.data[startLat][startLong] = {
+                windU: undefined,
+                windV: undefined,
+                current: undefined,
+                bounds: new LatLngBounds([[startLat - deltaLat / 2, startLong - deltaLong / 2], [startLat + deltaLat / 2, startLong + deltaLong / 2]]),
+                originalIndex: i
             }
-            out[out.length - 1].push(sum / count)
         }
+        weatherSnapshot.data[startLat][startLong][dataKey] = arr[i]
+
+    }
+}
+
+export function addDataPointToWeatherSnapshot(weatherSnapshot: WeatherDataSnapshot, dataPoint: WeatherDataPoint) {
+    if (dataPoint?.bounds === undefined) return;
+    const centre = dataPoint.bounds!.getCenter()
+    const lat = roundTo(centre?.lat, 6)
+    const long = roundTo(centre?.lng, 6)
+    if (!(lat in weatherSnapshot.data)) {
+        weatherSnapshot.data[lat] = {}
+    }
+    weatherSnapshot.data[lat][long] = dataPoint
+}
+
+
+export function iterateOverWeatherData(weatherDataSnapshot: WeatherDataSnapshot): [LatLng, WeatherDataPoint][] {
+    if (weatherDataSnapshot === undefined) return [];
+    const out: [LatLng, WeatherDataPoint][] = [];
+    for (const latStr in weatherDataSnapshot.data) {
+        const lat = parseFloat(latStr);
+        for (const longStr in weatherDataSnapshot.data[lat]) {
+            const long = parseFloat(longStr);
+            out.push([new LatLng(lat, long), weatherDataSnapshot.data[lat][long]]);
+        }
+    }
+    return out;
+}
+
+
+export function mapToScreen(weatherSnapshot: WeatherDataSnapshot, resolution: [number, number], viewportBounds: LatLngBounds): WeatherDataSnapshot {
+    if (weatherSnapshot === undefined) return {bounds: new LatLngBounds([[0, 0], [0, 0]]), data: {}, time: 0}
+    const dataInBounds = resizeDataSlice(weatherSnapshot, viewportBounds);
+    const out: WeatherDataSnapshot = {
+        time: dataInBounds.time,
+        bounds: dataInBounds.bounds,
+        data: {}
+    }
+    const targetBounds = latLngBndsIntersection(dataInBounds.bounds, viewportBounds.pad(0.2));
+    const deltaY = Math.max(targetBounds.getNorth() - targetBounds.getSouth(), weatherSnapshot.bounds.getNorth() - weatherSnapshot.bounds.getSouth()) / (resolution[0])
+    const deltaX = Math.max(targetBounds.getEast() - targetBounds.getWest(), weatherSnapshot.bounds.getEast() - weatherSnapshot.bounds.getWest()) / (resolution[1])
+    let long = targetBounds.getWest() + 0.5 * deltaX
+    while (long < targetBounds.getEast()) {
+        let lat = targetBounds.getSouth() + 0.5 * deltaY
+        while (lat < targetBounds.getNorth()) {
+            const bounds = new LatLngBounds([[lat - deltaY / 2, long - deltaX / 2], [lat + deltaY / 2, long + deltaX / 2]])
+            if (!bounds.intersects(targetBounds)) continue
+            const newDataPoint = getDataForLatLong(dataInBounds, new LatLng(lat, long), bounds);
+            addDataPointToWeatherSnapshot(out, newDataPoint)
+
+            lat += deltaY
+        }
+        long += deltaX;
     }
     return out
 }
 
-export function averageArrayToSize(arr: number[][], dim: [number, number]) {
-    if (arr.length === 0) return []
-    return averageConvolve(arr, arr[0].length / dim[0], arr.length / dim[1])
+function getSurroundingLatLong(data: WeatherDataSnapshot, point: LatLng): [LatLng, LatLng, LatLng, LatLng] {
+    let lats: number[] = []
+    let longs: number[] = []
+    const latitudeKeys = Object.keys(data.data).toSorted((a, b) => Number(a) - Number(b));
+    for (let i = 0; i < latitudeKeys.length; i++) {
+        lats = [Number(latitudeKeys[i]), Number(latitudeKeys[i + 1])]
+        if (Number.isNaN(lats[1])) {
+            lats = [Number(latitudeKeys[i - 1]), Number(latitudeKeys[i])]
+        }
+        if (point.lat <= lats[1]) {
+            break;
+        }
+    }
+    const longitudeKeys = Object.keys(data.data[lats[0]]).toSorted((a, b) => Number(a) - Number(b));
+    for (let i = 0; i < longitudeKeys.length; i++) {
+        longs = [Number(longitudeKeys[i]), Number(longitudeKeys[i + 1])]
+        if (Number.isNaN(longs[1])) {
+            longs = [Number(longitudeKeys[i - 1]), Number(longitudeKeys[i])]
+        }
+        if (point.lng <= longs[1]) {
+            break;
+        }
+    }
+
+    const out = []
+
+    for (const i of lats) {
+        for (const j of longs) {
+            out.push(new LatLng(i, j))
+        }
+    }
+    return out as [LatLng, LatLng, LatLng, LatLng]
+
 }
 
-export function getSliceOf2DArray(arr: number[][], resolution: [number, number], dataBounds: LatLngBounds, viewPortBounds: LatLngBounds) {
-    if (arr.length === 0) return []
-    let out = arr
-    const targetDataOverlap = latLngBndsIntersection(dataBounds, viewPortBounds)
-    const latitudePerValue = (dataBounds.getEast() - dataBounds.getWest()) / arr[0].length
-    const longitutePerValue = (dataBounds.getNorth() - dataBounds.getSouth()) / arr.length
-    const startLong = Math.max(0, (dataBounds.getWest() - viewPortBounds.getWest()) / longitutePerValue)
-    const endLong = Math.min(arr.length - 1, (dataBounds.getEast() - viewPortBounds.getEast()) / longitutePerValue)
-    out = out.slice(startLong, endLong)
-    const startLat = Math.max(0, (dataBounds.getSouth() - viewPortBounds.getSouth()) / latitudePerValue)
-    const endLat = Math.min(arr[0].length - 1, (dataBounds.getNorth() - viewPortBounds.getNorth()) / latitudePerValue)
-    out = out.map(it => it.slice(startLat, endLat))
-    if (out.length === 0) return []
-    return averageConvolve(out, out[0].length / resolution[0], out.length / resolution[1])
+function getDataForLatLong(weatherIn: WeatherDataSnapshot, latLng: LatLng, newBounds?: LatLngBounds): WeatherDataPoint {
+    const coords = getSurroundingLatLong(weatherIn, latLng)
+    const values: WeatherDataPoint[][] = [coords.slice(0, 2).map((point) => weatherIn.data[point.lat][point.lng]), coords.slice(2, 4).map((point) => weatherIn.data[point.lat][point.lng])]
+    const out: WeatherDataPoint = {...values[0][0], bounds: newBounds}
+    //using the first value because the values for everything in out are undefined and don't show up when iterating
+    for (const keyTypeless in values[0][0]) {
+        // we don't want to average the bounds
+        if (['bounds', 'originalIndex'].includes(keyTypeless)) continue
+        const key = keyTypeless as 'windU' | 'windV' | 'current'
+        // first lerp by long
+        let isPopulated = true
+        const lerpedValues = []
+        for (const [p1, p2] of values) {
+            const a = p1[key]
+            const b = p2[key]
+            const lngA = p1.bounds!.getCenter().lng
+            const lngB = p2.bounds!.getCenter().lng
+            if (a === undefined || b === undefined) {
+                isPopulated = false
+                break
+            }
+            lerpedValues.push(lerp(a, b, (latLng.lng - lngA) / (lngB - lngA)))
+        }
+        if (!isPopulated) continue
+        const [latA, latB] = values.map(([v]) => v.bounds!.getCenter().lat)
+        const [a, b] = lerpedValues
+        out[key] = lerp(a, b, (latLng.lat - latA) / (latB - latA))
+
+    }
+
+    return out
+
+}
+
+function resizeDataSlice(weatherIn: WeatherDataSnapshot, viewPortBounds: LatLngBounds): WeatherDataSnapshot {
+    if (Object.keys(weatherIn.data).length === 0) return weatherIn
+    if (containsEntireArea(viewPortBounds, weatherIn.bounds)) return weatherIn;
+    const targetBounds = latLngBndsIntersection(weatherIn.bounds, viewPortBounds);
+    const out = {
+        time: weatherIn.time,
+        bounds: targetBounds,
+        data: {}
+    }
+    for (const [_, i] of iterateOverWeatherData(weatherIn)) {
+        if (targetBounds.intersects(i.bounds!) || true) {
+            addDataPointToWeatherSnapshot(out, i)
+        }
+    }
+    return out
 }
