@@ -106,6 +106,7 @@ export function OceanTile({maxWind, viewportBounds, dataPoint}: OceanTileProps) 
 
     const center = dataPoint.bounds!.getCenter();
     return <SVGOverlay
+
         bounds={tileBounds!.pad(0.5)}
     >
 
@@ -123,6 +124,7 @@ export function OceanTile({maxWind, viewportBounds, dataPoint}: OceanTileProps) 
                     <b>{convertToDMS(Math.abs(center.lat))} {center.lat > 0 ? 'N' : 'S'}, {convertToDMS(center.lng)} E</b> {'\n'}
                     {roundTo(mpsToKnots(magnitude([windU!, windV!])), 2)}kt @ {' '}
                     {Math.round(windBearing)}° {'\n'}
+                    <i>{dataPoint.debugData}</i> {'\n'}
                 </p>
             </Tooltip>
         </Rectangle>

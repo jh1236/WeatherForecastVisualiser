@@ -5,7 +5,7 @@ export interface WeatherDataPoint {
     windV?: number;
     current?: number;
     bounds?: LatLngBounds;
-    originalIndex?: number;
+    debugData?: string;
 }
 
 export interface WeatherDataSnapshot {
