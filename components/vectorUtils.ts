@@ -25,5 +25,5 @@ export function rotatedBy(arr: number[], degrees: number): number[] {
 
 export function bearing(arr: number[]) {
     // Js uses rad instead of degrees
-    return Math.acos(dotproduct([0, 1], normalised(arr))) / Math.PI * 180
+    return (Math.atan2(arr[1], arr[0]) / Math.PI * 180 + 360) % 360
 }

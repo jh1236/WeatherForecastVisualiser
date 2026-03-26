@@ -3,23 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 25565",
+    "dev": "next dev -p 25565 --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-leaflet/core": "^3.0.0",
+    "@weacast/grib2json": "^2.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "grib2class": "^1.0.7",
-    "grib2json": "^1.0.2",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.563.0",
+    "lucide-react": "^1.0.1",
     "next": "16.1.7",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
+    "leaflet-velocity": "^2.1.4",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
