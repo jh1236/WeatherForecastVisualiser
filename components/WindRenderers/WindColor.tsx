@@ -1,23 +1,25 @@
 import {useMemo} from "react";
 import {magnitude} from "@/components/vectorUtils";
-import {Rectangle, SVGOverlay} from "react-leaflet";
+import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromWindSpeedKts, mpsToKnots} from "@/components/utilities";
-import {GribFrame, WeatherData, WeatherDataPoint} from "@/components/types";
+import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToScreen} from "@/components/DataProcessing";
 
 interface WindColorsProps {
-    viewportBounds: LatLngBounds;
+    viewportBounds: LatLngBounds | undefined;
     data: GribFrame[];
     currentLayer: string;
     resolution?: number;
+    enabled?: boolean;
 }
 
 
-export function WindColors({data, viewportBounds, currentLayer, resolution = 60}: WindColorsProps) {
+export function WindColors({data, viewportBounds, currentLayer, resolution = 60, enabled = true}: WindColorsProps) {
 
     const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
+    if (!enabled) return
 
     return windBarbData.map((dataPoint, i) =>
         <SingleWindColor

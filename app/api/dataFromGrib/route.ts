@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
             // we use this so that we don't have to try checking react state
             for (const i of grib) {
                 const header = i["header"]
+                if (data && !i["data"]) continue;
                 let isKeyFrame = false;
                 let time = new Date(header["refTime"]).getTime()
                 if (header["significanceOfRT"] === 1) {
-                    const daysToMs = 10 /*00*/ * 60 * 60 * 24;
+                    const daysToMs = 1000 * 60 * 60 * 24;
                     const secsToMs = 1000;
                     let delta = header["forecastTime"]! * daysToMs
                     /*
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
                      * but the encoding is not extracted during conversion (I have read the source of that project and
                      * confirmed).  So we are stuck doing little hacks like the below code until they choose to fix it.
                      */
-                    if (delta > 36525) { // if the time is more than 100 years, this is likely to be seconds
+                    if (delta > 36525) { // if the time is more than 100 years in days, this is likely to be seconds
                         delta = header["forecastTime"]! * secsToMs
                     }
                     time += delta
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
                     times[time].gribFrames!.push(i)
                 }
             }
-            return {times: [times[startTime]], startTime, endTime}
+            return {times: times, startTime, endTime}
         }
     );
     return Response.json({data: out});

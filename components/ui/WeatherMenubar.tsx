@@ -1,27 +1,42 @@
 import {
-    Menubar, MenubarCheckboxItem,
+    Menubar,
+    MenubarCheckboxItem,
     MenubarContent,
     MenubarGroup,
-    MenubarItem, MenubarLabel,
-    MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator,
-    MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger,
+    MenubarItem,
+    MenubarLabel,
+    MenubarMenu,
+    MenubarRadioGroup,
+    MenubarRadioItem,
+    MenubarSeparator,
+    MenubarShortcut,
+    MenubarSub,
+    MenubarSubContent,
+    MenubarSubTrigger,
     MenubarTrigger
 } from "./menubar";
+import {useSettings} from "@/components/settings";
+import Image from "next/image";
+import {Slider} from "@/components/ui/slider";
 
-export function WindMenubar() {
+export function WeatherMenubar() {
+    const {settings, setSetting} = useSettings()
     return (
-        <Menubar style={{width:'100%'}}>
+        <Menubar style={{width: '100%'}}>
+            <MenubarLabel><Image src="/icon.png" alt="Website logo" width={20} height={20}/></MenubarLabel>
             <MenubarMenu>
-                <MenubarLabel>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</MenubarLabel>
                 <MenubarTrigger>File</MenubarTrigger>
                 <MenubarContent>
+                    <MenubarLabel>Select Data Source</MenubarLabel>
                     <MenubarGroup>
-                        <MenubarItem>
-                            New Tab <MenubarShortcut>⌘T</MenubarShortcut>
-                        </MenubarItem>
-                        <MenubarItem>
-                            New Window <MenubarShortcut>⌘N</MenubarShortcut>
-                        </MenubarItem>
+                        <MenubarCheckboxItem checked={settings.dataSource === 'netCDF'}
+                                             onClick={() => setSetting("dataSource", "netCDF")}>
+                            netCDF
+                        </MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.dataSource === 'grib'}
+                                             onClick={() => setSetting("dataSource", "grib")}>
+                            GRIB File Upload
+                        </MenubarCheckboxItem>
                         <MenubarItem disabled>New Incognito Window</MenubarItem>
                     </MenubarGroup>
                     <MenubarSeparator/>
@@ -50,10 +65,20 @@ export function WindMenubar() {
                 <MenubarContent>
                     <MenubarGroup>
                         <MenubarItem>
-                            Undo <MenubarShortcut>⌘Z</MenubarShortcut>
+                            Set Wind Barb Resolution
                         </MenubarItem>
+                        <MenubarLabel>{settings["windBarbs.count"]}</MenubarLabel>
                         <MenubarItem>
-                            Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+                            <Slider style={{width: '160px'}} min={10} value={[settings["windBarbs.count"]]} max={40} step={5} onValueChange={([v]) => setSetting("windBarbs.count", v)}></Slider>
+                        </MenubarItem>
+                    </MenubarGroup>
+                    <MenubarGroup>
+                        <MenubarItem>
+                            Set Wind Color Resolution
+                        </MenubarItem>
+                        <MenubarLabel>{settings["windColors.count"]}</MenubarLabel>
+                        <MenubarItem>
+                            <Slider style={{width: '160px'}} min={20} value={[settings["windColors.count"]]} max={70} step={5} onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
                         </MenubarItem>
                     </MenubarGroup>
                     <MenubarSeparator/>
@@ -85,8 +110,9 @@ export function WindMenubar() {
                 <MenubarTrigger>View</MenubarTrigger>
                 <MenubarContent className="w-44">
                     <MenubarGroup>
-                        <MenubarCheckboxItem>Bookmarks Bar</MenubarCheckboxItem>
-                        <MenubarCheckboxItem checked>Full URLs</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.displayColorScale}
+                                             onClick={() => setSetting('displayColorScale', !settings.displayColorScale)}>Wind
+                            Color Scale</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarSeparator/>
                     <MenubarGroup>

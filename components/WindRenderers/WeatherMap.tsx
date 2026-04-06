@@ -7,15 +7,21 @@ import {WindDataMouseOver} from "@/components/WindRenderers/WindDataMouseOver";
 import {LatLngBounds} from "leaflet";
 import {useEffect, useState} from "react";
 import {GribFrame} from "@/components/types";
+import {useSettings} from "@/components/settings";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds;
     data: GribFrame[];
 }
 
-export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]), data}: WindMapParams) {
-    const [viewportBounds, setViewportBounds] = useState<LatLngBounds>(defaultBounds)
+export function WeatherMap({
+                               defaultBounds = new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]),
+                               data
+                           }: WindMapParams) {
+    const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const [baseLayer, setBaseLayer] = useState<string>("Satellite")
+    const {settings, setSetting} = useSettings()
+
 
     function MapEventHandler() {
         const map1 = useMap();
@@ -30,7 +36,33 @@ export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 1
                         setViewportBounds(map.getBounds())
                     },
                 moveend: () => setViewportBounds(map.getBounds()),
-                baselayerchange: e => setBaseLayer(e.name)
+                baselayerchange: e => setBaseLayer(e.name),
+                overlayremove: e => {
+                    switch (e.name) {
+                        case "Wind Particles":
+                            setSetting("windParticles.enabled", false);
+                            break;
+                        case "Wind Barbs":
+                            setSetting("windBarbs.enabled", false);
+                            break;
+                        case "Wind Colors":
+                            setSetting("windColors.enabled", false);
+                            break;
+                    }
+                },
+                overlayadd: e => {
+                    switch (e.name) {
+                        case "Wind Particles":
+                            setSetting("windParticles.enabled", true);
+                            break;
+                        case "Wind Barbs":
+                            setSetting("windBarbs.enabled", true);
+                            break;
+                        case "Wind Colors":
+                            setSetting("windColors.enabled", true);
+                            break;
+                    }
+                }
             }
         )
         return null
@@ -38,9 +70,9 @@ export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 1
     }
 
     return <><MapContainer bounds={defaultBounds} scrollWheelZoom={true}
-                           style={{height: '100%', width: '97%'}}>
+                           style={{height: '100%', width: settings.displayColorScale ? '97%' : '100%'}}>
         <MapEventHandler/>
-        <LayersControl position="topright">
+        <LayersControl position="topright" autoZIndex>
             <LayersControl.BaseLayer checked name="Satellite">
                 <TileLayer
                     attribution='© Esri © OpenStreetMap Contributors'
@@ -53,29 +85,33 @@ export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 1
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
             </LayersControl.BaseLayer>
-            <LayersControl.Overlay checked name="Wind Particles">
+            <LayersControl.Overlay checked={settings["windParticles.enabled"]} name="Wind Particles">
                 <LayerGroup>
                     <VelocityLayer
                         data={data}
-                        maxVelocity={knotsToMps(50)} velocityScale={0.01} displayValues={false}
+                        maxVelocity={knotsToMps(50)}
+                        velocityScale={0.01}
+                        displayValues={false}
                         colorScale={Array.from({length: 10}).map((_, i) =>
                             getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
                 </LayerGroup>
             </LayersControl.Overlay>
-            <LayersControl.Overlay name="Wind Barbs">
+            <LayersControl.Overlay checked={settings["windBarbs.enabled"]} name="Wind Barbs">
                 <LayerGroup>
                     <WindBarbs
                         data={data}
+                        resolution={settings["windBarbs.count"]}
                         viewportBounds={viewportBounds}
                         currentLayer={baseLayer}>
                     </WindBarbs>
 
                 </LayerGroup>
             </LayersControl.Overlay>
-            <LayersControl.Overlay name="Wind Colors">
+            <LayersControl.Overlay checked={settings["windColors.enabled"]} name="Wind Colors">
                 <LayerGroup>
                     <WindColors
                         data={data}
+                        resolution={settings["windColors.count"]}
                         viewportBounds={viewportBounds}
                         currentLayer={baseLayer}>
                     </WindColors>
@@ -87,9 +123,8 @@ export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 1
                     viewportBounds={viewportBounds}/>
             </LayersControl.Overlay>
         </LayersControl>
-
     </MapContainer>
-        <div style={{width: '3%', textAlign: 'center'}}>
+        {settings.displayColorScale && <div style={{width: '3%', textAlign: 'center'}}>
             {Array.from({length: 11}).map((_, i) =>
                 <div key={i} style={{
                     display: 'flex',
@@ -103,6 +138,6 @@ export function WindMap({defaultBounds=new LatLngBounds([[-31.957818684731258, 1
                     <b>{50 * (10 - i) / 10}kt</b>
                 </div>
             )}
-        </div>
+        </div>}
     </>
 }

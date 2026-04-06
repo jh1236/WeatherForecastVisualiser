@@ -4,26 +4,26 @@ import {Rectangle, Tooltip, useMapEvents} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {convertToDMS, mpsToKnots, roundTo} from "@/components/utilities";
 import {GribFrame} from "@/components/types";
-import {getWeatherDataPointForPoint, latLngBndsIntersection} from "@/components/DataProcessing";
+import {boundsFromGribHeader, getWeatherDataPointForPoint, latLngBndsIntersection} from "@/components/DataProcessing";
 
 interface WindDataMouseOverProps {
     data: GribFrame[]
-    viewportBounds: LatLngBounds;
+    viewportBounds: LatLngBounds | undefined;
 }
 
 
-export function WindDataMouseOver({data, viewportBounds, }: WindDataMouseOverProps) {
+export function WindDataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
     const [latLng, setLatLng] = useState<LatLng>(new LatLng(0, 0));
     const dataPoint = useMemo(() => (viewportBounds && viewportBounds.contains(latLng)) ? getWeatherDataPointForPoint(data, latLng) : undefined, [data, latLng, viewportBounds])
-    const events = useMapEvents({
+    useMapEvents({
         mousemove: e => setLatLng(e.latlng),
     })
 
-    const bounds = useMemo(() => (dataPoint?.bounds !== undefined ? latLngBndsIntersection(viewportBounds, dataPoint.bounds!)! : null), [dataPoint, viewportBounds]);
+    const bounds = useMemo(() => ((data?.length && viewportBounds) ? latLngBndsIntersection(viewportBounds, boundsFromGribHeader(data[0].header))! : new LatLngBounds([[0, 0], [0, 0]])), [data, viewportBounds]);
 
     const windBearing = useMemo(() => dataPoint ? bearing([-dataPoint.windV!, -dataPoint.windU!]) : undefined, [dataPoint]);
 
-    return <Rectangle bounds={viewportBounds ?? new LatLngBounds([[0, 0], [0, 0]])}
+    return <Rectangle bounds={bounds}
                       opacity={0} fillOpacity={0}
     >
         <Tooltip sticky>{dataPoint ?

@@ -10,7 +10,7 @@ export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): La
     return new LatLngBounds([[north, east], [south, west]])
 }
 
-function boundsFromGribHeader(header: GribHeader) {
+export function boundsFromGribHeader(header: GribHeader) {
     return new LatLngBounds([[header.la1, header.lo1], [header.la2, header.lo2]])
 }
 
@@ -30,8 +30,8 @@ export function* iterateOverBounds(targetBounds: LatLngBounds, maxResolution: nu
     }
 }
 
-export function* mapToScreen(gribFrames: GribFrame[], maxResolution: number, viewportBounds: LatLngBounds): Generator<WeatherDataPoint> {
-    if (gribFrames === undefined || gribFrames.length === 0) return {
+export function* mapToScreen(gribFrames: GribFrame[], maxResolution: number, viewportBounds: LatLngBounds | undefined): Generator<WeatherDataPoint> {
+    if (gribFrames === undefined || gribFrames.length === 0 || viewportBounds === undefined) return {
         bounds: new LatLngBounds([[0, 0], [0, 0]]),
         data: {},
         time: 0,

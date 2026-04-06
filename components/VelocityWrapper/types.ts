@@ -34,6 +34,7 @@ export type VelocityLayerOptions = {
 
 
     velocityScale?: number,
+    enabled?: boolean,
 };
 export type VelocityLayerProps = VelocityLayerOptions &
     PropsWithChildren;

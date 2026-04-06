@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef} from "react";
 import {VelocityLayerProps} from "@/components/VelocityWrapper/types";
 import {useLeafletContext} from "@react-leaflet/core";
 import L from 'leaflet';
@@ -41,39 +41,40 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
         maybeProps.data = maybeProps?.data ?? []
         const layer = L.velocityLayer(maybeProps);
         layerRef.current = layer;
-        //this is like this because I am reaching inside the layer's private methods
-        // (layerRef.current as unknown as { _timer: () => void })._timer = () => (layerRef.current as unknown as {
-        //     _startWindy: () => void
-        // })._startWindy()
         const container = context.layerContainer || context.map
         container.addLayer(layerRef.current!)
         layerRef.current!.setData([])
         return () => {
-            try {
-                container.removeLayer(layer)
-            } catch (e) {
-                // What you are witnessing is me giving up
-                console.error(e)
-            }
+            container.removeLayer(layer)
         }
     }, []);
     useEffect(() => {
-        try {
-            if (layerRef.current === null || context.map === null || !props.data.length) return
+        if (layerRef.current === null || context.map === null) return
 
-            (layerRef.current! as unknown as { _map: L.Map })._map = context.map
+        (layerRef.current! as unknown as { _map: L.Map })._map = context.map
 
-            layerRef.current!.setData(props.data);
-            if (props.opacity !== undefined) {
+        const datalessOptions = Object.fromEntries(Object.entries(propsRef.current).filter(([k]) => k !== 'data'))
+        const prevDatalessOptions = Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'data'))
+
+        let changed = false;
+        layerRef.current!.setData(props.data);
+        if (JSON.stringify(datalessOptions) !== JSON.stringify(prevDatalessOptions)) {
+            changed = true;
+            if (props.opacity) {
                 layerRef.current!.setOpacity(props.opacity)
             }
-            if (props.velocityScale !== propsRef.current.velocityScale || props.colorScale !== propsRef.current.colorScale) {
-                layerRef.current!.setOptions(props)
-                propsRef.current = props
-            }
-        } catch (e) {
-            console.error(e)
-            //again i don't know how to fix this code
+            layerRef.current!.setOptions(props)
+        }
+
+        if (props.data?.length !== propsRef.current.data?.length) {
+            changed = true;
+            layerRef.current!.setData(props.data)
+        }
+        if (props.enabled !== propsRef.current.enabled) {
+            changed = true;
+        }
+        if (changed) {
+            propsRef.current = props
         }
     }, [context.map, props])
 

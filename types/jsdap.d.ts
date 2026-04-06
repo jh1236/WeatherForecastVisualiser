@@ -6,14 +6,14 @@ declare module '@jeremybarbet/jsdap' {
 
     export type DDSResponse = {
         type: string,
-        attributes: {[key: string]: any},
+        attributes: {[key: string]: unknown},
         [dataKey: string]: {
             type: string,
             name: string,
             id: string
         }
     } // Dataset Descriptor Set
-    export type DASResponse = any //Dataset Attribute Structure
+    export type DASResponse = unknown //Dataset Attribute Structure
     export type DataResponse = {[dataKey: string]: unknown}
     const jsdap: {
         newRequest: (url: string, binary: unknown) => XMLHttpRequest;
@@ -22,7 +22,7 @@ declare module '@jeremybarbet/jsdap' {
 
         ddsRequestHandler: (xhr: XMLHttpRequest) => DDSResponse
 
-        dasRequestHandler: (xhr: XMLHttpRequest, dds: { type: string, attributes: any }) => DASResponse
+        dasRequestHandler: (xhr: XMLHttpRequest, dds: { type: string, attributes: unknown }) => DASResponse
 
         loadDataAndDDS: (url: string,
                          onLoad: (data: DODSResponse) => void,

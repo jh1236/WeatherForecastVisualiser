@@ -3,7 +3,7 @@ import {magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
 import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {mpsToKnots} from "@/components/utilities";
-import {GribFrame, WeatherData, WeatherDataPoint} from "@/components/types";
+import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToScreen} from "@/components/DataProcessing";
 
 
@@ -12,15 +12,18 @@ const strokeWidth = "3%"
 
 
 interface WindBarbsParams {
-    viewportBounds: LatLngBounds;
+    viewportBounds: LatLngBounds | undefined;
     data?: GribFrame[];
     currentLayer: string;
     resolution?: number;
+    enabled?: boolean;
 }
 
-export function WindBarbs({viewportBounds, data, currentLayer, resolution = 25}: WindBarbsParams) {
+export function WindBarbs({viewportBounds, data, currentLayer, resolution = 25, enabled=true}: WindBarbsParams) {
 
     const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+
+    if (!enabled) return
 
     return windBarbData.map((dataPoint, i) =>
         <SingleWindBarb
