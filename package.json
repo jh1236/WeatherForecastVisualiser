@@ -9,18 +9,22 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@jeremybarbet/jsdap": "^10.1.0",
     "@react-leaflet/core": "^3.0.0",
     "@weacast/grib2json": "^2.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
+    "leaflet-velocity": "^2.1.4",
     "lucide-react": "^1.0.1",
     "next": "16.1.7",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
+    "react-day-picker": "^9.14.0",
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
-    "leaflet-velocity": "^2.1.4",
+    "react-use": "^17.6.0",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

@@ -1,17 +1,40 @@
-import {useMemo, useState} from "react";
-import {bearing, magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
-import {Rectangle, SVGOverlay, Tooltip, useMap, useMapEvent} from "react-leaflet";
+import {useMemo} from "react";
+import {magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
+import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
-import {convertToDMS, getColorFromWindSpeedKts, hsvToRgb, mpsToKnots, roundTo} from "@/components/utilities";
-import {WeatherDataPoint} from "@/components/types";
+import {mpsToKnots} from "@/components/utilities";
+import {GribFrame, WeatherData, WeatherDataPoint} from "@/components/types";
+import {mapToScreen} from "@/components/DataProcessing";
 
 
 const strokeWidth = "3%"
 
 
-interface OceanTileProps {
+
+interface WindBarbsParams {
+    viewportBounds: LatLngBounds;
+    data?: GribFrame[];
+    currentLayer: string;
+    resolution?: number;
+}
+
+export function WindBarbs({viewportBounds, data, currentLayer, resolution = 25}: WindBarbsParams) {
+
+    const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+
+    return windBarbData.map((dataPoint, i) =>
+        <SingleWindBarb
+            key={i}
+            count={i}
+            viewportBounds={viewportBounds}
+            dataPoint={dataPoint}
+            baseLayer={currentLayer}
+        />
+    )
+}
+
+interface SingleWindBarbProp {
     dataPoint: WeatherDataPoint
-    maxWind: number,
     viewportBounds: LatLngBounds | undefined,
     count?: number,
     trueLatLng?: LatLng,
@@ -19,7 +42,7 @@ interface OceanTileProps {
 }
 
 
-export function WindBarb({viewportBounds, dataPoint, baseLayer}: OceanTileProps) {
+function SingleWindBarb({viewportBounds, dataPoint, baseLayer}: SingleWindBarbProp) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const isSatellite = baseLayer === 'Satellite';
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
@@ -99,7 +122,6 @@ export function WindBarb({viewportBounds, dataPoint, baseLayer}: OceanTileProps)
     }
 
     return <SVGOverlay
-        zIndex={-99}
         bounds={tileBounds!.pad(0.5)}
     >
         {out}

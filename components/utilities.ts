@@ -6,9 +6,9 @@ export function zip<T>(...rows: T[][]): T[][] {
 export const WEIRDNESS_THRESHOLD = 145
 
 export function lerp(a: number, b: number, t: number) {
-    if (t > 1) {
+    if (t > 1 || a === undefined) {
         return b;
-    } else if (t < 0) {
+    } else if (t < 0 || b === undefined) {
         return a;
     }
     return a + (b - a) * t;
@@ -53,7 +53,34 @@ export function hsvToRgb(H: number, S: number, V: number) {
 }
 
 export function getColorFromWindSpeedKts(windspeed: number) {
-    const {r, g, b} = hsvToRgb(((180 + 360) - windspeed / 32 * 180) % 360, 0.7, Math.max(0.2, Math.min(0.6, 0.6 - ((windspeed - 40) * .02))))
+    let interpolatedWindspeed = windspeed;
+    const f = 30
+    if (interpolatedWindspeed < f) {
+        interpolatedWindspeed = f - (Math.pow(f - interpolatedWindspeed, 2) / f)
+    }
+    const {
+        r,
+        g,
+        b
+    } = hsvToRgb(((180 + 360) - interpolatedWindspeed / 32 * 180) % 360, 0.7, Math.max(0.2, Math.min(0.7, 0.7 - ((interpolatedWindspeed - 40) * .02))))
     // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
     return `rgb(${r},${g},${b})`
+}
+
+export function divMod(numerator: number, denominator: number) {
+    return [numerator / denominator, numerator % denominator];
+}
+
+export function floorCeil(x: number): [number, number] {
+    return [Math.floor(x), Math.ceil(x)];
+}
+
+export function generateHash(string: string) {
+    //snippet from https://stackoverflow.com/a/7616484
+    let hash = 0;
+    for (const char of string) {
+        hash = (hash << 5) - hash + char.charCodeAt(0);
+        hash |= 0; // Constrain to 32bit integer
+    }
+    return hash;
 }

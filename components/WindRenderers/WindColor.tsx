@@ -1,58 +1,68 @@
-import {useMemo, useState} from "react";
-import {bearing, magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
-import {Rectangle, SVGOverlay, Tooltip, useMap, useMapEvent} from "react-leaflet";
+import {useMemo} from "react";
+import {magnitude} from "@/components/vectorUtils";
+import {Rectangle, SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
-import {convertToDMS, getColorFromWindSpeedKts, hsvToRgb, mpsToKnots, roundTo} from "@/components/utilities";
-import {WeatherDataPoint} from "@/components/types";
+import {getColorFromWindSpeedKts, mpsToKnots} from "@/components/utilities";
+import {GribFrame, WeatherData, WeatherDataPoint} from "@/components/types";
+import {mapToScreen} from "@/components/DataProcessing";
+
+interface WindColorsProps {
+    viewportBounds: LatLngBounds;
+    data: GribFrame[];
+    currentLayer: string;
+    resolution?: number;
+}
 
 
-const strokeWidth = "3%"
+export function WindColors({data, viewportBounds, currentLayer, resolution = 60}: WindColorsProps) {
+
+    const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
 
-interface OceanTileProps {
+    return windBarbData.map((dataPoint, i) =>
+        <SingleWindColor
+            key={i}
+            count={i}
+            viewportBounds={viewportBounds}
+            dataPoint={dataPoint}
+            baseLayer={currentLayer}
+        />
+    )
+}
+
+interface SingleWindColorProps {
     dataPoint: WeatherDataPoint
-    maxWind: number,
     viewportBounds: LatLngBounds | undefined,
     count?: number,
     trueLatLng?: LatLng,
     baseLayer: string,
 }
 
-
-export function WindColor({viewportBounds, dataPoint, baseLayer}: OceanTileProps) {
+function SingleWindColor({viewportBounds, dataPoint, baseLayer}: SingleWindColorProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const strength = useMemo(() => mpsToKnots(magnitude([windU!, windV!])), [windU, windV]);
-    const windBearing = useMemo(() => bearing([-windV!, -windU!]), [windU, windV]);
     const isSatellite = baseLayer === "satellite";
 
     if (!viewportBounds || !viewportBounds.intersects(tileBounds!)) {
         return null
     }
 
-    const center = dataPoint.bounds!.getCenter();
     return <SVGOverlay
-        bounds={tileBounds!.pad(0.5)}
-        zIndex={99}
+        bounds={tileBounds!}
     >
 
         <rect
-            x="24%"
-            y="24%"
-            width="51%"
-            height="51%"
-            fillOpacity={isSatellite ? 0.6 : 0.3}
+            z={-100}
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+            fillOpacity={isSatellite ? 0.8 : 0.5}
             fill={getColorFromWindSpeedKts(strength)}>
         </rect>
-        <Rectangle bounds={dataPoint.bounds!} fillOpacity={0} opacity={0}>
-            <Tooltip sticky>
-                <p>
-                    <b>{convertToDMS(Math.abs(center.lat))} {center.lat > 0 ? 'N' : 'S'}, {convertToDMS(center.lng)} E</b> {'\n'}
-                    {roundTo(mpsToKnots(magnitude([windU!, windV!])), 2)}kt @ {' '}
-                    {Math.round(windBearing)}° {'\n'}
-                    <i>{dataPoint.debugData}</i> {'\n'}
-                </p>
-            </Tooltip>
-        </Rectangle>
+        {/*<Rectangle bounds={dataPoint.bounds!} fillOpacity={isSatellite ? 0.8 : 0.5} opacity={0}*/}
+        {/*           color={getColorFromWindSpeedKts(strength)}>*/}
+        {/*</Rectangle>*/}
     </SVGOverlay>
 
 }
