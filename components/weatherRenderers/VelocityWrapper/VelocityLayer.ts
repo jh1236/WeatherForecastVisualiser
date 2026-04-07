@@ -31,7 +31,8 @@ export const defaultVelocityProps: {
     velocityType: "GBR Wind"
 }
 
-function onDrawLayer(overlay, params) {
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+function onDrawLayer(this: any) {
 
     if (!this._windy) {
         this._initWindy(this);
@@ -42,7 +43,7 @@ function onDrawLayer(overlay, params) {
         return;
     }
 
-    if (this._timer) clearTimeout(self._timer);
+    if (this._timer) clearTimeout(this._timer);
 
     this._timer = setTimeout(() => this._startWindy(), 0); // showing velocity is delayed
 }
@@ -58,7 +59,7 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
         maybeProps.data = maybeProps?.data ?? []
         const layer = L.velocityLayer(maybeProps);
         layerRef.current = layer;
-        layerRef.current.onDrawLayer = onDrawLayer
+        (layerRef.current as unknown as {onDrawLayer: () => void}).onDrawLayer = onDrawLayer
         const container = context.layerContainer || context.map
         container.addLayer(layerRef.current!)
         layerRef.current!.setData([])
@@ -76,9 +77,6 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
 
         layerRef.current!.setData(props.data);
         if (JSON.stringify(datalessOptions) !== JSON.stringify(prevDatalessOptions)) {
-            if (props.opacity) {
-                layerRef.current!.setOpacity(props.opacity)
-            }
             layerRef.current!.setOptions(props)
         }
 

@@ -1,4 +1,4 @@
-import {LayerGroup, LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayerGroup, LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/VelocityWrapper/VelocityLayer";
 import {getColorFromTemperature, getColorFromWindSpeedKts, knotsToMps, roundTo} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -10,6 +10,7 @@ import {GribFrame} from "@/components/types";
 import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
+import {boundsFromGribHeader} from "@/components/dataManagement/DataProcessing";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds;
@@ -81,8 +82,7 @@ export function WeatherMap({
 
     return <>
         {resolvedTheme === 'dark' && (
-            //this is a bit of a hack; all the dark mode map tiles aren't free so we are just inverting the colors
-            // on the light mode map
+            //works to invert the colors on the white controls in dark mode
             <style>
                 .leaflet-control-layers,
                 .leaflet-control-zoom-in,
@@ -152,9 +152,11 @@ export function WeatherMap({
                     </LayerGroup>
                 </LayersControl.Overlay>
                 <LayersControl.Overlay checked name="Data on Mouse Over">
-                    <DataMouseOver
-                        data={data}
-                        viewportBounds={viewportBounds}/>
+                    <LayerGroup>
+                        <DataMouseOver
+                            data={data}
+                            viewportBounds={viewportBounds}/>
+                    </LayerGroup>
                 </LayersControl.Overlay>
             </LayersControl>
         </MapContainer>

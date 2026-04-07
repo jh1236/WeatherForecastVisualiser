@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
             const temperature = (data.Tair as number[][][])
             const lats = (data.LAT as number[][]).map(it => it[0])
             const longs = (data.LON as number[][])[0]
-            const dx = longs[1] - longs[0]
-            const dy = lats[1] - lats[0]
+            const dx = (longs[longs.length - 1] - longs[0]) / longs.length
+            const dy = (lats[lats.length - 1] - lats[0]) / lats.length
             const startTime = netCdfEpoch + DAYS_TO_MS * windTimes[0];
             const endTime = netCdfEpoch + DAYS_TO_MS * windTimes[windTimes.length - 1];
             // we use this so that we don't have to try checking react state
