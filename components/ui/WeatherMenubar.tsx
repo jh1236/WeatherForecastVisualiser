@@ -5,13 +5,13 @@ import {
     MenubarGroup,
     MenubarItem,
     MenubarLabel,
-    MenubarMenu,
+    MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
     MenubarSub,
     MenubarSubContent,
     MenubarSubTrigger,
     MenubarTrigger
 } from "./menubar";
-import {useSettings} from "@/components/settings";
+import {Settings, useSettings} from "@/components/settings";
 import Image from "next/image";
 import {Slider} from "@/components/ui/slider";
 import {useTheme} from "next-themes";
@@ -50,17 +50,21 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                     </MenubarGroup>
                     <MenubarGroup>
                         <MenubarLabel>Thredds Settings</MenubarLabel>
-                        <MenubarCheckboxItem
-                            disabled={settings.dataSource === 'grib'}
-                            checked={settings.useBigArea}
-                            onSelect={() => {
-                                if (settings.dataSource === 'netCDF') {
-                                    resetData()
-                                    setSetting('useBigArea', !settings.useBigArea)
-                                }
-                            }}>
-                            Display Wider Perth Area
-                        </MenubarCheckboxItem>
+                        <MenubarRadioGroup value={settings.region}
+                                           onValueChange={value => setSetting('region', (value as Settings['region']))}>
+                            <MenubarRadioItem
+                                disabled={settings.dataSource === 'grib'}
+                                value="perth"
+                            >Perth</MenubarRadioItem>
+                            <MenubarRadioItem
+                                disabled={settings.dataSource === 'grib'}
+                                value="greaterPerth"
+                            >Greater Perth Region</MenubarRadioItem>
+                            <MenubarRadioItem
+                                disabled={settings.dataSource === 'grib'}
+                                value="greatBarrierReef"
+                            >Great Barrier Reef</MenubarRadioItem>
+                        </MenubarRadioGroup>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>

@@ -1,20 +1,19 @@
-import {LayerGroup, LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayerGroup, LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/VelocityWrapper/VelocityLayer";
 import {getColorFromTemperature, getColorFromWindSpeedKts, knotsToMps, roundTo} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
 import {LatLngBounds} from "leaflet";
-import {useEffect, useMemo, useState} from "react";
-import {GribFrame} from "@/components/types";
+import {useEffect, useState} from "react";
+import {WeatherDataTimeSnapshot} from "@/components/types";
 import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
-import {boundsFromGribHeader} from "@/components/dataManagement/DataProcessing";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds;
-    data: GribFrame[];
+    data: WeatherDataTimeSnapshot;
 }
 
 export function WeatherMap({
@@ -112,7 +111,7 @@ export function WeatherMap({
                 <LayersControl.Overlay checked={settings["windParticles.enabled"]} name="Wind Particles">
                     <LayerGroup>
                         <VelocityLayer
-                            data={data}
+                            data={data?.gribFrames}
                             maxVelocity={knotsToMps(50)}
                             velocityScale={0.01}
                             displayValues={false}
@@ -123,7 +122,7 @@ export function WeatherMap({
                 <LayersControl.Overlay checked={settings["windBarbs.enabled"]} name="Wind Barbs">
                     <LayerGroup>
                         <WindBarbs
-                            data={data}
+                            data={data?.gribFrames}
                             resolution={settings["windBarbs.count"]}
                             viewportBounds={viewportBounds}
                             darkModeRender={darkModeRender}>
@@ -134,7 +133,7 @@ export function WeatherMap({
                 <LayersControl.Overlay checked={settings["windColors.enabled"]} name="Wind Colors">
                     <LayerGroup>
                         <WindColors
-                            data={data}
+                            data={data?.gribFrames}
                             resolution={settings["windColors.count"]}
                             viewportBounds={viewportBounds}
                             darkModeRender={darkModeRender}>
@@ -144,17 +143,18 @@ export function WeatherMap({
                 <LayersControl.Overlay checked={settings["temperatureColors.enabled"]} name="Temperature Colors">
                     <LayerGroup>
                         <TemperatureColors
-                            data={data}
+                            data={data?.gribFrames}
                             resolution={settings["temperatureColors.count"]}
                             viewportBounds={viewportBounds}
                             darkModeRender={darkModeRender}>
                         </TemperatureColors>
                     </LayerGroup>
                 </LayersControl.Overlay>
+
                 <LayersControl.Overlay checked name="Data on Mouse Over">
                     <LayerGroup>
                         <DataMouseOver
-                            data={data}
+                            data={data?.gribFrames}
                             viewportBounds={viewportBounds}/>
                     </LayerGroup>
                 </LayersControl.Overlay>
@@ -175,6 +175,8 @@ export function WeatherMap({
                 </div>
             )}
         </div>}
+        {settings.displayTempScale && settings.displayWindScale &&
+            <div style={{width: '5px', textAlign: 'center'}}></div>}
         {settings.displayTempScale &&
             <div style={{
                 width: '3%',
@@ -224,7 +226,8 @@ export function WeatherMap({
                         </div>
                     )}
                 </div>
-            </div>}
+            </div>
+        }
 
     </>
 }

@@ -53,6 +53,9 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
         const text = (await fs.promises.readFile(path)).toString();
         return JSON.parse(text)
     }
+
+    console.log("\n" + newUrl + "\n")
+
     const json = await new Promise<DODSResponse>((resolve, reject) =>
         jsdap.loadDataAndDDS(
             newUrl,

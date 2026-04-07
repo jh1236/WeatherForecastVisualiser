@@ -4,7 +4,7 @@
 import {useLocalStorage} from "react-use";
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 
-interface Settings {
+export interface Settings {
     displayTempScale: boolean;
     displayWindScale: boolean;
 
@@ -23,13 +23,13 @@ interface Settings {
     "temperatureColors.opacity": number;
 
     dataSource: 'netCDF' | 'grib'
-    useBigArea: boolean;
+    region: 'perth' | 'greaterPerth' | 'greatBarrierReef';
     gribFile: null | string;
 }
 
 const defaultSettings: Settings = {
     dataSource: 'netCDF',
-    useBigArea: false,
+    region: 'perth',
     gribFile: 'cwa_atmosphere',
 
     "windBarbs.count": 15,

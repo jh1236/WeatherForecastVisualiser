@@ -4,11 +4,21 @@ import fs from 'fs';
 import {GribData, WeatherDataTimeSnapshot} from "@/components/types";
 import {getGribData} from "@/components/dataManagement/grib2JsonWrapper";
 
+export async function GET() {
+    return await POST({
+        json: () => new Promise((resolve) => resolve({
+            data: false,
+            file: 'perth',
+            names: true
+        }))
+    } as unknown as NextRequest);
+}
+
 export async function POST(request: NextRequest) {
     const req = await request.json()
     const file = req.file;
-    const data = req.data !== 'false';
-    const names = req.names === 'true';
+    const data = req.data !== false;
+    const names = req.names === true;
     if (!fs.existsSync(`./resources/${file}.grb2`)) {
         return Response.json({status: 404, statusText: "Not Found"});
     }
@@ -20,8 +30,6 @@ export async function POST(request: NextRequest) {
         }
     ).then((grib: GribData) => {
             const times: { [key: string]: WeatherDataTimeSnapshot } = {};
-            let startTime = Number.MAX_VALUE
-            let endTime = Number.MIN_VALUE
             // we use this so that we don't have to try checking react state
             for (const i of grib) {
                 const header = i["header"]
@@ -53,13 +61,11 @@ export async function POST(request: NextRequest) {
 
                 if (!Object.keys(times).includes('' + time)) {
                     times[time] = {time, isKeyFrame, gribFrames: [i]};
-                    startTime = Math.min(startTime, time)
-                    endTime = Math.max(endTime, time)
                 } else {
                     times[time].gribFrames!.push(i)
                 }
             }
-            return {times: times, startTime, endTime}
+            return {times: times}
         }
     );
     return Response.json({data: out});

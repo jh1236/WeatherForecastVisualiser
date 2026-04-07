@@ -15,7 +15,7 @@ interface DataFunctionReturn {
 
 
 export function useLocalData(filename: string): DataFunctionReturn {
-    const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const [data, setData] = useState<WeatherData>({times: {}})
     const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
         fetch(SERVER_ADDRESS + `/api/dataFromGrib`, {
@@ -31,14 +31,14 @@ export function useLocalData(filename: string): DataFunctionReturn {
     return {
         data: data,
         reset: () => {
-            setData({endTime: 0, startTime: 0, times: {}})
+            setData({times: {}})
         },
         populated
     }
 }
 
 export function useThreddsServer(date: Date): DataFunctionReturn {
-    const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const [data, setData] = useState<WeatherData>({times: {}})
     const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
         fetch(SERVER_ADDRESS + `/api/dataFromThredds`, {
@@ -58,7 +58,7 @@ export function useThreddsServer(date: Date): DataFunctionReturn {
     return {
         data: data,
         reset: () => {
-            setData({endTime: 0, startTime: 0, times: {}})
+            setData({times: {}})
         },
         populated
     }
@@ -66,7 +66,7 @@ export function useThreddsServer(date: Date): DataFunctionReturn {
 
 export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
     const {settings, isLoaded} = useSettings()
-    const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const [data, setData] = useState<WeatherData>({times: {}})
     const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
         if (!isLoaded) return;
@@ -77,7 +77,7 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
                     year: date.getFullYear(),
                     month: date.getMonth() + 1,
                     day: date.getDate(),
-                    largerPerth: settings.useBigArea
+                    region: settings.region
                 }),
             }).then(res =>
                 res.json().then(({data}: { data: WeatherData }) => {
@@ -96,11 +96,11 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
                 )
             )
         }
-    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.useBigArea])
+    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.region])
     return {
         data: data,
         reset: () => {
-            setData({endTime: 0, startTime: 0, times: {}})
+            setData({times: {}})
         },
         populated
     }

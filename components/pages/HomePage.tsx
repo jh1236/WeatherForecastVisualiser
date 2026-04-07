@@ -38,7 +38,7 @@ export function HomePage() {
         </div>
         <div>
             <div style={{width: '100vw', height: '86vh', display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap data={data.times?.[currentTimeStamp]?.gribFrames}/>
+                <WeatherMap data={data.times?.[currentTimeStamp]}/>
             </div>
             <div style={{display: 'flex', flexDirection: 'row', padding: '30px', width: '100%', height: '20%'}}>
                 <div style={{

@@ -103,8 +103,12 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 }
 
 
+export function getCodeFromHeader(header: GribHeader) {
+    return `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`;
+}
+
 function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, value: number) {
-    const code = `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`
+    const code = getCodeFromHeader(header)
 
     switch (code) {
         case "0.0.0":

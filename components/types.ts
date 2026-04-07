@@ -11,8 +11,6 @@ export interface WeatherDataPoint {
 }
 
 export interface WeatherData {
-    startTime: number;
-    endTime: number;
     times: { [time: string]: WeatherDataTimeSnapshot }
 }
 
