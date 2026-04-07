@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react";
-import {VelocityLayerProps} from "@/components/VelocityWrapper/types";
+import {VelocityLayerProps} from "@/components/weatherRenderers/VelocityWrapper/types";
 import {useLeafletContext} from "@react-leaflet/core";
 import L from 'leaflet';
 import 'leaflet-velocity';
@@ -31,23 +31,41 @@ export const defaultVelocityProps: {
     velocityType: "GBR Wind"
 }
 
+function onDrawLayer(overlay, params) {
+
+    if (!this._windy) {
+        this._initWindy(this);
+        return;
+    }
+
+    if (!this.options.data) {
+        return;
+    }
+
+    if (this._timer) clearTimeout(self._timer);
+
+    this._timer = setTimeout(() => this._startWindy(), 0); // showing velocity is delayed
+}
+
+
 export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | null {
     const context = useLeafletContext();
     const layerRef = useRef<L.VelocityLayer>(null);
     const propsRef = useRef(props)
     useEffect(() => {
-        // if (!layerRef.current === !props.data) return
+        if (!props.data?.length) return
         const maybeProps = {...props}
         maybeProps.data = maybeProps?.data ?? []
         const layer = L.velocityLayer(maybeProps);
         layerRef.current = layer;
+        layerRef.current.onDrawLayer = onDrawLayer
         const container = context.layerContainer || context.map
         container.addLayer(layerRef.current!)
         layerRef.current!.setData([])
         return () => {
             container.removeLayer(layer)
         }
-    }, []);
+    }, [props.data]);
     useEffect(() => {
         if (layerRef.current === null || context.map === null) return
 
@@ -56,10 +74,8 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
         const datalessOptions = Object.fromEntries(Object.entries(propsRef.current).filter(([k]) => k !== 'data'))
         const prevDatalessOptions = Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'data'))
 
-        let changed = false;
         layerRef.current!.setData(props.data);
         if (JSON.stringify(datalessOptions) !== JSON.stringify(prevDatalessOptions)) {
-            changed = true;
             if (props.opacity) {
                 layerRef.current!.setOpacity(props.opacity)
             }
@@ -67,15 +83,11 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
         }
 
         if (props.data?.length !== propsRef.current.data?.length) {
-            changed = true;
             layerRef.current!.setData(props.data)
         }
-        if (props.enabled !== propsRef.current.enabled) {
-            changed = true;
-        }
-        if (changed) {
-            propsRef.current = props
-        }
+
+        console.log("renderedAgain!")
+        propsRef.current = props
     }, [context.map, props])
 
     return null!

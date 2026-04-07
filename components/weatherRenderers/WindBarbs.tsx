@@ -10,16 +10,15 @@ import {mapToScreen} from "@/components/dataManagement/DataProcessing";
 const strokeWidth = "3%"
 
 
-
 interface WindBarbsParams {
     viewportBounds: LatLngBounds | undefined;
     data?: GribFrame[];
-    currentLayer: string;
+    darkModeRender: boolean;
     resolution?: number;
     enabled?: boolean;
 }
 
-export function WindBarbs({viewportBounds, data, currentLayer, resolution = 25, enabled=true}: WindBarbsParams) {
+export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25, enabled = true}: WindBarbsParams) {
 
     const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
@@ -31,7 +30,7 @@ export function WindBarbs({viewportBounds, data, currentLayer, resolution = 25, 
             count={i}
             viewportBounds={viewportBounds}
             dataPoint={dataPoint}
-            baseLayer={currentLayer}
+            darkModeRender={darkModeRender}
         />
     )
 }
@@ -41,18 +40,17 @@ interface SingleWindBarbProp {
     viewportBounds: LatLngBounds | undefined,
     count?: number,
     trueLatLng?: LatLng,
-    baseLayer: string,
+    darkModeRender: boolean
 }
 
 
-function SingleWindBarb({viewportBounds, dataPoint, baseLayer}: SingleWindBarbProp) {
+function SingleWindBarb({viewportBounds, dataPoint, darkModeRender}: SingleWindBarbProp) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
-    const isSatellite = baseLayer === 'Satellite';
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
     const magnitudeKnots = Math.round(5 * mpsToKnots(magnitude([windU!, windV!]))) / 5;
     const out = []
-    const opacity = isSatellite ? 1 : 0.5;
-    const color = isSatellite ? "white" : "black";
+    const opacity = darkModeRender ? 1 : 0.5;
+    const color = darkModeRender ? "white" : "black";
     if (magnitudeKnots === 0) {
         out.push(<circle cx="50%" cy="50%" r="8%" fillOpacity={0.0} stroke={color} opacity={opacity}
                          strokeWidth={strokeWidth}/>)

@@ -4,11 +4,10 @@ import jsdap, {DDSResponse, DODSResponse} from "@jeremybarbet/jsdap"
 import fs from 'fs';
 import {generateHash} from "@/components/utilities";
 
-
-function fixData<T>(data: T): T {
+function fixData<T extends object>(data: T): T {
     switch (data.constructor.name) {
         case "Array":
-            return data.map(fixData)
+            return ((data as never[]).map(fixData) as T)
         case "Float64Array":
         case "Float32Array":
         case "Int32Array":
@@ -17,9 +16,9 @@ function fixData<T>(data: T): T {
         case "UInt16Array":
         case "Int8Array":
         case "UInt8Array":
-            return Array.from(data);
+            return (Array.from(data as Uint8Array) as T);
         case "Object":
-            return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, fixData(v)]))
+            return (Object.fromEntries(Object.entries(data).map(([k, v]) => [k, fixData(v)])) as T)
         default:
             return data
     }
@@ -44,7 +43,8 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
     let newUrl = url + ".dods"
     if (args) {
         newUrl += "?"
-        newUrl += Object.entries(args).map(([key, value]) => `${key}${argToString(value)}`).join(",")
+        const entries = (Object.entries(args) as [string, string | string[]][]);
+        newUrl += entries.map(([key, value]) => `${key}${argToString(value)}`).join(",")
     }
     newUrl = encodeURI(newUrl)
     const hash = generateHash(newUrl)
@@ -64,7 +64,7 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
             }
         )
     )
-    json.data = fixData(json.data)
+    json.data = (fixData(json.data) as Record<T, numberOrObjectWithNumericIndices>)
     let files = await fs.promises.readdir("./cachedResponses/");
     while (files.length >= 50) { // We only want to keep the 50 most recent files; delete the rest
         let oldestFileTime = Number.MAX_VALUE
@@ -93,6 +93,9 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
     fs.promises.writeFile(path, JSON.stringify(json))
 
 
-    return json
+    return json as {
+        dds: DDSResponse,
+        data: Record<T, numberOrObjectWithNumericIndices>
+    }
 }
 

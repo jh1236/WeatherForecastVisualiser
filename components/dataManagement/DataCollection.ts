@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {WeatherData} from "@/components/types";
 import {useSettings} from "@/components/settings";
 
@@ -10,10 +10,13 @@ const SERVER_ADDRESS = "http://flun.in:25565";
 interface DataFunctionReturn {
     data: WeatherData;
     reset: () => void;
+    populated: boolean;
 }
+
 
 export function useLocalData(filename: string): DataFunctionReturn {
     const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
         fetch(SERVER_ADDRESS + `/api/dataFromGrib`, {
             method: "POST",
@@ -25,11 +28,18 @@ export function useLocalData(filename: string): DataFunctionReturn {
             )
         )
     }, [filename])
-    return {data: data, reset: () => setData({endTime: 0, startTime: 0, times: {}})}
+    return {
+        data: data,
+        reset: () => {
+            setData({endTime: 0, startTime: 0, times: {}})
+        },
+        populated
+    }
 }
 
 export function useThreddsServer(date: Date): DataFunctionReturn {
     const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
         fetch(SERVER_ADDRESS + `/api/dataFromThredds`, {
             method: "POST",
@@ -45,21 +55,29 @@ export function useThreddsServer(date: Date): DataFunctionReturn {
             )
         )
     }, [date])
-    return {data: data, reset: () => setData({endTime: 0, startTime: 0, times: {}})}
+    return {
+        data: data,
+        reset: () => {
+            setData({endTime: 0, startTime: 0, times: {}})
+        },
+        populated
+    }
 }
 
-export function useDataFromSettingsSource(date: Date): { data: WeatherData, reset: () => void } {
-    const {settings} = useSettings()
+export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
+    const {settings, isLoaded} = useSettings()
     const [data, setData] = useState<WeatherData>({endTime: 0, startTime: 0, times: {}})
+    const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
-        setData({endTime: 0, startTime: 0, times: {}})
+        if (!isLoaded) return;
         if (settings.dataSource === 'netCDF') {
             fetch(SERVER_ADDRESS + `/api/dataFromThredds`, {
                 method: "POST",
                 body: JSON.stringify({
                     year: date.getFullYear(),
                     month: date.getMonth() + 1,
-                    day: date.getDate()
+                    day: date.getDate(),
+                    largerPerth: settings.useBigArea
                 }),
             }).then(res =>
                 res.json().then(({data}: { data: WeatherData }) => {
@@ -78,6 +96,12 @@ export function useDataFromSettingsSource(date: Date): { data: WeatherData, rese
                 )
             )
         }
-    }, [date, settings.dataSource, settings.gribFile])
-    return {data: data, reset: () => setData({endTime: 0, startTime: 0, times: {}})}
+    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.useBigArea])
+    return {
+        data: data,
+        reset: () => {
+            setData({endTime: 0, startTime: 0, times: {}})
+        },
+        populated
+    }
 }

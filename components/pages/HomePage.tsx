@@ -1,5 +1,5 @@
 import {WeatherMenubar} from "@/components/ui/WeatherMenubar";
-import {WeatherMap} from "@/components/windRenderers/WeatherMap";
+import {WeatherMap} from "@/components/weatherRenderers/WeatherMap";
 import {DatePicker} from "@/components/ui/datePicker";
 import {Slider} from "@/components/ui/slider";
 import {Button} from "@/components/ui/button";
@@ -8,9 +8,11 @@ import {useEffect, useMemo, useState} from "react";
 import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollection";
 import {useSettings} from "@/components/settings";
 
+import "@/components/pages/homepage.module.css"
+
 export function HomePage() {
     const [date, setDate] = useState(new Date());
-    const {data, reset} = useDataFromSettingsSource(date);
+    const {data, reset, populated} = useDataFromSettingsSource(date);
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
     const timestamps = useMemo(() => data.times ? Object.keys(data.times).map(it => Number(it)).toSorted((a, b) => a - b) : [], [data]);
@@ -29,9 +31,10 @@ export function HomePage() {
     }, [currentTimeStamp, currentTimeStampIndex, playbackSpeed, timestamps])
 
 
-    return <div style={{width: '100vw', height: '100vh',}}>
+    return <div style={{width: '100vw', height: '100vh'}}>
+        {populated && <div style={{}}></div>}
         <div style={{width: '100%'}}>
-            <WeatherMenubar></WeatherMenubar>
+            <WeatherMenubar resetData={reset}></WeatherMenubar>
         </div>
         <div>
             <div style={{width: '100vw', height: '86vh', display: 'flex', flexDirection: 'row'}}>

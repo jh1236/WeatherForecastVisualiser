@@ -5,7 +5,8 @@ import {useLocalStorage} from "react-use";
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 
 interface Settings {
-    displayColorScale: boolean;
+    displayTempScale: boolean;
+    displayWindScale: boolean;
 
     "windParticles.enabled": boolean;
     "windParticles.particleMultiplier": number;
@@ -15,29 +16,47 @@ interface Settings {
 
     "windColors.enabled": boolean;
     "windColors.count": number;
+    "windColors.opacity": number;
+
+    "temperatureColors.enabled": boolean;
+    "temperatureColors.count": number;
+    "temperatureColors.opacity": number;
 
     dataSource: 'netCDF' | 'grib'
+    useBigArea: boolean;
     gribFile: null | string;
 }
 
 const defaultSettings: Settings = {
     dataSource: 'netCDF',
+    useBigArea: false,
     gribFile: 'cwa_atmosphere',
-    "windBarbs.count": 30,
-    "windColors.count": 60,
+
+    "windBarbs.count": 15,
+
     "windBarbs.enabled": false,
+    "windColors.count": 30,
     "windColors.enabled": false,
+
+    "windColors.opacity": 0.6,
     "windParticles.enabled": true,
+
     "windParticles.particleMultiplier": 1,
-    displayColorScale: false
+    "temperatureColors.count": 30,
+    "temperatureColors.enabled": false,
+    "temperatureColors.opacity": 0.6,
+
+    displayTempScale: true,
+    displayWindScale: true
 };
 
 const SettingsContext = createContext<{
     settings: Settings,
-    setSetting: <K extends keyof Settings>(setting: K, value: Settings[K]) => void
+    setSetting: <K extends keyof Settings>(setting: K, value: Settings[K]) => void,
+    isLoaded: boolean
 }>({
     settings: defaultSettings, setSetting: () => {
-    }
+    }, isLoaded: false
 })
 
 export function useSettings() {
@@ -46,6 +65,7 @@ export function useSettings() {
 
 export function SettingsProvider({children}: { children: ReactNode }) {
     const [settingsStorage, setSettingStorage] = useLocalStorage<Settings>('settings', defaultSettings);
+    const [loaded, setLoaded] = useState<boolean>(false);
     const [settings, setSettings] = useState<Settings>();
 
     const setSetting = <K extends keyof Settings>(setting: K, value: Settings[K]) => {
@@ -57,11 +77,13 @@ export function SettingsProvider({children}: { children: ReactNode }) {
     useEffect(() => {
         if (settings === undefined && settingsStorage) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSettings(settingsStorage);
+            setSettings(Object.assign({}, defaultSettings, settingsStorage));
+            setLoaded(true);
         }
     }, [settings, settingsStorage])
 
-    return <SettingsContext.Provider value={{setSetting, settings: settings ?? defaultSettings}}>
+    return <SettingsContext.Provider
+        value={{setSetting, settings: settings ?? defaultSettings, isLoaded: loaded}}>
         {children}
     </SettingsContext.Provider>
 }

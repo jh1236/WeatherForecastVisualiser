@@ -6,10 +6,6 @@ import {
     MenubarItem,
     MenubarLabel,
     MenubarMenu,
-    MenubarRadioGroup,
-    MenubarRadioItem,
-    MenubarSeparator,
-    MenubarShortcut,
     MenubarSub,
     MenubarSubContent,
     MenubarSubTrigger,
@@ -18,45 +14,53 @@ import {
 import {useSettings} from "@/components/settings";
 import Image from "next/image";
 import {Slider} from "@/components/ui/slider";
+import {useTheme} from "next-themes";
+import {round} from "@floating-ui/utils";
 
-export function WeatherMenubar() {
+interface WeatherMenubarProps {
+    resetData: () => void
+}
+
+export function WeatherMenubar({resetData}: WeatherMenubarProps) {
     const {settings, setSetting} = useSettings()
+    const {theme, setTheme} = useTheme()
     return (
         <Menubar style={{width: '100%'}}>
-            <MenubarLabel><Image src="/icon.png" alt="Website logo" width={20} height={20}/></MenubarLabel>
+            <MenubarLabel style={{width: '50px'}}><Image src="/icon.png" alt="Website logo" width={20}
+                                                         height={20}/></MenubarLabel>
             <MenubarMenu>
                 <MenubarTrigger>File</MenubarTrigger>
                 <MenubarContent>
                     <MenubarLabel>Select Data Source</MenubarLabel>
                     <MenubarGroup>
                         <MenubarCheckboxItem checked={settings.dataSource === 'netCDF'}
-                                             onClick={() => setSetting("dataSource", "netCDF")}>
-                            netCDF
+                                             onSelect={() => {
+                                                 resetData()
+                                                 setSetting("dataSource", "netCDF")
+                                             }}>
+                            From THREDDS Server
                         </MenubarCheckboxItem>
                         <MenubarCheckboxItem checked={settings.dataSource === 'grib'}
-                                             onClick={() => setSetting("dataSource", "grib")}>
+                                             onSelect={() => {
+                                                 resetData()
+                                                 setSetting("dataSource", "grib")
+                                             }}>
                             GRIB File Upload
                         </MenubarCheckboxItem>
-                        <MenubarItem disabled>New Incognito Window</MenubarItem>
                     </MenubarGroup>
-                    <MenubarSeparator/>
                     <MenubarGroup>
-                        <MenubarSub>
-                            <MenubarSubTrigger>Share</MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarGroup>
-                                    <MenubarItem>Email link</MenubarItem>
-                                    <MenubarItem>Messages</MenubarItem>
-                                    <MenubarItem>Notes</MenubarItem>
-                                </MenubarGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem>
-                            Print... <MenubarShortcut>⌘P</MenubarShortcut>
-                        </MenubarItem>
+                        <MenubarLabel>Thredds Settings</MenubarLabel>
+                        <MenubarCheckboxItem
+                            disabled={settings.dataSource === 'grib'}
+                            checked={settings.useBigArea}
+                            onSelect={() => {
+                                if (settings.dataSource === 'netCDF') {
+                                    resetData()
+                                    setSetting('useBigArea', !settings.useBigArea)
+                                }
+                            }}>
+                            Display Wider Perth Area
+                        </MenubarCheckboxItem>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
@@ -64,45 +68,71 @@ export function WeatherMenubar() {
                 <MenubarTrigger>Edit</MenubarTrigger>
                 <MenubarContent>
                     <MenubarGroup>
-                        <MenubarItem>
-                            Set Wind Barb Resolution
-                        </MenubarItem>
-                        <MenubarLabel>{settings["windBarbs.count"]}</MenubarLabel>
-                        <MenubarItem>
-                            <Slider style={{width: '160px'}} min={10} value={[settings["windBarbs.count"]]} max={40} step={5} onValueChange={([v]) => setSetting("windBarbs.count", v)}></Slider>
+                        <MenubarLabel>Wind Barbs</MenubarLabel>
+                        <MenubarLabel inset>
+                            Resolution: {settings["windBarbs.count"]}
+                        </MenubarLabel>
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+
+                            <Slider style={{width: '120px'}} min={10} value={[settings["windBarbs.count"]]} max={40}
+                                    step={5} onValueChange={([v]) => setSetting("windBarbs.count", v)}></Slider>
                         </MenubarItem>
                     </MenubarGroup>
                     <MenubarGroup>
-                        <MenubarItem>
-                            Set Wind Color Resolution
+                        <MenubarLabel>Wind Colors</MenubarLabel>
+                        <MenubarLabel inset>
+                            Resolution: {settings["windColors.count"]}
+                        </MenubarLabel>
+
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider
+                                style={{width: '120px',}}
+                                min={20}
+                                value={[settings["windColors.count"]]}
+                                max={60}
+                                step={5}
+                                onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
                         </MenubarItem>
-                        <MenubarLabel>{settings["windColors.count"]}</MenubarLabel>
-                        <MenubarItem>
-                            <Slider style={{width: '160px'}} min={20} value={[settings["windColors.count"]]} max={70} step={5} onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
+                        {settings["windColors.count"] > 40 &&
+                            <MenubarLabel style={{fontWeight: 600, color: 'darkred', fontSize: 8}}>
+                                Values over 40 may impact performance!
+                            </MenubarLabel>}
+                        <MenubarLabel inset>
+                            Opacity: {round(100 * settings["windColors.opacity"])}%
+                        </MenubarLabel>
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider style={{width: '120px'}} min={0} value={[settings["windColors.opacity"]]} max={1}
+                                    step={0.05} onValueChange={([v]) => setSetting("windColors.opacity", v)}></Slider>
                         </MenubarItem>
                     </MenubarGroup>
-                    <MenubarSeparator/>
                     <MenubarGroup>
-                        <MenubarSub>
-                            <MenubarSubTrigger>Find</MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarGroup>
-                                    <MenubarItem>Search the web</MenubarItem>
-                                </MenubarGroup>
-                                <MenubarSeparator/>
-                                <MenubarGroup>
-                                    <MenubarItem>Find...</MenubarItem>
-                                    <MenubarItem>Find Next</MenubarItem>
-                                    <MenubarItem>Find Previous</MenubarItem>
-                                </MenubarGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem>Cut</MenubarItem>
-                        <MenubarItem>Copy</MenubarItem>
-                        <MenubarItem>Paste</MenubarItem>
+                        <MenubarLabel>Temperature Colors</MenubarLabel>
+                        <MenubarLabel inset>
+                            Resolution: {settings["temperatureColors.count"]}
+                        </MenubarLabel>
+
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider
+                                style={{width: '120px',}}
+                                min={20}
+                                value={[settings["temperatureColors.count"]]}
+                                max={60}
+                                step={5}
+                                onValueChange={([v]) => setSetting("temperatureColors.count", v)}></Slider>
+                        </MenubarItem>
+                        {settings["temperatureColors.count"] > 40 &&
+                            <MenubarLabel style={{fontWeight: 600, color: 'darkred', fontSize: 8}}>
+                                Values over 40 may impact performance!
+                            </MenubarLabel>}
+                        <MenubarLabel inset>
+                            Opacity: {round(100 * settings["temperatureColors.opacity"])}%
+                        </MenubarLabel>
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider style={{width: '120px'}} min={0} value={[settings["temperatureColors.opacity"]]}
+                                    max={1}
+                                    step={0.05}
+                                    onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
+                        </MenubarItem>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
@@ -110,44 +140,29 @@ export function WeatherMenubar() {
                 <MenubarTrigger>View</MenubarTrigger>
                 <MenubarContent className="w-44">
                     <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.displayColorScale}
-                                             onClick={() => setSetting('displayColorScale', !settings.displayColorScale)}>Wind
+                        <MenubarCheckboxItem checked={settings.displayWindScale}
+                                             onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Wind
                             Color Scale</MenubarCheckboxItem>
                     </MenubarGroup>
-                    <MenubarSeparator/>
                     <MenubarGroup>
-                        <MenubarItem inset>
-                            Reload <MenubarShortcut>⌘R</MenubarShortcut>
-                        </MenubarItem>
-                        <MenubarItem disabled inset>
-                            Force Reload <MenubarShortcut>⇧⌘R</MenubarShortcut>
-                        </MenubarItem>
+                        <MenubarCheckboxItem checked={settings.displayTempScale}
+                                             onSelect={() => setSetting('displayTempScale', !settings.displayTempScale)}>Temp
+                            Color Scale</MenubarCheckboxItem>
                     </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem inset>Toggle Fullscreen</MenubarItem>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem inset>Hide Sidebar</MenubarItem>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Profiles</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarRadioGroup value="benoit">
-                        <MenubarRadioItem value="andy">Andy</MenubarRadioItem>
-                        <MenubarRadioItem value="benoit">Benoit</MenubarRadioItem>
-                        <MenubarRadioItem value="Luis">Luis</MenubarRadioItem>
-                    </MenubarRadioGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem inset>Edit...</MenubarItem>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarItem inset>Add Profile...</MenubarItem>
+                    <MenubarGroup className="w-80">
+                        <MenubarSub>
+                            <MenubarSubTrigger inset className="w-40">Dark Mode</MenubarSubTrigger>
+                            <MenubarSubContent>
+                                <MenubarGroup>
+                                    <MenubarCheckboxItem checked={theme === 'system'}
+                                                         onSelect={() => setTheme('system')}>System</MenubarCheckboxItem>
+                                    <MenubarCheckboxItem checked={theme === 'light'}
+                                                         onSelect={() => setTheme('light')}>Light</MenubarCheckboxItem>
+                                    <MenubarCheckboxItem checked={theme === 'dark'}
+                                                         onSelect={() => setTheme('dark')}>Dark</MenubarCheckboxItem>
+                                </MenubarGroup>
+                            </MenubarSubContent>
+                        </MenubarSub>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>

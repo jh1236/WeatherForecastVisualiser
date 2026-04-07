@@ -16,17 +16,22 @@ export function boundsFromGribHeader(header: GribHeader) {
 
 
 export function* iterateOverBounds(targetBounds: LatLngBounds, maxResolution: number): Generator<LatLngBounds> {
-    const deltaY = Math.abs(targetBounds.getNorth() - targetBounds.getSouth()) / (maxResolution)
-    const deltaX = Math.abs(targetBounds.getEast() - targetBounds.getWest()) / (maxResolution)
+    const latWindow = Math.abs(targetBounds.getNorth() - targetBounds.getSouth());
+    const lngWindow = Math.abs(targetBounds.getEast() - targetBounds.getWest());
+
+    const deltaY = latWindow / (maxResolution + 1)
+    const deltaX = lngWindow / (maxResolution + 1)
+
     const delta = Math.max(deltaX, deltaY)
-    let long = targetBounds.getWest() + 0.5 * delta
-    while (long < targetBounds.getEast()) {
-        let lat = targetBounds.getSouth() + 0.5 * delta
-        while (lat < targetBounds.getNorth()) {
+
+    //these correction values ensure that the grid is aligned on ea
+    const correctionLat = (latWindow - (Math.floor(latWindow / delta) * delta)) / 2;
+    const correctionLng = (lngWindow - (Math.floor(lngWindow / delta) * delta)) / 2;
+
+    for (let long = targetBounds.getWest() + delta / 2 + correctionLng; long < targetBounds.getEast(); long += delta) {
+        for (let lat = targetBounds.getSouth() + delta / 2 + correctionLat; lat < targetBounds.getNorth(); lat += delta) {
             yield new LatLngBounds([[lat - delta / 2, long - delta / 2], [lat + delta / 2, long + delta / 2]])
-            lat += delta
         }
-        long += delta;
     }
 }
 
@@ -102,6 +107,9 @@ function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, 
     const code = `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`
 
     switch (code) {
+        case "0.0.0":
+            dataPoint.temperature = value
+            break;
         case "0.2.2":
             dataPoint.windU = value
             break;

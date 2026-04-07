@@ -5,45 +5,42 @@ import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromWindSpeedKts, mpsToKnots} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToScreen} from "@/components/dataManagement/DataProcessing";
+import {useSettings} from "@/components/settings";
 
 interface WindColorsProps {
     viewportBounds: LatLngBounds | undefined;
     data: GribFrame[];
-    currentLayer: string;
+    darkModeRender: boolean;
     resolution?: number;
-    enabled?: boolean;
 }
 
 
-export function WindColors({data, viewportBounds, currentLayer, resolution = 60, enabled = true}: WindColorsProps) {
+export function WindColors({data, viewportBounds, darkModeRender, resolution = 60}: WindColorsProps) {
 
     const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
-    if (!enabled) return
-
-    return windBarbData.map((dataPoint, i) =>
-        <SingleWindColor
-            key={i}
-            count={i}
-            viewportBounds={viewportBounds}
-            dataPoint={dataPoint}
-            baseLayer={currentLayer}
-        />
+    return windBarbData.map((dataPoint, i) => {
+            return <SingleWindColor
+                key={i}
+                viewportBounds={viewportBounds}
+                dataPoint={dataPoint}
+                darkModeRender={darkModeRender}
+            />;
+        }
     )
 }
 
 interface SingleWindColorProps {
     dataPoint: WeatherDataPoint
     viewportBounds: LatLngBounds | undefined,
-    count?: number,
     trueLatLng?: LatLng,
-    baseLayer: string,
+    darkModeRender: boolean,
 }
 
-function SingleWindColor({viewportBounds, dataPoint, baseLayer}: SingleWindColorProps) {
+function SingleWindColor({viewportBounds, dataPoint}: SingleWindColorProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const strength = useMemo(() => mpsToKnots(magnitude([windU!, windV!])), [windU, windV]);
-    const isSatellite = baseLayer === "satellite";
+    const {settings} = useSettings();
 
     if (!viewportBounds || !viewportBounds.intersects(tileBounds!)) {
         return null
@@ -59,7 +56,7 @@ function SingleWindColor({viewportBounds, dataPoint, baseLayer}: SingleWindColor
             y="0%"
             width="100%"
             height="100%"
-            fillOpacity={isSatellite ? 0.8 : 0.5}
+            fillOpacity={settings["windColors.opacity"]}
             fill={getColorFromWindSpeedKts(strength)}>
         </rect>
         {/*<Rectangle bounds={dataPoint.bounds!} fillOpacity={isSatellite ? 0.8 : 0.5} opacity={0}*/}

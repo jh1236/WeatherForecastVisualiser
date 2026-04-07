@@ -1,5 +1,5 @@
 import "leaflet"
-import {VelocityLayerProps} from "@/components/VelocityWrapper/types";
+import {VelocityLayerProps} from "@/components/weatherRenderers/VelocityWrapper/types";
 
 // this is so that TS recognises the custom types that 'leaflet-velocity' adds
 declare module "leaflet" {
@@ -7,8 +7,6 @@ declare module "leaflet" {
 
     interface VelocityLayer extends L.Layer {
         setData: (data: GribData) => void;
-        setOpacity: (opacity: number) => void;
         setOptions: (options: VelocityLayerOptions) => void;
-        onDrawLayer: (overlay, params) => void;
     }
 }

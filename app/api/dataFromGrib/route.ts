@@ -1,8 +1,8 @@
-import grib2json from "@weacast/grib2json";
 import {NextRequest} from "next/server";
 
 import fs from 'fs';
 import {GribData, WeatherDataTimeSnapshot} from "@/components/types";
+import {getGribData} from "@/components/dataManagement/grib2JsonWrapper";
 
 export async function POST(request: NextRequest) {
     const req = await request.json()
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     if (!fs.existsSync(`./resources/${file}.grb2`)) {
         return Response.json({status: 404, statusText: "Not Found"});
     }
-    const out = await grib2json(`./resources/${file}.grb2`, {
+    const out = await getGribData(`./resources/${file}.grb2`, {
             // scriptPath: './grib2json-0.8.0-SNAPSHOT/bin/grib2json',
             data,
             names,

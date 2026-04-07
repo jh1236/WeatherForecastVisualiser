@@ -9,44 +9,57 @@ const DAYS_TO_MS = 24 * 60 * 60 * 1000;
 export async function POST(request: NextRequest) {
     const req = await request.json()
     console.log(req)
-    const displayData = req.data !== 'false';
+
+    const isBig = req.largerPerth
+    const displayData = req.data !== false;
     const year = req.year.toString();
     const month = req.month.toString().padStart(2, '0');
     const day = req.day.toString().padStart(2, '0');
-    const out = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/WRF2026/wrf_roms_d02_${year}${month}${day}.nc`, {
+    const rangeCeil = isBig ? 98 : 89
+    const args = {
         wind_time: "0:1:23",
-        Uwind: ["0:1:23", "0:1:164", "0:1:89"],
-        Vwind: ["0:1:23", "0:1:164", "0:1:89"],
-        LON: ["0:1:0", "0:1:89"],
+        tair_time: "0:1:23",
+        Uwind: ["0:1:23", "0:1:164", `0:1:${rangeCeil}`],
+        Vwind: ["0:1:23", "0:1:164", `0:1:${rangeCeil}`],
+        LON: ["0:1:0", `0:1:${rangeCeil}`],
         LAT: ["0:1:164", "0:1:0"],
-    }).then(({data, dds}) => {
+        Tair: ["0:1:23", "0:1:164", `0:1:${rangeCeil}`],
+    };
+    console.log(args);
+    const out = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/WRF2026/wrf_roms_d0${isBig ? 1 : 2}_${year}${month}${day}.nc`, args).then(({data, dds}) => {
             const timesOut: { [key: string]: WeatherDataTimeSnapshot } = {};
-            const times = (data.wind_time as number[])
+            const airTimes = (data.tair_time as number[])
+            const windTimes = (data.wind_time as number[])
             const windU = (data.Uwind as number[][][])
             const windV = (data.Vwind as number[][][])
+            const temperature = (data.Tair as number[][][])
             const lats = (data.LAT as number[][]).map(it => it[0])
             const longs = (data.LON as number[][])[0]
             const dx = longs[1] - longs[0]
             const dy = lats[1] - lats[0]
-            const startTime = netCdfEpoch + DAYS_TO_MS * times[0];
-            const endTime = netCdfEpoch + DAYS_TO_MS * times[times.length - 1];
+            const startTime = netCdfEpoch + DAYS_TO_MS * windTimes[0];
+            const endTime = netCdfEpoch + DAYS_TO_MS * windTimes[windTimes.length - 1];
             // we use this so that we don't have to try checking react state
-            for (let i = 0; i < times.length; i++) {
-                const time = times[i]
-                const convertedTime = netCdfEpoch + time * DAYS_TO_MS
+            for (let i = 0; i < windTimes.length; i++) {
+                const airTime = airTimes[i]
+                const convertedairTime = netCdfEpoch + airTime * DAYS_TO_MS
+                const windTime = windTimes[i]
+                const convertedWindTime = netCdfEpoch + windTime * DAYS_TO_MS
                 const windUData = []
                 const windVData = []
+                const temperatureData = []
                 if (displayData) {
                     for (let x = 0; x < lats.length; x++) {
                         for (let y = 0; y < longs.length; y++) {
                             windUData.push(windU[i][x][y])
                             windVData.push(windV[i][x][y])
+                            temperatureData.push(temperature[i][x][y])
                         }
                     }
                 }
 
 
-                const header: GribHeader = {
+                const baseHeader: GribHeader = {
                     discipline: 0,
                     dx,
                     dy,
@@ -83,10 +96,30 @@ export async function POST(request: NextRequest) {
                     surface2Type: 255,
                     surface2Value: -9.999e-252,
                 }
-                const windUFrame: GribFrame = {data: windUData, header: {...header, parameterNumber: 2}}
-                const windVFrame: GribFrame = {data: windVData, header: {...header, parameterNumber: 3}}
+                const tempFrame: GribFrame = {
+                    data: temperatureData,
+                    header: {...baseHeader, parameterNumber: 0, discipline: 0, parameterCategory: 0}
+                }
+                const windUFrame: GribFrame = {data: windUData, header: {...baseHeader, parameterNumber: 2}}
+                const windVFrame: GribFrame = {data: windVData, header: {...baseHeader, parameterNumber: 3}}
 
-                timesOut[convertedTime] = {gribFrames: [windUFrame, windVFrame], isKeyFrame: false, time: convertedTime}
+
+                if (convertedWindTime in timesOut) {
+                    timesOut[convertedairTime].gribFrames.push(windUFrame)
+                    timesOut[convertedairTime].gribFrames.push(windVFrame)
+                } else {
+                    timesOut[convertedWindTime] = {
+                        gribFrames: [windUFrame, windVFrame],
+                        isKeyFrame: false,
+                        time: convertedWindTime
+                    }
+                }
+
+                if (convertedairTime in timesOut) {
+                    timesOut[convertedairTime].gribFrames.push(tempFrame)
+                } else {
+                    timesOut[convertedairTime] = {gribFrames: [tempFrame], isKeyFrame: false, time: convertedWindTime}
+                }
             }
             return {times: timesOut, startTime, endTime}
         }

@@ -12,7 +12,7 @@ interface WindDataMouseOverProps {
 }
 
 
-export function WindDataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
+export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
     const [latLng, setLatLng] = useState<LatLng>(new LatLng(0, 0));
     const dataPoint = useMemo(() => (viewportBounds && viewportBounds.contains(latLng)) ? getWeatherDataPointForPoint(data, latLng) : undefined, [data, latLng, viewportBounds])
     useMapEvents({
@@ -29,9 +29,9 @@ export function WindDataMouseOver({data, viewportBounds,}: WindDataMouseOverProp
         <Tooltip sticky>{dataPoint ?
             <p>
                 <b>{convertToDMS(Math.abs(latLng.lat))} {latLng.lat > 0 ? 'N' : 'S'}, {convertToDMS(latLng.lng)} E</b> {'\n'}
-                {roundTo(mpsToKnots(magnitude([dataPoint?.windU ?? 0, dataPoint?.windV ?? 0])), 2)}kt @ {' '}
-                {Math.round(windBearing ?? 0)}° {'\n'}
-                <i>{dataPoint?.debugData}</i> {'\n'}
+                {roundTo(mpsToKnots(magnitude([dataPoint.windU ?? 0, dataPoint.windV ?? 0])), 2)}kt @ {' '}
+                {Math.round(windBearing ?? 0)}° {'\n'} {dataPoint.temperature && `(${roundTo(dataPoint.temperature!, 1)}°C)`}
+                <i>{dataPoint.debugData}</i> {'\n'}
             </p> : <i>No Data</i>}
         </Tooltip>
     </Rectangle>

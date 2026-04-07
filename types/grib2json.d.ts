@@ -1,7 +1,7 @@
 declare module '@weacast/grib2json' {
     import type {GribData} from "@/components/types";
 
-    interface Grib2JsonArguments {
+    export interface Grib2JsonArguments {
         version?: boolean;
         data?: boolean;
         compact?: boolean;

@@ -3,8 +3,6 @@ export function zip<T>(...rows: T[][]): T[][] {
     return [...rows[0]].map((_, c) => rows.map(row => row[c]))
 }
 
-export const WEIRDNESS_THRESHOLD = 145
-
 export function lerp(a: number, b: number, t: number) {
     if (t > 1 || a === undefined) {
         return b;
@@ -39,11 +37,12 @@ export function knotsToMps(knots: number) {
 }
 
 export function hsvToRgb(H: number, S: number, V: number) {
+    const trueH = ((H % 360) + 360) % 360
     //from https://stackoverflow.com/a/31490738
     const V2 = V * (1 - S);
-    const r = ((H >= 0 && H <= 60) || (H >= 300 && H <= 360)) ? V : ((H >= 120 && H <= 240) ? V2 : ((H >= 60 && H <= 120) ? mix(V, V2, (H - 60) / 60) : ((H >= 240 && H <= 300) ? mix(V2, V, (H - 240) / 60) : 0)));
-    const g = (H >= 60 && H <= 180) ? V : ((H >= 240 && H <= 360) ? V2 : ((H >= 0 && H <= 60) ? mix(V2, V, H / 60) : ((H >= 180 && H <= 240) ? mix(V, V2, (H - 180) / 60) : 0)));
-    const b = (H >= 0 && H <= 120) ? V2 : ((H >= 180 && H <= 300) ? V : ((H >= 120 && H <= 180) ? mix(V2, V, (H - 120) / 60) : ((H >= 300 && H <= 360) ? mix(V, V2, (H - 300) / 60) : 0)));
+    const r = ((trueH >= 0 && trueH <= 60) || (trueH >= 300 && trueH <= 360)) ? V : ((trueH >= 120 && trueH <= 240) ? V2 : ((trueH >= 60 && trueH <= 120) ? mix(V, V2, (trueH - 60) / 60) : ((trueH >= 240 && trueH <= 300) ? mix(V2, V, (trueH - 240) / 60) : 0)));
+    const g = (trueH >= 60 && trueH <= 180) ? V : ((trueH >= 240 && trueH <= 360) ? V2 : ((trueH >= 0 && trueH <= 60) ? mix(V2, V, trueH / 60) : ((trueH >= 180 && trueH <= 240) ? mix(V, V2, (trueH - 180) / 60) : 0)));
+    const b = (trueH >= 0 && trueH <= 120) ? V2 : ((trueH >= 180 && trueH <= 300) ? V : ((trueH >= 120 && trueH <= 180) ? mix(V2, V, (trueH - 120) / 60) : ((trueH >= 300 && trueH <= 360) ? mix(V, V2, (trueH - 300) / 60) : 0)));
 
     return {
         r: Math.round(r * 255),
@@ -52,7 +51,7 @@ export function hsvToRgb(H: number, S: number, V: number) {
     };
 }
 
-export function getColorFromWindSpeedKts(windspeed: number) {
+export function getColorFromWindSpeedKts(windspeed: number, saturation: number = 0.7) {
     let interpolatedWindspeed = windspeed;
     const f = 30
     if (interpolatedWindspeed < f) {
@@ -62,7 +61,18 @@ export function getColorFromWindSpeedKts(windspeed: number) {
         r,
         g,
         b
-    } = hsvToRgb(((180 + 360) - interpolatedWindspeed / 32 * 180) % 360, 0.7, Math.max(0.2, Math.min(0.7, 0.7 - ((interpolatedWindspeed - 40) * .02))))
+    } = hsvToRgb((180 - interpolatedWindspeed / 32 * 180) % 360, saturation, Math.max(0.2, Math.min(0.7, 0.7 - ((interpolatedWindspeed - 40) * .02))))
+    // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
+    return `rgb(${r},${g},${b})`
+}
+
+export function getColorFromTemperature(temperature: number) {
+    const t = temperature / 55;
+    const {
+        r,
+        g,
+        b
+    } = hsvToRgb(-t * 360 - 50, 1.0, temperature < 40 ? lerp(0.4, 0.9, temperature / 40) : 0.9)
     // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
     return `rgb(${r},${g},${b})`
 }

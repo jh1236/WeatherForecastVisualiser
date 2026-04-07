@@ -5,6 +5,7 @@ export interface WeatherDataPoint {
     windV?: number;
     currentU?: number;
     currentV?: number;
+    temperature?: number;
     bounds?: LatLngBounds;
     debugData?: string;
 }
