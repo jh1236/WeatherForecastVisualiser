@@ -1,6 +1,6 @@
 import {NextRequest} from "next/server";
 import {GribFrame, GribHeader, WeatherDataTimeSnapshot} from "@/components/types";
-import {getJsDapData} from "@/components/jsdapWrapper";
+import {getJsDapData} from "@/components/dataManagement/jsdapWrapper";
 
 const netCdfEpoch = Date.UTC(2000, 0, 1)
 

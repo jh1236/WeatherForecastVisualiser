@@ -1,9 +1,9 @@
 import {LayerGroup, LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/VelocityWrapper/VelocityLayer";
 import {getColorFromWindSpeedKts, knotsToMps, roundTo} from "@/components/utilities";
-import {WindBarbs} from "@/components/WindRenderers/WindBarbs";
-import {WindColors} from "@/components/WindRenderers/WindColor";
-import {WindDataMouseOver} from "@/components/WindRenderers/WindDataMouseOver";
+import {WindBarbs} from "@/components/windRenderers/WindBarbs";
+import {WindColors} from "@/components/windRenderers/WindColor";
+import {WindDataMouseOver} from "@/components/windRenderers/WindDataMouseOver";
 import {LatLngBounds} from "leaflet";
 import {useEffect, useState} from "react";
 import {GribFrame} from "@/components/types";

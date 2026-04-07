@@ -1,11 +1,11 @@
 import {WeatherMenubar} from "@/components/ui/WeatherMenubar";
-import {WeatherMap} from "@/components/WindRenderers/WeatherMap";
+import {WeatherMap} from "@/components/windRenderers/WeatherMap";
 import {DatePicker} from "@/components/ui/datePicker";
 import {Slider} from "@/components/ui/slider";
 import {Button} from "@/components/ui/button";
 import {ArrowLeftIcon, ArrowRightIcon, FastForwardIcon, PauseIcon, PlayIcon, RewindIcon} from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
-import {useDataFromSettingsSource} from "@/components/DataCollection";
+import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollection";
 import {useSettings} from "@/components/settings";
 
 export function HomePage() {

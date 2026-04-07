@@ -4,7 +4,7 @@ import {Rectangle, Tooltip, useMapEvents} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {convertToDMS, mpsToKnots, roundTo} from "@/components/utilities";
 import {GribFrame} from "@/components/types";
-import {boundsFromGribHeader, getWeatherDataPointForPoint, latLngBndsIntersection} from "@/components/DataProcessing";
+import {boundsFromGribHeader, getWeatherDataPointForPoint, latLngBndsIntersection} from "@/components/dataManagement/DataProcessing";
 
 interface WindDataMouseOverProps {
     data: GribFrame[]

@@ -1,14 +1,11 @@
 'use client';
 
 import "leaflet/dist/leaflet.css";
-import {SettingsProvider} from "@/components/settings";
-import {HomePage} from "@/components/HomePage";
+import {HomePage} from "@/components/pages/HomePage";
 
 
 export default function Home() {
     return (
-        <SettingsProvider>
-            <HomePage/>
-        </SettingsProvider>
+        <HomePage/>
     );
 }

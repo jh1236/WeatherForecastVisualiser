@@ -1,4 +1,4 @@
-import {getJsDapData} from "@/components/jsdapWrapper";
+import {getJsDapData} from "@/components/dataManagement/jsdapWrapper";
 
 export async function GET() {
     return getJsDapData("http://boreas.mywire.org:8080/thredds/dodsC/WRF2026/wrf_roms_d02_20260408.nc", {

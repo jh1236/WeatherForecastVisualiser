@@ -4,7 +4,7 @@ import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromWindSpeedKts, mpsToKnots} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
-import {mapToScreen} from "@/components/DataProcessing";
+import {mapToScreen} from "@/components/dataManagement/DataProcessing";
 
 interface WindColorsProps {
     viewportBounds: LatLngBounds | undefined;
