@@ -51,7 +51,10 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                     <MenubarGroup>
                         <MenubarLabel>Thredds Settings</MenubarLabel>
                         <MenubarRadioGroup value={settings.region}
-                                           onValueChange={value => setSetting('region', (value as Settings['region']))}>
+                                           onValueChange={value => {
+                                               resetData()
+                                               setSetting('region', (value as Settings['region']))
+                                           }}>
                             <MenubarRadioItem
                                 disabled={settings.dataSource === 'grib'}
                                 value="perth"
@@ -71,6 +74,30 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
             <MenubarMenu>
                 <MenubarTrigger>Edit</MenubarTrigger>
                 <MenubarContent>
+                    <MenubarGroup>
+                        <MenubarLabel>Units</MenubarLabel>
+                        <MenubarSub>
+                            <MenubarSubTrigger inset>
+                                Wind speed
+                            </MenubarSubTrigger>
+                            <MenubarSubContent>
+                                <MenubarRadioGroup value={settings.speedUnit}
+                                                   onValueChange={value => {
+                                                       setSetting('speedUnit', (value as Settings['speedUnit']))
+                                                   }}>
+                                    <MenubarRadioItem
+                                        value="m/s"
+                                    >Metres per Second</MenubarRadioItem>
+                                    <MenubarRadioItem
+                                        value="kt"
+                                    >Knots</MenubarRadioItem>
+                                    <MenubarRadioItem
+                                        value="km/h"
+                                    >Kilometres per Hour</MenubarRadioItem>
+                                </MenubarRadioGroup>
+                            </MenubarSubContent>
+                        </MenubarSub>
+                    </MenubarGroup>
                     <MenubarGroup>
                         <MenubarLabel>Wind Barbs</MenubarLabel>
                         <MenubarLabel inset>

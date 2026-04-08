@@ -8,6 +8,8 @@ export interface Settings {
     displayTempScale: boolean;
     displayWindScale: boolean;
 
+    speedUnit: 'm/s' | 'km/h' | 'kt',
+
     "windParticles.enabled": boolean;
     "windParticles.particleMultiplier": number;
 
@@ -31,6 +33,8 @@ const defaultSettings: Settings = {
     dataSource: 'netCDF',
     region: 'perth',
     gribFile: 'cwa_atmosphere',
+
+    speedUnit: 'kt',
 
     "windBarbs.count": 15,
 

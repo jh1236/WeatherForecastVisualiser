@@ -77,23 +77,44 @@ const threddsConfigData: {
         }
     },
     greatBarrierReef: {
-        link: 'gbrqck/gbr_qck_20260412.nc{year}{month}{day}.nc',
+        link: 'NCEP2026/gbr_roms_forcing_{year}{month}{day}.nc',
         bindings: {
-            currentTime: 'ocean_time',
-            temperature: 'temp_sur',
-            temperatureTime: 'ocean_time',
-            lat: 'lat_rho',
-            lng: 'lng_rho'
+            windU: 'Uwind',
+            windV: 'Vwind',
+            windTime: 'wind_time',
+            temperature: 'Tair',
+            temperatureTime: 'tair_time',
+            lat: 'lat',
+            lng: 'lon'
         },
         args: {
-            lat_rho: ["0:1:561", "0:1:241"],
-            lon_rho: ["0:1:561", "0:1:241"],
-            ocean_time: ["0:1:23"],
-            temp_sur: ["0:1:23", "0:1:561", "0:1:241"],
-            u_sur_eastward: ["0:1:23", "0:1:561", "0:1:241"],
-            v_sur_northward: ["0:1:23", "0:1:561", "0:1:241"],
+            wind_time: "0:1:7",
+            tair_time: "0:1:7",
+            Uwind: ["0:1:7", "0:1:164", '0:1:98'],
+            Vwind: ["0:1:7", "0:1:164", '0:1:98'],
+            lon: ["0:1:0", '0:1:98'],
+            lat: ["0:1:164", "0:1:0"],
+            Tair: ["0:1:7", "0:1:164", '0:1:98'],
         }
     },
+    // greatBarrierReef: {
+    //     link: 'gbrqck/gbr_qck_20260412.nc{year}{month}{day}.nc',
+    //     bindings: {
+    //         currentTime: 'ocean_time',
+    //         temperature: 'temp_sur',
+    //         temperatureTime: 'ocean_time',
+    //         lat: 'lat_rho',
+    //         lng: 'lng_rho'
+    //     },
+    //     args: {
+    //         lat_rho: ["0:1:561", "0:1:241"],
+    //         lon_rho: ["0:1:561", "0:1:241"],
+    //         ocean_time: ["0:1:23"],
+    //         temp_sur: ["0:1:23", "0:1:561", "0:1:241"],
+    //         u_sur_eastward: ["0:1:23", "0:1:561", "0:1:241"],
+    //         v_sur_northward: ["0:1:23", "0:1:561", "0:1:241"],
+    //     }
+    // },
 };
 
 function getBaseHeader(lats: number[], longs: number[]) {
