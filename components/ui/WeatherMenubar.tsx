@@ -5,7 +5,7 @@ import {
     MenubarGroup,
     MenubarItem,
     MenubarLabel,
-    MenubarMenu, MenubarRadioGroup, MenubarRadioItem,
+    MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator,
     MenubarSub,
     MenubarSubContent,
     MenubarSubTrigger,
@@ -21,13 +21,33 @@ interface WeatherMenubarProps {
     resetData: () => void
 }
 
+function uncamelCase(s: string) {
+    return s.slice(0, 1).toUpperCase() + s.slice(1).replace(/([A-Z]+)/g, ' $1')
+}
+
+interface MenubarEnablerParams {
+    settings: Settings;
+    setSetting: <K extends keyof Settings>(setting: K, value: Settings[K]) => void;
+    settingName: keyof Settings;
+}
+
+function MenubarEnabler({settings, setSetting, settingName}: MenubarEnablerParams) {
+    return <MenubarCheckboxItem checked={settings[settingName] as boolean}
+                                onSelect={e => {
+                                    setSetting(settingName, !settings[settingName])
+                                    e.preventDefault()
+                                }}>
+        {uncamelCase(settingName.split(".enabled")[0])}
+    </MenubarCheckboxItem>;
+}
+
 export function WeatherMenubar({resetData}: WeatherMenubarProps) {
     const {settings, setSetting} = useSettings()
-    const {theme, setTheme} = useTheme()
+    const {theme, resolvedTheme, setTheme} = useTheme()
     return (
         <Menubar style={{width: '100%'}}>
-            <MenubarLabel style={{width: '50px'}}><Image src="/icon.png" alt="Website logo" width={20}
-                                                         height={20}/></MenubarLabel>
+            <MenubarLabel style={{width: '50px'}}><Image src="/icon.png" alt="Website logo" width={30}
+                                                         height={30}/></MenubarLabel>
             <MenubarMenu>
                 <MenubarTrigger>File</MenubarTrigger>
                 <MenubarContent>
@@ -50,54 +70,127 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                     </MenubarGroup>
                     <MenubarGroup>
                         <MenubarLabel>Thredds Settings</MenubarLabel>
-                        <MenubarRadioGroup value={settings.region}
+                        <MenubarSub>
+                            <MenubarSubTrigger className="w-50">Region</MenubarSubTrigger>
+                            <MenubarSubContent>
+                                <MenubarRadioGroup value={settings.region}
+                                                   onValueChange={value => {
+                                                       resetData()
+                                                       setSetting('region', (value as Settings['region']))
+                                                   }}>
+                                    <MenubarRadioItem
+                                        disabled={settings.dataSource === 'grib'}
+                                        value="perth"
+                                    >Perth</MenubarRadioItem>
+                                    <MenubarRadioItem
+                                        disabled={settings.dataSource === 'grib'}
+                                        value="greaterPerth"
+                                    >Greater Perth Region</MenubarRadioItem>
+                                    {/*<MenubarRadioItem*/}
+                                    {/*    disabled={settings.dataSource === 'grib'}*/}
+                                    {/*    value="greatBarrierReef"*/}
+                                    {/*>Great Barrier Reef</MenubarRadioItem>*/}
+                                </MenubarRadioGroup>
+                            </MenubarSubContent>
+                        </MenubarSub>
+                        <MenubarSub>
+                            <MenubarSubTrigger className="w-50">Data Type</MenubarSubTrigger>
+                            <MenubarSubContent>
+                                <MenubarRadioGroup value={settings.dataType}
+                                                   onValueChange={value => {
+                                                       resetData()
+                                                       setSetting('dataType', (value as Settings['dataType']))
+                                                   }}>
+                                    <MenubarRadioItem
+                                        disabled={settings.dataSource === 'grib'}
+                                        value="meteorological"
+                                    >Meteorological</MenubarRadioItem>
+                                    <MenubarRadioItem
+                                        disabled={settings.dataSource === 'grib'}
+                                        value="oceanographic"
+                                    >Oceanographic</MenubarRadioItem>
+                                </MenubarRadioGroup>
+                            </MenubarSubContent>
+                        </MenubarSub>
+
+                    </MenubarGroup>
+                </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+                <MenubarTrigger>Units</MenubarTrigger>
+                <MenubarContent>
+                    <MenubarGroup>
+
+                        <MenubarLabel>
+                            Wind speed
+                        </MenubarLabel>
+
+                        <MenubarRadioGroup value={settings.windSpeedUnit}
                                            onValueChange={value => {
-                                               resetData()
-                                               setSetting('region', (value as Settings['region']))
+                                               setSetting('windSpeedUnit', (value as Settings['windSpeedUnit']))
                                            }}>
                             <MenubarRadioItem
-                                disabled={settings.dataSource === 'grib'}
-                                value="perth"
-                            >Perth</MenubarRadioItem>
+                                value="m/s"
+                            >Metres per Second</MenubarRadioItem>
                             <MenubarRadioItem
-                                disabled={settings.dataSource === 'grib'}
-                                value="greaterPerth"
-                            >Greater Perth Region</MenubarRadioItem>
+                                value="kt"
+                            >Knots</MenubarRadioItem>
                             <MenubarRadioItem
-                                disabled={settings.dataSource === 'grib'}
-                                value="greatBarrierReef"
-                            >Great Barrier Reef</MenubarRadioItem>
+                                value="km/h"
+                            >Kilometres per Hour</MenubarRadioItem>
+                        </MenubarRadioGroup>
+                        <MenubarLabel>
+                            Current speed
+                        </MenubarLabel>
+
+                        <MenubarRadioGroup value={settings.currentSpeedUnit}
+                                           onValueChange={value => {
+                                               setSetting('currentSpeedUnit', (value as Settings['currentSpeedUnit']))
+                                           }}>
+                            <MenubarRadioItem
+                                value="m/s"
+                            >Metres per Second</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="kt"
+                            >Knots</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="km/h"
+                            >Kilometres per Hour</MenubarRadioItem>
                         </MenubarRadioGroup>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-                <MenubarTrigger>Edit</MenubarTrigger>
+                <MenubarTrigger>Renderers</MenubarTrigger>
                 <MenubarContent>
                     <MenubarGroup>
-                        <MenubarLabel>Units</MenubarLabel>
-                        <MenubarSub>
-                            <MenubarSubTrigger inset>
-                                Wind speed
-                            </MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarRadioGroup value={settings.speedUnit}
-                                                   onValueChange={value => {
-                                                       setSetting('speedUnit', (value as Settings['speedUnit']))
-                                                   }}>
-                                    <MenubarRadioItem
-                                        value="m/s"
-                                    >Metres per Second</MenubarRadioItem>
-                                    <MenubarRadioItem
-                                        value="kt"
-                                    >Knots</MenubarRadioItem>
-                                    <MenubarRadioItem
-                                        value="km/h"
-                                    >Kilometres per Hour</MenubarRadioItem>
-                                </MenubarRadioGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
+                        <MenubarLabel>Wind Renderers</MenubarLabel>
+                        <MenubarEnabler settings={settings} setSetting={setSetting}
+                                        settingName="windParticles.enabled"/>
+                        <MenubarEnabler settings={settings} setSetting={setSetting} settingName="windBarbs.enabled"/>
+                        <MenubarEnabler settings={settings} setSetting={setSetting} settingName="windColors.enabled"/>
                     </MenubarGroup>
+                    <MenubarSeparator/>
+                    <MenubarGroup>
+                        <MenubarLabel>Temperature Renderers</MenubarLabel>
+                        <MenubarEnabler settings={settings} setSetting={setSetting}
+                                        settingName="temperatureColors.enabled"/>
+                    </MenubarGroup>
+                    <MenubarSeparator/>
+                    <MenubarGroup>
+                        <MenubarLabel>Ocean Renderers</MenubarLabel>
+                        <MenubarEnabler settings={settings} setSetting={setSetting}
+                                        settingName="currentArrows.enabled"/>
+                        <MenubarEnabler settings={settings} setSetting={setSetting}
+                                        settingName="currentParticles.enabled"/>
+                        <MenubarEnabler settings={settings} setSetting={setSetting}
+                                        settingName="oceanTemperatureColors.enabled"/>
+                    </MenubarGroup>
+                </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+                <MenubarTrigger>Wind</MenubarTrigger>
+                <MenubarContent>
                     <MenubarGroup>
                         <MenubarLabel>Wind Barbs</MenubarLabel>
                         <MenubarLabel inset>
@@ -125,7 +218,11 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                 onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
                         </MenubarItem>
                         {settings["windColors.count"] > 40 &&
-                            <MenubarLabel style={{fontWeight: 600, color: 'darkred', fontSize: 8}}>
+                            <MenubarLabel style={{
+                                fontWeight: 600,
+                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                fontSize: 8
+                            }}>
                                 Values over 40 may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
@@ -135,7 +232,64 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <Slider style={{width: '120px'}} min={0} value={[settings["windColors.opacity"]]} max={1}
                                     step={0.05} onValueChange={([v]) => setSetting("windColors.opacity", v)}></Slider>
                         </MenubarItem>
+                        <MenubarCheckboxItem checked={settings.displayWindScale}
+                                             onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Show
+                            Color Scale</MenubarCheckboxItem>
                     </MenubarGroup>
+                </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+                <MenubarTrigger>Ocean</MenubarTrigger>
+                <MenubarContent>
+                    <MenubarGroup>
+                        <MenubarLabel>Current Arrows</MenubarLabel>
+                        <MenubarLabel inset>
+                            Resolution: {settings["currentArrows.count"]}
+                        </MenubarLabel>
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+
+                            <Slider style={{width: '120px'}} min={10} value={[settings["currentArrows.count"]]} max={70}
+                                    step={5} onValueChange={([v]) => setSetting("currentArrows.count", v)}></Slider>
+                        </MenubarItem>
+                    </MenubarGroup>
+                    <MenubarGroup>
+                        <MenubarLabel>Ocean Temperature Colors</MenubarLabel>
+                        <MenubarLabel inset>
+                            Resolution: {settings["oceanTemperatureColors.count"]}
+                        </MenubarLabel>
+
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider
+                                style={{width: '120px',}}
+                                min={20}
+                                value={[settings["oceanTemperatureColors.count"]]}
+                                max={60}
+                                step={5}
+                                onValueChange={([v]) => setSetting("oceanTemperatureColors.count", v)}></Slider>
+                        </MenubarItem>
+                        {settings["oceanTemperatureColors.count"] > 40 &&
+                            <MenubarLabel style={{
+                                fontWeight: 600,
+                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                fontSize: 8
+                            }}>
+                                Values over 40 may impact performance!
+                            </MenubarLabel>}
+                        <MenubarLabel inset>
+                            Opacity: {round(100 * settings["temperatureColors.opacity"])}%
+                        </MenubarLabel>
+                        <MenubarItem inset onSelect={e => e.preventDefault()}>
+                            <Slider style={{width: '120px'}} min={0} value={[settings["temperatureColors.opacity"]]}
+                                    max={1}
+                                    step={0.05}
+                                    onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
+                        </MenubarItem>
+                    </MenubarGroup>
+                </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+                <MenubarTrigger>Temperature</MenubarTrigger>
+                <MenubarContent>
                     <MenubarGroup>
                         <MenubarLabel>Temperature Colors</MenubarLabel>
                         <MenubarLabel inset>
@@ -152,7 +306,11 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                 onValueChange={([v]) => setSetting("temperatureColors.count", v)}></Slider>
                         </MenubarItem>
                         {settings["temperatureColors.count"] > 40 &&
-                            <MenubarLabel style={{fontWeight: 600, color: 'darkred', fontSize: 8}}>
+                            <MenubarLabel style={{
+                                fontWeight: 600,
+                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                fontSize: 8
+                            }}>
                                 Values over 40 may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
@@ -164,6 +322,11 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                     step={0.05}
                                     onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
                         </MenubarItem>
+                        <MenubarGroup>
+                            <MenubarCheckboxItem checked={settings.displayTempScale}
+                                                 onSelect={() => setSetting('displayTempScale', !settings.displayTempScale)}>Show
+                                Color Scale</MenubarCheckboxItem>
+                        </MenubarGroup>
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
@@ -171,14 +334,17 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                 <MenubarTrigger>View</MenubarTrigger>
                 <MenubarContent className="w-44">
                     <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.displayWindScale}
-                                             onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Wind
-                            Color Scale</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.displayDataArea}
+                                             onSelect={() => setSetting('displayDataArea', !settings.displayDataArea)}>Demarcate
+                            Data Bounds</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.displayTempScale}
-                                             onSelect={() => setSetting('displayTempScale', !settings.displayTempScale)}>Temp
-                            Color Scale</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.showDataOnMouseOver}
+                                             onSelect={() => setSetting('showDataOnMouseOver', !settings.showDataOnMouseOver)}>Show
+                            Data on Mouseover</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.interpolateDataMouseOver}
+                                             onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
+                            Mouseover Data</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarGroup className="w-80">
                         <MenubarSub>

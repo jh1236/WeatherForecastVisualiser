@@ -3,7 +3,7 @@ import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromTemperature} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
-import {mapToScreen} from "@/components/dataManagement/DataProcessing";
+import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {useSettings} from "@/components/settings";
 
 interface WindColorsProps {
@@ -11,15 +11,17 @@ interface WindColorsProps {
     data: GribFrame[];
     darkModeRender: boolean;
     resolution?: number;
+    tempKey?: keyof WeatherDataPoint;
 }
 
 
-export function TemperatureColors({data, viewportBounds, darkModeRender, resolution = 60}: WindColorsProps) {
+export function TemperatureColors({data, viewportBounds, darkModeRender, resolution = 60, tempKey='temperature'}: WindColorsProps) {
 
-    const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
     return windBarbData.map((dataPoint, i) => {
             return <SingleTempColor
+                tempKey={tempKey}
                 key={i}
                 viewportBounds={viewportBounds}
                 dataPoint={dataPoint}
@@ -34,13 +36,15 @@ interface SingleTempColorProps {
     viewportBounds: LatLngBounds | undefined,
     trueLatLng?: LatLng,
     darkModeRender: boolean,
+    tempKey: keyof WeatherDataPoint,
 }
 
-function SingleTempColor({viewportBounds, dataPoint}: SingleTempColorProps) {
-    const {temperature, bounds: tileBounds} = dataPoint;
+function SingleTempColor({viewportBounds, dataPoint, tempKey}: SingleTempColorProps) {
+    const {bounds: tileBounds} = dataPoint;
+    const temperature = (dataPoint[tempKey] as number | undefined)
     const {settings} = useSettings();
 
-    if (!viewportBounds || !viewportBounds.intersects(tileBounds!)) {
+    if (!viewportBounds || !viewportBounds.intersects(tileBounds!) || !temperature || isNaN(temperature)) {
         return null
     }
 

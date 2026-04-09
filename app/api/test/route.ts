@@ -1,11 +1,8 @@
 import {getJsDapData} from "@/components/dataManagement/jsdapWrapper";
 
 export async function GET() {
-    return getJsDapData("http://boreas.mywire.org:8080/thredds/dodsC/WRF2026/wrf_roms_d02_20260408.nc", {
-        wind_time: "0:1:23",
-        Uwind: ["0:1:23", "0:1:164", "0:1:89"],
-        Vwind: ["0:1:23", "0:1:164", "0:1:89"],
-        LON: ["0:1:164", "0:1:0"],
-        LAT: ["0:1:0", "0:1:89"],
+    return await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/perthqck/perth_qck_20260406.nc`, {
+        "lat_rho": ["0:1:258", "0:1:128"],
+        "lon_rho": ["0:1:258", "0:1:128"]
     }).then(Response.json)
 }

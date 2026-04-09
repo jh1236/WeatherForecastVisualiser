@@ -5,49 +5,84 @@ import {useLocalStorage} from "react-use";
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 
 export interface Settings {
+    showDataOnMouseOver: boolean;
+    interpolateDataMouseOver: boolean;
+    displayDataArea: boolean;
     displayTempScale: boolean;
     displayWindScale: boolean;
 
-    speedUnit: 'm/s' | 'km/h' | 'kt',
+    windSpeedUnit: 'm/s' | 'km/h' | 'kt',
+    currentSpeedUnit: 'm/s' | 'km/h' | 'kt',
 
     "windParticles.enabled": boolean;
     "windParticles.particleMultiplier": number;
-
+    "windParticles.opacity": number;
     "windBarbs.enabled": boolean;
-    "windBarbs.count": number;
 
+    "windBarbs.count": number;
     "windColors.enabled": boolean;
+
     "windColors.count": number;
     "windColors.opacity": number;
-
     "temperatureColors.enabled": boolean;
+
     "temperatureColors.count": number;
     "temperatureColors.opacity": number;
 
+    "oceanTemperatureColors.enabled": boolean;
+    "oceanTemperatureColors.count": number;
+    "oceanTemperatureColors.opacity": number;
+
+    "currentArrows.enabled": boolean;
+    "currentArrows.count": number;
+
+    "currentParticles.enabled": boolean;
+    "currentParticles.particleMultiplier": number;
+    "currentParticles.opacity": number;
+
     dataSource: 'netCDF' | 'grib'
     region: 'perth' | 'greaterPerth' | 'greatBarrierReef';
+    dataType: 'meteorological' | 'oceanographic';
     gribFile: null | string;
 }
 
 const defaultSettings: Settings = {
+    dataType: 'meteorological',
+    showDataOnMouseOver: true,
+    interpolateDataMouseOver: true,
+    displayDataArea: false,
+
     dataSource: 'netCDF',
     region: 'perth',
     gribFile: 'cwa_atmosphere',
 
-    speedUnit: 'kt',
+    windSpeedUnit: 'kt',
+    currentSpeedUnit: 'km/h',
 
-    "windBarbs.count": 15,
+    "currentArrows.count": 15,
+    "currentArrows.enabled": false,
+
+    "oceanTemperatureColors.enabled": false,
+    "oceanTemperatureColors.count": 30,
+    "oceanTemperatureColors.opacity": 0.6,
+
+    "currentParticles.enabled": false,
+    "currentParticles.opacity": 0.97,
+    "currentParticles.particleMultiplier": 1,
 
     "windBarbs.enabled": false,
-    "windColors.count": 30,
+    "windBarbs.count": 15,
+
     "windColors.enabled": false,
-
+    "windColors.count": 30,
     "windColors.opacity": 0.6,
-    "windParticles.enabled": true,
 
+    "windParticles.enabled": true,
     "windParticles.particleMultiplier": 1,
-    "temperatureColors.count": 30,
+    "windParticles.opacity": 0.97,
+
     "temperatureColors.enabled": false,
+    "temperatureColors.count": 30,
     "temperatureColors.opacity": 0.6,
 
     displayTempScale: true,

@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react";
-import {VelocityLayerProps} from "@/components/weatherRenderers/VelocityWrapper/types";
+import {VelocityLayerProps} from "@/components/weatherRenderers/LeafletVelocityWrapper/types";
 import {useLeafletContext} from "@react-leaflet/core";
 import L from 'leaflet';
 import 'leaflet-velocity';
@@ -55,36 +55,31 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
     const propsRef = useRef(props)
     useEffect(() => {
         if (!props.data?.length) return
-        const maybeProps = {...props}
-        maybeProps.data = maybeProps?.data ?? []
-        const layer = L.velocityLayer(maybeProps);
+        console.log("remounted")
+        const layer = L.velocityLayer(props);
         layerRef.current = layer;
-        (layerRef.current as unknown as {onDrawLayer: () => void}).onDrawLayer = onDrawLayer
+        // (layerRef.current as unknown as { onDrawLayer: () => void }).onDrawLayer = onDrawLayer
         const container = context.layerContainer || context.map
         container.addLayer(layerRef.current!)
-        layerRef.current!.setData([])
+        // Remove setData([]) — let the second effect handle data
         return () => {
             container.removeLayer(layer)
         }
-    }, [props.data]);
+    }, [props.data === undefined]);
+
     useEffect(() => {
         if (layerRef.current === null || context.map === null) return
 
-        (layerRef.current! as unknown as { _map: L.Map })._map = context.map
+        (layerRef.current as unknown as { _map: L.Map })._map = context.map
+        console.log('setting data, sample value:', props.data?.[0]?.data?.[0])
+        layerRef.current!.setData(props.data)
 
-        const datalessOptions = Object.fromEntries(Object.entries(propsRef.current).filter(([k]) => k !== 'data'))
-        const prevDatalessOptions = Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'data'))
-
-        layerRef.current!.setData(props.data);
-        if (JSON.stringify(datalessOptions) !== JSON.stringify(prevDatalessOptions)) {
+        const currentOptions = Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'data'))
+        const prevOptions = Object.fromEntries(Object.entries(propsRef.current).filter(([k]) => k !== 'data'))
+        if (JSON.stringify(currentOptions) !== JSON.stringify(prevOptions)) {
             layerRef.current!.setOptions(props)
         }
 
-        if (props.data?.length !== propsRef.current.data?.length) {
-            layerRef.current!.setData(props.data)
-        }
-
-        console.log("renderedAgain!")
         propsRef.current = props
     }, [context.map, props])
 

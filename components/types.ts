@@ -1,6 +1,7 @@
 import {LatLngBounds} from "leaflet";
 
 export interface WeatherDataPoint {
+    oceanTemperature?: number;
     windU?: number;
     windV?: number;
     currentU?: number;
@@ -8,6 +9,7 @@ export interface WeatherDataPoint {
     temperature?: number;
     bounds?: LatLngBounds;
     debugData?: string;
+    nanPercentage?: number;
 }
 
 export interface WeatherData {

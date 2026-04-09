@@ -1,8 +1,10 @@
-import {useSettings} from "@/components/settings";
-
-export function zip<T>(...rows: T[][]): T[][] {
-    // snippet from https://stackoverflow.com/questions/4856717/javascript-equivalent-of-pythons-zip-function
-    return [...rows[0]].map((_, c) => rows.map(row => row[c]))
+export function zip<T extends unknown[][]>(
+    ...args: T
+): { [K in keyof T]: T[K] extends (infer V)[] ? V : never }[] {
+    // Source: https://stackoverflow.com/a/70192772/6053417
+    const minLength = Math.min(...args.map((arr) => arr.length));
+    // @ts-expect-error This is too much for ts
+    return [...Array(minLength).keys()].map((i) => args.map((arr) => arr[i]));
 }
 
 export function lerp(a: number, b: number, t: number) {
@@ -28,31 +30,6 @@ function mix(a: number, b: number, v: number) {
     return (1 - v) * a + v * b;
 }
 
-const convertToMps: {
-    'm/s': number,
-    'kt': number,
-    'km/h': number
-} = {
-    'kt': 0.514444,
-    'km/h': 0.277778,
-    'm/s': 1
-}
-
-export function useSpeedInUserUnits(valueIn: number, unitType: 'm/s' | 'kt' | 'km/h') {
-    const mps = valueIn * convertToMps[unitType];
-    const {settings} = useSettings()
-    return mps / convertToMps[settings.speedUnit];
-}
-
-export function mpsToKnots(mps: number) {
-    const mpsToKtConversionFactor = 1.94384;
-    return mps * mpsToKtConversionFactor;
-}
-
-export function knotsToMps(knots: number) {
-    const mpsToKtConversionFactor = 1.94384;
-    return knots / mpsToKtConversionFactor;
-}
 
 export function hsvToRgb(H: number, S: number, V: number) {
     const trueH = ((H % 360) + 360) % 360
@@ -69,7 +46,7 @@ export function hsvToRgb(H: number, S: number, V: number) {
     };
 }
 
-export function getColorFromWindSpeedKts(windspeed: number, saturation: number = 0.7) {
+export function getColorFromWindSpeedKts(windspeed: number, saturation: number = 0.9) {
     let interpolatedWindspeed = windspeed;
     const f = 30
     if (interpolatedWindspeed < f) {
@@ -81,18 +58,38 @@ export function getColorFromWindSpeedKts(windspeed: number, saturation: number =
         b
     } = hsvToRgb((180 - interpolatedWindspeed / 32 * 180) % 360, saturation, Math.max(0.2, Math.min(0.7, 0.7 - ((interpolatedWindspeed - 40) * .02))))
     // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
-    return `rgb(${r},${g},${b})`
+    return `rgb(${r} ${g} ${b})`
 }
 
-export function getColorFromTemperature(temperature: number) {
-    const t = temperature / 55;
+export function getColorFromCurrentKts(current: number) {
+
     const {
         r,
         g,
         b
-    } = hsvToRgb(-t * 360 - 50, 1.0, temperature < 40 ? lerp(0.4, 0.9, temperature / 40) : 0.9)
+    } = hsvToRgb(240, 1.0, 0.5 * lerp(1, 0, current / 3) + 0.25)
     // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
-    return `rgb(${r},${g},${b})`
+    return `rgb(${r} ${g} ${b})`
+}
+
+export function getColorFromTemperature(temp: number) {
+
+    const temperature = 1.1 * temp + 5
+    const valueAdjustFactor = 0.0
+    const satAdjustFactor = 0.7
+    const hueAdjustFactor = 0.6
+    // const t = (1 - (1 - temperature / 50) * (1 - temperature / 50)) * hueAdjustFactor + (temperature / 50) * (1 - hueAdjustFactor);
+    const t = (1 - (Math.cos(Math.PI * temperature / 50) + 1) / 2) * hueAdjustFactor + (temperature / 50) * (1 - hueAdjustFactor);
+    const whiteningCutoff = 12
+    const {
+        r,
+        g,
+        b
+    } = hsvToRgb(-t * 360 - 40, temperature > whiteningCutoff ? 1 : (1 - satAdjustFactor) * (temperature / whiteningCutoff) + satAdjustFactor * (1 - (1 - temperature / whiteningCutoff) * (1 - temperature / whiteningCutoff)), temperature < whiteningCutoff ?
+        lerp(0.8, 0.4, temperature / whiteningCutoff) :
+        lerp(0.4, 0.9, valueAdjustFactor * ((temperature - whiteningCutoff) / 45) * ((temperature - whiteningCutoff) / 45) + ((temperature - whiteningCutoff) / 45) * (1 - valueAdjustFactor)))
+
+    return `rgb(${r} ${g} ${b})`
 }
 
 export function divMod(numerator: number, denominator: number) {

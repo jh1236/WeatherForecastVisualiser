@@ -1,5 +1,5 @@
 import "leaflet"
-import {VelocityLayerProps} from "@/components/weatherRenderers/VelocityWrapper/types";
+import {VelocityLayerProps} from "@/components/weatherRenderers/LeafletVelocityWrapper/types";
 
 // this is so that TS recognises the custom types that 'leaflet-velocity' adds
 declare module "leaflet" {

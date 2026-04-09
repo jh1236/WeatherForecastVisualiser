@@ -18,7 +18,7 @@ export function useLocalData(filename: string): DataFunctionReturn {
     const [data, setData] = useState<WeatherData>({times: {}})
     const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
-        fetch(SERVER_ADDRESS + `/api/dataFromGrib`, {
+        fetch(`/api/dataFromGrib`, {
             method: "POST",
             body: JSON.stringify({file: filename}),
         }).then(res =>
@@ -41,7 +41,7 @@ export function useThreddsServer(date: Date): DataFunctionReturn {
     const [data, setData] = useState<WeatherData>({times: {}})
     const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
     useEffect(() => {
-        fetch(SERVER_ADDRESS + `/api/dataFromThredds`, {
+        fetch(`/api/dataFromThredds`, {
             method: "POST",
             body: JSON.stringify({
                 year: date.getFullYear(),
@@ -64,10 +64,27 @@ export function useThreddsServer(date: Date): DataFunctionReturn {
     }
 }
 
+export function useTestData() {
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const [data, setData] = useState<any>()
+    useEffect(() => {
+
+        fetch('/api/test').then(res =>
+            res.json().then(({data}: { data: WeatherData }) => {
+                    setData(data)
+                }
+            )
+        )
+
+    }, [])
+
+    return data
+}
+
 export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
     const {settings, isLoaded} = useSettings()
     const [data, setData] = useState<WeatherData>({times: {}})
-    const populated = useMemo(() => Object.keys(data.times).length > 0, [data.times])
+    const [populated, setPopulated] = useState<boolean>(false)
     useEffect(() => {
         if (!isLoaded) return;
         if (settings.dataSource === 'netCDF') {
@@ -77,11 +94,13 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
                     year: date.getFullYear(),
                     month: date.getMonth() + 1,
                     day: date.getDate(),
-                    region: settings.region
+                    region: settings.region,
+                    type: settings.dataType
                 }),
             }).then(res =>
                 res.json().then(({data}: { data: WeatherData }) => {
                         setData(data)
+                        setPopulated(true)
                     }
                 )
             )
@@ -92,14 +111,16 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
             }).then(res =>
                 res.json().then(({data}: { data: WeatherData }) => {
                         setData(data)
+                        setPopulated(true)
                     }
                 )
             )
         }
-    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.region])
+    }, [date, isLoaded, settings.dataSource, settings.dataType, settings.gribFile, settings.region])
     return {
         data: data,
         reset: () => {
+            setPopulated(false)
             setData({times: {}})
         },
         populated

@@ -22,6 +22,12 @@ export function HomePage() {
     const {settings} = useSettings();
 
     useEffect(() => {
+        if (populated) {
+            console.log(data);
+        }
+    }, [populated]);
+
+    useEffect(() => {
         if (playbackSpeed > 0) {
             const timer = setInterval(() => {
                 setCurrentTimeStampIndex((currentTimeStampIndex + 1) % timestamps.length);
@@ -38,7 +44,7 @@ export function HomePage() {
         </div>
         <div>
             <div style={{width: '100vw', height: '86vh', display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap data={data.times?.[currentTimeStamp]}/>
+                <WeatherMap data={data.times?.[currentTimeStamp]} populated={populated} />
             </div>
             <div style={{display: 'flex', flexDirection: 'row', padding: '30px', width: '100%', height: '20%'}}>
                 <div style={{
@@ -55,7 +61,7 @@ export function HomePage() {
                 </div>
                 <Slider
                     min={timestamps.reduce((a, b) => Math.min(a, b), Number.MAX_VALUE)}
-                    max={timestamps.reduce((a, b) => Math.max(a, b), Number.MIN_VALUE)}
+                    max={timestamps.reduce((a, b) => Math.max(a, b), 0)}
                     value={[isDragging ? dragValue : currentTimeStamp]}
                     style={{width: '60%', margin: 'auto'}}
                     onValueChange={([v]) => {

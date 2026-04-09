@@ -2,9 +2,9 @@ import {useMemo} from "react";
 import {magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
 import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
-import {mpsToKnots} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
-import {mapToScreen} from "@/components/dataManagement/DataProcessing";
+import {mapToBounds} from "@/components/dataManagement/DataProcessing";
+import {mpsToKnots} from "@/components/unitsUtils";
 
 
 const strokeWidth = "3%"
@@ -20,7 +20,7 @@ interface WindBarbsParams {
 
 export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25, enabled = true}: WindBarbsParams) {
 
-    const windBarbData = useMemo(() => [...mapToScreen(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
 
     if (!enabled) return
 
@@ -35,7 +35,7 @@ export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25
     )
 }
 
-interface SingleWindBarbProp {
+interface SingleWindBarbProps {
     dataPoint: WeatherDataPoint
     viewportBounds: LatLngBounds | undefined,
     count?: number,
@@ -44,7 +44,7 @@ interface SingleWindBarbProp {
 }
 
 
-function SingleWindBarb({viewportBounds, dataPoint, darkModeRender}: SingleWindBarbProp) {
+function SingleWindBarb({viewportBounds, dataPoint, darkModeRender}: SingleWindBarbProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
     const magnitudeKnots = Math.round(5 * mpsToKnots(magnitude([windU!, windV!]))) / 5;

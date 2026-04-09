@@ -1,6 +1,6 @@
-import {LayerGroup, LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
-import {VelocityLayer} from "@/components/weatherRenderers/VelocityWrapper/VelocityLayer";
-import {getColorFromTemperature, getColorFromWindSpeedKts, knotsToMps, roundTo} from "@/components/utilities";
+import {LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
+import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
@@ -10,74 +10,101 @@ import {WeatherDataTimeSnapshot} from "@/components/types";
 import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
+import {ColorRange} from "@/components/weatherRenderers/ColorRange";
+import {boundsFromGribFrame} from "@/components/dataManagement/gribUtils";
+import {cn} from "@/lib/utils";
+import {Spinner} from "@/components/ui/spinner";
+import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
+import {knotsToMps} from "@/components/unitsUtils";
 
 interface WindMapParams {
-    defaultBounds?: LatLngBounds;
+    defaultBounds?: LatLngBounds,
+    data: WeatherDataTimeSnapshot,
+    populated: boolean
+}
+
+interface MapEventHandlerParams {
+    viewportBounds?: LatLngBounds;
+    setViewportBounds: (bounds: LatLngBounds) => void;
+    setBaseLayer: (layer: string) => void;
     data: WeatherDataTimeSnapshot;
+    populated: boolean
+}
+
+function MapEventHandler({viewportBounds, setViewportBounds, setBaseLayer, data, populated}: MapEventHandlerParams,) {
+    const map1 = useMap();
+    const {setSetting} = useSettings();
+    useEffect(() => {
+        if (!viewportBounds) {
+            setViewportBounds(map1.getBounds())
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [map1]);
+    useEffect(() => {
+        if (data?.gribFrames?.length) {
+            const boundsTarget = boundsFromGribFrame(data.gribFrames[0]);
+            map1.fitBounds(boundsTarget.pad(0.1));
+            setViewportBounds(map1.getBounds())
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [populated]);
+    const map = useMapEvents({
+            zoomend:
+                () => {
+                    setViewportBounds(map.getBounds())
+                },
+            moveend: () => setViewportBounds(map.getBounds()),
+            baselayerchange: e => setBaseLayer(e.name),
+            overlayremove: e => {
+                switch (e.name) {
+                    case "Wind Particles":
+                        setSetting("windParticles.enabled", false);
+                        break;
+                    case "Wind Barbs":
+                        setSetting("windBarbs.enabled", false);
+                        break;
+                    case "Wind Colors":
+                        setSetting("windColors.enabled", false);
+                        break;
+                    case "Temperature Colors":
+                        setSetting("temperatureColors.enabled", false);
+                        break;
+                }
+            },
+            overlayadd: e => {
+                switch (e.name) {
+                    case "Wind Particles":
+                        setSetting("windParticles.enabled", true);
+                        break;
+                    case "Wind Barbs":
+                        setSetting("windBarbs.enabled", true);
+                        break;
+                    case "Wind Colors":
+                        setSetting("windColors.enabled", true);
+                        break;
+                    case "Temperature Colors":
+                        setSetting("temperatureColors.enabled", true);
+                        break;
+                }
+            }
+        }
+    )
+    return null
+
 }
 
 export function WeatherMap({
                                defaultBounds = new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]),
-                               data
+                               data,
+                               populated
                            }: WindMapParams) {
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const [baseLayer, setBaseLayer] = useState<string>("Satellite")
-    const {settings, setSetting} = useSettings()
+    const {settings} = useSettings()
     const {resolvedTheme} = useTheme()
 
     const darkModeRender = resolvedTheme === 'dark' || baseLayer === 'Satellite'
 
-    function MapEventHandler() {
-        const map1 = useMap();
-        useEffect(() => {
-            if (!viewportBounds) {
-                setViewportBounds(map1.getBounds())
-            }
-        }, [map1]);
-        const map = useMapEvents({
-                zoomend:
-                    () => {
-                        setViewportBounds(map.getBounds())
-                    },
-                moveend: () => setViewportBounds(map.getBounds()),
-                baselayerchange: e => setBaseLayer(e.name),
-                overlayremove: e => {
-                    switch (e.name) {
-                        case "Wind Particles":
-                            setSetting("windParticles.enabled", false);
-                            break;
-                        case "Wind Barbs":
-                            setSetting("windBarbs.enabled", false);
-                            break;
-                        case "Wind Colors":
-                            setSetting("windColors.enabled", false);
-                            break;
-                        case "Temperature Colors":
-                            setSetting("temperatureColors.enabled", false);
-                            break;
-                    }
-                },
-                overlayadd: e => {
-                    switch (e.name) {
-                        case "Wind Particles":
-                            setSetting("windParticles.enabled", true);
-                            break;
-                        case "Wind Barbs":
-                            setSetting("windBarbs.enabled", true);
-                            break;
-                        case "Wind Colors":
-                            setSetting("windColors.enabled", true);
-                            break;
-                        case "Temperature Colors":
-                            setSetting("temperatureColors.enabled", true);
-                            break;
-                    }
-                }
-            }
-        )
-        return null
-
-    }
 
     return <>
         {resolvedTheme === 'dark' && (
@@ -91,9 +118,105 @@ export function WeatherMap({
                 {'}'}
             </style>
         )}
+
         <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
                       style={{height: '100%', width: `100%`}}>
-            <MapEventHandler/>
+            {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
+                                 style={{
+                                     color: resolvedTheme === 'dark' || baseLayer === 'Satellite' ? 'white' : 'black',
+                                     fontSize: '5em',
+                                     fontWeight: 400,
+                                     padding: 20,
+                                     display: 'flex',
+                                     flexDirection: 'row',
+                                     justifyContent: 'space-between'
+                                 }}>
+                <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
+            </div>)}
+            {settings.displayDataArea && populated &&
+                <Rectangle bounds={boundsFromGribFrame(data.gribFrames[0])} opacity={0.5}
+                           fillOpacity={0.1}></Rectangle>}
+            <MapEventHandler
+                viewportBounds={viewportBounds}
+                setViewportBounds={setViewportBounds}
+                setBaseLayer={setBaseLayer}
+                data={data}
+                populated={populated}/>
+            {populated && <>
+                {settings["windParticles.enabled"] &&
+                    <VelocityLayer
+                        data={data?.gribFrames}
+                        maxVelocity={knotsToMps(50)}
+                        velocityScale={0.01 * settings["windParticles.particleMultiplier"]}
+                        opacity={settings["windParticles.opacity"]}
+                        displayValues={false}
+                        colorScale={Array.from({length: 10}).map((_, i) =>
+                            getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
+                }
+                {settings["currentArrows.enabled"] &&
+                    <CurrentArrows
+                        data={data?.gribFrames}
+                        resolution={settings["currentArrows.count"]}
+                        viewportBounds={viewportBounds}
+                        darkModeRender={darkModeRender}>
+                    </CurrentArrows>
+                }
+                {settings["currentParticles.enabled"] &&
+                    <VelocityLayer
+                        data={data?.gribFrames}
+                        maxVelocity={2}
+                        velocityScale={darkModeRender ? 0.075 : 0.125}
+                        opacity={settings["currentParticles.opacity"]}
+                        displayValues={false}>
+                    </VelocityLayer>
+                }
+                {settings["windBarbs.enabled"] &&
+                    <WindBarbs
+                        data={data?.gribFrames}
+                        resolution={settings["windBarbs.count"]}
+                        viewportBounds={viewportBounds}
+                        darkModeRender={darkModeRender}>
+                    </WindBarbs>
+                }
+
+
+                {settings["windColors.enabled"] &&
+                    <WindColors
+                        data={data?.gribFrames}
+                        resolution={settings["windColors.count"]}
+                        viewportBounds={viewportBounds}
+                        darkModeRender={darkModeRender}>
+                    </WindColors>
+                }
+
+                {settings["temperatureColors.enabled"] &&
+                    <TemperatureColors
+                        data={data?.gribFrames}
+                        resolution={settings["temperatureColors.count"]}
+                        viewportBounds={viewportBounds}
+                        darkModeRender={darkModeRender}>
+                    </TemperatureColors>
+                }
+                {settings["oceanTemperatureColors.enabled"] &&
+                    <TemperatureColors
+                        data={data?.gribFrames}
+                        resolution={settings["oceanTemperatureColors.count"]}
+                        viewportBounds={viewportBounds}
+                        darkModeRender={darkModeRender}
+                        tempKey={"oceanTemperature"}>
+                    </TemperatureColors>
+                }
+
+                {settings.showDataOnMouseOver &&
+                    <DataMouseOver
+                        data={data?.gribFrames}
+                        viewportBounds={viewportBounds}/>
+                }
+
+                <Rectangle
+                    bounds={new LatLngBounds([[data.gribFrames[0].header.la1, data.gribFrames[0].header.lo1],
+                        [data.gribFrames[0].header.la1 + data.gribFrames[0].header.dy, data.gribFrames[0].header.lo1 + data.gribFrames[0].header.dx]])}></Rectangle>
+            </>}
             <LayersControl position="topright" autoZIndex>
                 <LayersControl.BaseLayer checked name="Satellite">
                     <TileLayer
@@ -108,125 +231,28 @@ export function WeatherMap({
                     />
 
                 </LayersControl.BaseLayer>
-                <LayersControl.Overlay checked={settings["windParticles.enabled"]} name="Wind Particles">
-                    <LayerGroup>
-                        <VelocityLayer
-                            data={data?.gribFrames}
-                            maxVelocity={knotsToMps(50)}
-                            velocityScale={0.01}
-                            displayValues={false}
-                            colorScale={Array.from({length: 10}).map((_, i) =>
-                                getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
-                    </LayerGroup>
-                </LayersControl.Overlay>
-                <LayersControl.Overlay checked={settings["windBarbs.enabled"]} name="Wind Barbs">
-                    <LayerGroup>
-                        <WindBarbs
-                            data={data?.gribFrames}
-                            resolution={settings["windBarbs.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </WindBarbs>
-
-                    </LayerGroup>
-                </LayersControl.Overlay>
-                <LayersControl.Overlay checked={settings["windColors.enabled"]} name="Wind Colors">
-                    <LayerGroup>
-                        <WindColors
-                            data={data?.gribFrames}
-                            resolution={settings["windColors.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </WindColors>
-                    </LayerGroup>
-                </LayersControl.Overlay>
-                <LayersControl.Overlay checked={settings["temperatureColors.enabled"]} name="Temperature Colors">
-                    <LayerGroup>
-                        <TemperatureColors
-                            data={data?.gribFrames}
-                            resolution={settings["temperatureColors.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </TemperatureColors>
-                    </LayerGroup>
-                </LayersControl.Overlay>
-
-                <LayersControl.Overlay checked name="Data on Mouse Over">
-                    <LayerGroup>
-                        <DataMouseOver
-                            data={data?.gribFrames}
-                            viewportBounds={viewportBounds}/>
-                    </LayerGroup>
-                </LayersControl.Overlay>
             </LayersControl>
+
         </MapContainer>
-        {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center'}}>
-            {Array.from({length: 11}).map((_, i) =>
-                <div key={i} style={{
-                    display: 'flex',
-                    backgroundColor: getColorFromWindSpeedKts(50 * (10 - i) / 10),
-                    height: `${roundTo(100 / 11, 2)}%`,
-                    width: '100%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    color: 'white',
-                }}>
-                    <b>{50 * (10 - i) / 10}kt</b>
-                </div>
-            )}
+        {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
+            <ColorRange
+                colorFunc={getColorFromWindSpeedKts} textFunc={n => `${Math.round(n - 2.5)}kt`}
+                top={52.5}
+                bottom={-2.5}
+                resolution={100}
+                textCount={11}/>
         </div>}
         {settings.displayTempScale && settings.displayWindScale &&
             <div style={{width: '5px', textAlign: 'center'}}></div>}
-        {settings.displayTempScale &&
-            <div style={{
-                width: '3%',
-                textAlign: 'center',
-                height: '100%',
-                display: 'grid',
-                gridTemplate: '1fr / 1fr',
-                placeItems: 'center',
-            }}>
-                <div style={{
-                    gridColumn: '1 / 1',
-                    gridRow: '1 / 1',
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%'
-                }}>
-                    {Array.from({length: 111}).map((_, i) =>
-                        <div key={i} style={{
-                            display: 'flex',
-                            backgroundColor: getColorFromTemperature(50 * (105 - i) / 100),
-                            height: `${100.1 / 111}%`,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            color: 'white',
-                        }}>
-
-                        </div>
-                    )}
-                </div>
-                <div style={{
-                    gridColumn: '1 / 1',
-                    gridRow: '1 / 1',
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%'
-                }}>
-                    {Array.from({length: 11}).map((_, i) =>
-                        <div key={i} style={{
-                            display: 'flex',
-                            height: `${roundTo(100 / 11, 2)}%`,
-                            width: '100%',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            color: 'white',
-                        }}>
-                            <b>{50 * (10 - i) / 10}°C</b>
-                        </div>
-                    )}
-                </div>
-            </div>
+        {settings.displayTempScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
+            <ColorRange
+                colorFunc={getColorFromTemperature}
+                textFunc={n => `${Math.round(n - 2.5)}°C`}
+                top={52.5}
+                bottom={-2.5}
+                resolution={100}
+                textCount={11}></ColorRange>
+        </div>
         }
 
     </>

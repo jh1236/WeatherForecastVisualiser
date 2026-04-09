@@ -1,41 +1,10 @@
 import {LatLng, LatLngBounds} from "leaflet";
 import {GribFrame, GribHeader, WeatherDataPoint} from "@/components/types";
 import {floorCeil, lerp} from "@/components/utilities";
+import {boundsFromGribFrame, getCodeFromHeader, iterateOverBounds, latLngBndsIntersection} from "./gribUtils";
+import {round} from "@floating-ui/utils";
 
-export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): LatLngBounds {
-    const east = Math.min(in1.getEast(), in2.getEast())
-    const west = Math.max(in1.getWest(), in2.getWest())
-    const north = Math.min(in1.getNorth(), in2.getNorth())
-    const south = Math.max(in1.getSouth(), in2.getSouth())
-    return new LatLngBounds([[north, east], [south, west]])
-}
-
-export function boundsFromGribHeader(header: GribHeader) {
-    return new LatLngBounds([[header.la1, header.lo1], [header.la2, header.lo2]])
-}
-
-
-export function* iterateOverBounds(targetBounds: LatLngBounds, maxResolution: number): Generator<LatLngBounds> {
-    const latWindow = Math.abs(targetBounds.getNorth() - targetBounds.getSouth());
-    const lngWindow = Math.abs(targetBounds.getEast() - targetBounds.getWest());
-
-    const deltaY = latWindow / (maxResolution + 1)
-    const deltaX = lngWindow / (maxResolution + 1)
-
-    const delta = Math.max(deltaX, deltaY)
-
-    //these correction values ensure that the grid is aligned on ea
-    const correctionLat = (latWindow - (Math.floor(latWindow / delta) * delta)) / 2;
-    const correctionLng = (lngWindow - (Math.floor(lngWindow / delta) * delta)) / 2;
-
-    for (let long = targetBounds.getWest() + delta / 2 + correctionLng; long < targetBounds.getEast(); long += delta) {
-        for (let lat = targetBounds.getSouth() + delta / 2 + correctionLat; lat < targetBounds.getNorth(); lat += delta) {
-            yield new LatLngBounds([[lat - delta / 2, long - delta / 2], [lat + delta / 2, long + delta / 2]])
-        }
-    }
-}
-
-export function* mapToScreen(gribFrames: GribFrame[], maxResolution: number, viewportBounds: LatLngBounds | undefined): Generator<WeatherDataPoint> {
+export function* mapToBounds(gribFrames: GribFrame[], resolution: number | number[], viewportBounds: LatLngBounds | undefined): Generator<WeatherDataPoint> {
     if (gribFrames === undefined || gribFrames.length === 0 || viewportBounds === undefined) return {
         bounds: new LatLngBounds([[0, 0], [0, 0]]),
         data: {},
@@ -43,8 +12,8 @@ export function* mapToScreen(gribFrames: GribFrame[], maxResolution: number, vie
         isKeyFrame: false
     }
 
-    const targetBounds = latLngBndsIntersection(boundsFromGribHeader(gribFrames[0].header), viewportBounds.pad(0.2));
-    for (const i of iterateOverBounds(targetBounds, maxResolution)) {
+    const targetBounds = latLngBndsIntersection(boundsFromGribFrame(gribFrames[0]), viewportBounds.pad(0.2));
+    for (const i of iterateOverBounds(targetBounds, resolution)) {
         yield getWeatherDataPointForArea(gribFrames, i);
     }
 }
@@ -59,7 +28,7 @@ function getLatAndLngIndex(point: LatLng, weatherIn: GribFrame) {
     return [offsetLat / dy, offsetLong / dx]
 }
 
-function getDatumForLatLong(weatherIn: GribFrame, point: LatLng): number {
+function getInterpolatedDatumForLatLong(weatherIn: GribFrame, point: LatLng): number {
     const offsetLat = point.lat - weatherIn.header.la1;
     const offsetLong = point.lng - weatherIn.header.lo1;
 
@@ -74,15 +43,33 @@ function getDatumForLatLong(weatherIn: GribFrame, point: LatLng): number {
     const coords = lats.map(it => longs.map(it2 => it * nx + it2))
 
     const values = coords.map(lats => lats.map(it => weatherIn.data[it]))
+    if (values.flat().reduce((a, b) => a || (b === undefined || isNaN(b) || b === null), false)) {
+        return NaN
+    }
 
     const intermediateValues = values.map(([a, b]) => lerp(a, b, latTValue))
 
     return lerp(intermediateValues[0], intermediateValues[1], longTValue)
 }
 
+function getClosestDatumForLatLong(weatherIn: GribFrame, point: LatLng): number {
+    const offsetLat = point.lat - weatherIn.header.la1;
+    const offsetLong = point.lng - weatherIn.header.lo1;
+
+    const dx = weatherIn.header.dx
+    const dy = weatherIn.header.dy
+    const nx = weatherIn.header.nx
+
+    const lat = round(offsetLat / dy);
+    const long = round(offsetLong / dx)
+
+    return weatherIn.data[lat * nx + long]
+}
+
+
 function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 
-    const trueArea = latLngBndsIntersection(area, boundsFromGribHeader(weatherIn.header))
+    const trueArea = latLngBndsIntersection(area, boundsFromGribFrame(weatherIn))
 
     const [smallLat, smallLong] = getLatAndLngIndex(trueArea.getSouthWest(), weatherIn).map(it => Math.floor(it))
 
@@ -90,22 +77,52 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 
     const nx = weatherIn.header.nx
 
+    let nanCount = 0;
+
     const values = []
-    for (let lng = smallLong; lng <= bigLong; lng++) {
-        for (let lat = smallLat; lat <= bigLat; lat++) {
+    for (let lng = smallLong; lng < bigLong; lng++) {
+        for (let lat = smallLat; lat < bigLat; lat++) {
             const number = weatherIn.data[lat * nx + lng];
-            if (number !== undefined) {
+            if (number === undefined || number === null || Number.isNaN(number) || number >= 1e30) {
+                nanCount++;
+            } else if (number) {
                 values.push(number)
             }
         }
     }
+    if (nanCount > (nanCount + values.length) * 0.5) {
+        //if at least 1 quater of the values are bad, throw away this cell
+        return NaN
+    }
     return values.reduce((a, b) => a + b, 0) / values.length
 }
 
+function getNanPercentageInArea(weatherIn: GribFrame, area: LatLngBounds): number {
 
-export function getCodeFromHeader(header: GribHeader) {
-    return `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`;
+    const trueArea = latLngBndsIntersection(area, boundsFromGribFrame(weatherIn))
+
+    const [smallLat, smallLong] = getLatAndLngIndex(trueArea.getSouthWest(), weatherIn).map(it => Math.floor(it))
+
+    const [bigLat, bigLong] = getLatAndLngIndex(trueArea.getNorthEast(), weatherIn).map(it => Math.ceil(it))
+
+    const nx = weatherIn.header.nx
+
+    let nanCount = 0;
+    let total = 0
+
+    for (let lng = smallLong; lng <= bigLong; lng++) {
+        for (let lat = smallLat; lat <= bigLat; lat++) {
+            const number = weatherIn.data[lat * nx + lng];
+            if (number === undefined || number === null || Number.isNaN(number) || number >= 1e30) {
+                nanCount++;
+            }
+            total++
+        }
+    }
+
+    return nanCount / total
 }
+
 
 function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, value: number) {
     const code = getCodeFromHeader(header)
@@ -120,23 +137,35 @@ function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, 
         case "0.2.3":
             dataPoint.windV = value
             break;
+        case "10.1.2":
+            dataPoint.currentU = value
+            break;
+        case "10.1.3":
+            dataPoint.currentV = value
+            break;
+        case "10.3.0":
+            dataPoint.oceanTemperature = value
+            break;
     }
 }
 
 export function getWeatherDataPointForArea(weatherIn: GribFrame[], area: LatLngBounds): WeatherDataPoint {
     const out: WeatherDataPoint = {bounds: area}
+    out.nanPercentage = getNanPercentageInArea(weatherIn[0], area)
     for (const i of weatherIn) {
-        addToWeatherDataPoint(out, i.header, getDatumForArea(i, area))
+        const datum = getDatumForArea(i, area);
+        addToWeatherDataPoint(out, i.header, datum)
     }
 
     return out
 }
 
-export function getWeatherDataPointForPoint(weatherIn: GribFrame[], point: LatLng): WeatherDataPoint | undefined {
-    if (weatherIn === undefined || !boundsFromGribHeader(weatherIn[0].header).contains(point)) return undefined
+export function getWeatherDataPointForPoint(weatherIn: GribFrame[], point: LatLng, interpolate: boolean = true): WeatherDataPoint | undefined {
+    if (weatherIn === undefined || !boundsFromGribFrame(weatherIn[0]).contains(point)) return undefined
     const out: WeatherDataPoint = {}
     for (const i of weatherIn) {
-        addToWeatherDataPoint(out, i.header, getDatumForLatLong(i, point))
+        const datum = interpolate ? getInterpolatedDatumForLatLong(i, point) : getClosestDatumForLatLong(i, point);
+        addToWeatherDataPoint(out, i.header, datum)
     }
 
     return out
