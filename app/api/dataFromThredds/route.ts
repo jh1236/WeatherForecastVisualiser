@@ -128,30 +128,49 @@ const threddsConfigData: {
             }
         }
     },
-    // greatBarrierReef: {
-    //     wind: {
-    //         link: 'NCEP2026/gbr_roms_forcing_{year}{month}{day}.nc',
-    //         bindings: {
-    //             windU: 'Uwind',
-    //             windV: 'Vwind',
-    //             windTime: 'wind_time',
-    //             temperature: 'Tair',
-    //             temperatureTime: 'tair_time',
-    //             lat: 'lat',
-    //             lng: 'lon'
-    //         },
-    //         args: {
-    //             wind_time: "0:1:7",
-    //             tair_time: "0:1:7",
-    //             Uwind: ["0:1:7", "0:1:164", '0:1:98'],
-    //             Vwind: ["0:1:7", "0:1:164", '0:1:98'],
-    //             lon: ["0:1:0", '0:1:98'],
-    //             lat: ["0:1:164", "0:1:0"],
-    //             Tair: ["0:1:7", "0:1:164", '0:1:98'],
-    //         }
-    //     },
-    //     ocean: {}
-    // },
+    greatererPerth: {
+        wind: {
+            link: 'NCEP2026/gbr_roms_forcing_{year}{month}{day}.nc',
+            bindings: {
+                windU: 'Uwind',
+                windV: 'Vwind',
+                windTime: 'wind_time',
+                temperature: 'Tair',
+                temperatureTime: 'tair_time',
+                lat: 'lat',
+                lng: 'lon'
+            },
+            args: {
+                wind_time: "0:1:7",
+                tair_time: "0:1:7",
+                Uwind: ["0:1:7", "0:1:164", '0:1:98'],
+                Vwind: ["0:1:7", "0:1:164", '0:1:98'],
+                lon: ["0:1:0", '0:1:98'],
+                lat: ["0:1:164", "0:1:0"],
+                Tair: ["0:1:7", "0:1:164", '0:1:98'],
+            }
+        },
+        ocean: {
+            link: 'gbrqck/gbr_qck_{year}{month}{day}.nc',
+            bindings: {
+                currentU: 'u_sur_eastward',
+                currentV: 'v_sur_northward',
+                currentTime: 'ocean_time',
+                latRho: 'lat_rho',
+                lngRho: 'lon_rho',
+                waterTemperature: 'temp_sur',
+                waterTemperatureTime: 'ocean_time',
+            },
+            args: {
+                "lat_rho": ["0:2:561", "0:2:241"],
+                "lon_rho": ["0:2:561", "0:2:241"],
+                "ocean_time": ["0:1:23"],
+                "u_sur_eastward": ["0:1:23", "0:2:561", "0:2:241"],
+                "v_sur_northward": ["0:1:23", "0:2:561", "0:2:241"],
+                "temp_sur": ["0:1:23", "0:2:561", "0:2:241"],
+            }
+        }
+    },
 };
 
 function getBaseHeader(lats

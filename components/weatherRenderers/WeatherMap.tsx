@@ -1,9 +1,8 @@
-import {LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
-import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
 import {LatLngBounds} from "leaflet";
 import {useEffect, useState} from "react";
 import {WeatherDataTimeSnapshot} from "@/components/types";
@@ -16,6 +15,7 @@ import {cn} from "@/lib/utils";
 import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
 import {knotsToMps} from "@/components/unitsUtils";
+import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds,
@@ -133,9 +133,6 @@ export function WeatherMap({
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
-            {settings.displayDataArea && populated &&
-                <Rectangle bounds={boundsFromGribFrame(data.gribFrames[0])} opacity={0.5}
-                           fillOpacity={0.1}></Rectangle>}
             <MapEventHandler
                 viewportBounds={viewportBounds}
                 setViewportBounds={setViewportBounds}
@@ -145,7 +142,7 @@ export function WeatherMap({
             {populated && <>
                 {settings["windParticles.enabled"] &&
                     <VelocityLayer
-                        data={data?.gribFrames}
+                        data={data?.gribFrames.filter(it => it.header.discipline === 0)}
                         maxVelocity={knotsToMps(50)}
                         velocityScale={0.01 * settings["windParticles.particleMultiplier"]}
                         opacity={settings["windParticles.opacity"]}
@@ -163,7 +160,7 @@ export function WeatherMap({
                 }
                 {settings["currentParticles.enabled"] &&
                     <VelocityLayer
-                        data={data?.gribFrames}
+                        data={data?.gribFrames.filter(it => it.header.discipline === 10)}
                         maxVelocity={2}
                         velocityScale={darkModeRender ? 0.075 : 0.125}
                         opacity={settings["currentParticles.opacity"]}
@@ -212,10 +209,6 @@ export function WeatherMap({
                         data={data?.gribFrames}
                         viewportBounds={viewportBounds}/>
                 }
-
-                <Rectangle
-                    bounds={new LatLngBounds([[data.gribFrames[0].header.la1, data.gribFrames[0].header.lo1],
-                        [data.gribFrames[0].header.la1 + data.gribFrames[0].header.dy, data.gribFrames[0].header.lo1 + data.gribFrames[0].header.dx]])}></Rectangle>
             </>}
             <LayersControl position="topright" autoZIndex>
                 <LayersControl.BaseLayer checked name="Satellite">

@@ -41,7 +41,7 @@ export interface Settings {
     "currentParticles.opacity": number;
 
     dataSource: 'netCDF' | 'grib'
-    region: 'perth' | 'greaterPerth' | 'greatBarrierReef';
+    region: 'perth' | 'greaterPerth'
     dataType: 'meteorological' | 'oceanographic';
     gribFile: null | string;
 }
