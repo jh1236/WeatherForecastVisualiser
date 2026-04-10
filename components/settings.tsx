@@ -11,8 +11,9 @@ export interface Settings {
     displayTempScale: boolean;
     displayWindScale: boolean;
 
-    windSpeedUnit: 'm/s' | 'km/h' | 'kt',
-    currentSpeedUnit: 'm/s' | 'km/h' | 'kt',
+    windSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph',
+    currentSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph',
+    temperatureUnit: 'C' | 'K' | 'F',
 
     "windParticles.enabled": boolean;
     "windParticles.particleMultiplier": number;
@@ -42,12 +43,10 @@ export interface Settings {
 
     dataSource: 'netCDF' | 'grib'
     region: 'perth' | 'greaterPerth'
-    dataType: 'meteorological' | 'oceanographic';
     gribFile: null | string;
 }
 
 const defaultSettings: Settings = {
-    dataType: 'meteorological',
     showDataOnMouseOver: true,
     interpolateDataMouseOver: true,
     displayDataArea: false,
@@ -58,6 +57,7 @@ const defaultSettings: Settings = {
 
     windSpeedUnit: 'kt',
     currentSpeedUnit: 'km/h',
+    temperatureUnit: 'C',
 
     "currentArrows.count": 15,
     "currentArrows.enabled": false,

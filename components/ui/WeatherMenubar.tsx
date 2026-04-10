@@ -71,7 +71,7 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                     <MenubarGroup>
                         <MenubarLabel>Thredds Settings</MenubarLabel>
                         <MenubarSub>
-                            <MenubarSubTrigger className="w-50">Region</MenubarSubTrigger>
+                            <MenubarSubTrigger inset className="w-50">Region</MenubarSubTrigger>
                             <MenubarSubContent>
                                 <MenubarRadioGroup value={settings.region}
                                                    onValueChange={value => {
@@ -93,26 +93,6 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                 </MenubarRadioGroup>
                             </MenubarSubContent>
                         </MenubarSub>
-                        <MenubarSub>
-                            <MenubarSubTrigger className="w-50">Data Type</MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarRadioGroup value={settings.dataType}
-                                                   onValueChange={value => {
-                                                       resetData()
-                                                       setSetting('dataType', (value as Settings['dataType']))
-                                                   }}>
-                                    <MenubarRadioItem
-                                        disabled={settings.dataSource === 'grib'}
-                                        value="meteorological"
-                                    >Meteorological</MenubarRadioItem>
-                                    <MenubarRadioItem
-                                        disabled={settings.dataSource === 'grib'}
-                                        value="oceanographic"
-                                    >Oceanographic</MenubarRadioItem>
-                                </MenubarRadioGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
-
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
@@ -138,6 +118,9 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="km/h"
                             >Kilometres per Hour</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="mph"
+                            >Miles per Hour</MenubarRadioItem>
                         </MenubarRadioGroup>
                         <MenubarLabel>
                             Current speed
@@ -156,6 +139,27 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="km/h"
                             >Kilometres per Hour</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="mph"
+                            >Miles per Hour</MenubarRadioItem>
+                        </MenubarRadioGroup>
+                        <MenubarLabel>
+                            Temperature
+                        </MenubarLabel>
+
+                        <MenubarRadioGroup value={settings.temperatureUnit}
+                                           onValueChange={value => {
+                                               setSetting('temperatureUnit', (value as Settings['temperatureUnit']))
+                                           }}>
+                            <MenubarRadioItem
+                                value="C"
+                            >Celsius</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="K"
+                            >Knots</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="F"
+                            >Fahrenheit</MenubarRadioItem>
                         </MenubarRadioGroup>
                     </MenubarGroup>
                 </MenubarContent>

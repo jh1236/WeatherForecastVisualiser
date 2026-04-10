@@ -20,6 +20,13 @@ export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): La
     return new LatLngBounds([[north, east], [south, west]])
 }
 
+export function maxBoundsFromGribFrames(frames: GribFrame[]) {
+    const minLat = Math.min(...frames.map(it => it.header.la1))
+    const maxLat = Math.max(...frames.map(it => it.header.la2))
+    const minLng = Math.min(...frames.map(it => it.header.lo1))
+    const maxLng = Math.max(...frames.map(it => it.header.lo2))
+    return new LatLngBounds([[minLat, minLng], [maxLat, maxLng]])
+}
 export function boundsFromGribFrame({header}: GribFrame) {
     return new LatLngBounds([[header.la1, header.lo1], [header.la2, header.lo2]])
 }

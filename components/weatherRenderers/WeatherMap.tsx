@@ -1,4 +1,4 @@
-import {LayersControl, MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -10,7 +10,7 @@ import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
 import {ColorRange} from "@/components/weatherRenderers/ColorRange";
-import {boundsFromGribFrame} from "@/components/dataManagement/gribUtils";
+import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 import {cn} from "@/lib/utils";
 import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
@@ -42,7 +42,7 @@ function MapEventHandler({viewportBounds, setViewportBounds, setBaseLayer, data,
     }, [map1]);
     useEffect(() => {
         if (data?.gribFrames?.length) {
-            const boundsTarget = boundsFromGribFrame(data.gribFrames[0]);
+            const boundsTarget = maxBoundsFromGribFrames(data.gribFrames);
             map1.fitBounds(boundsTarget.pad(0.1));
             setViewportBounds(map1.getBounds())
         }
@@ -133,6 +133,9 @@ export function WeatherMap({
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
+            {settings.displayDataArea && populated &&
+                <Rectangle bounds={maxBoundsFromGribFrames(data.gribFrames)} opacity={0.5}
+                           fillOpacity={0.1}></Rectangle>}
             <MapEventHandler
                 viewportBounds={viewportBounds}
                 setViewportBounds={setViewportBounds}

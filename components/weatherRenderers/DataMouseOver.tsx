@@ -7,7 +7,7 @@ import {GribFrame} from "@/components/types";
 import {getWeatherDataPointForPoint,} from "@/components/dataManagement/DataProcessing";
 import {useSettings} from "@/components/settings";
 import {boundsFromGribFrame, latLngBndsIntersection} from "@/components/dataManagement/gribUtils";
-import {useCurrentSpeedInUserUnits, useWindSpeedInUserUnits} from "@/components/unitsUtils";
+import {useCurrentSpeedInUserUnits, useTemperatureInUserUnits, useWindSpeedInUserUnits} from "@/components/unitsUtils";
 
 interface WindDataMouseOverProps {
     data: GribFrame[]
@@ -29,10 +29,10 @@ export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
     })
     const bounds = useMemo(() => ((data?.length && viewportBounds) ? latLngBndsIntersection(viewportBounds, boundsFromGribFrame(data[0]))! : new LatLngBounds([[0, 0], [0, 0]])), [data, viewportBounds]);
     const wind = !!(dataPoint?.windU && dataPoint.windV);
-    const temperature = !!(dataPoint?.temperature);
-    const oceanTemperature = !!(dataPoint?.oceanTemperature);
     const current = !!(dataPoint?.currentU && dataPoint.currentV);
     const {settings} = useSettings();
+    const temperature = useTemperatureInUserUnits(dataPoint?.temperature, 'C');
+    const oceanTemperature = useTemperatureInUserUnits(dataPoint?.oceanTemperature, 'C');
     return <Rectangle bounds={bounds}
                       opacity={0} fillOpacity={0}
     >
@@ -46,12 +46,15 @@ export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
                     style={{fontWeight: 600}}>Wind: </i>{roundTo(windSpeed, 2)}{settings.windSpeedUnit} @ {Math.round(windBearing ?? 0)}°
                 </div>}
                 {temperature &&
-                    <div><i style={{fontWeight: 600}}>Temperature: </i>{roundTo(dataPoint.temperature!, 1)}°C</div>}
+                    <div><i
+                        style={{fontWeight: 600}}>Temperature: </i>{roundTo(temperature, 1)}°{settings.temperatureUnit}
+                    </div>}
                 {current && <div><i
                     style={{fontWeight: 600}}>Current: </i>{roundTo(currentSpeed, 2)}{settings.currentSpeedUnit} @ {Math.round(currentBearing ?? 0)}°
                 </div>}
                 {oceanTemperature &&
-                    <div><i style={{fontWeight: 600}}>Ocean Temperature: </i>{roundTo(dataPoint.oceanTemperature!, 1)}°C</div>}
+                    <div><i style={{fontWeight: 600}}>Ocean
+                        Temperature: </i>{roundTo(oceanTemperature, 1)}°{settings.temperatureUnit}</div>}
                 <i>{dataPoint.debugData}</i> {'\n'}
             </div> : <i>No Data</i>}
         </Tooltip>

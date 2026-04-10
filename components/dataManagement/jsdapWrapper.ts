@@ -34,11 +34,11 @@ function argToString(value: string | string[]): string {
     throw new Error(`Expected ${value} to be string or list`)
 }
 
-type numberOrObjectWithNumericIndices = number | number[] | number[][] | number[][][];
+export type NumberOrNDArray = number | number[] | number[][] | number[][][];
 
 export async function getJsDapData<T extends string>(url: string, args?: Record<T, string | string[]>): Promise<{
     dds: DDSResponse,
-    data: Record<T, numberOrObjectWithNumericIndices>
+    data: Record<T, NumberOrNDArray>
 }> {
     let newUrl = url + ".dods"
     if (args) {
@@ -67,7 +67,7 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
             }
         )
     )
-    json.data = (fixData(json.data) as Record<T, numberOrObjectWithNumericIndices>)
+    json.data = (fixData(json.data) as Record<T, NumberOrNDArray>)
     let files = await fs.promises.readdir("./cachedResponses/");
     while (files.length >= 50) { // We only want to keep the 50 most recent files; delete the rest
         let oldestFileTime = Number.MAX_VALUE
@@ -98,7 +98,7 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
 
     return json as {
         dds: DDSResponse,
-        data: Record<T, numberOrObjectWithNumericIndices>
+        data: Record<T, NumberOrNDArray>
     }
 }
 
