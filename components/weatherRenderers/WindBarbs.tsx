@@ -20,7 +20,7 @@ interface WindBarbsParams {
 
 export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25, enabled = true}: WindBarbsParams) {
 
-    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.2.2", "0.2.3"])], [data, resolution, viewportBounds])
 
     if (!enabled) return
 

@@ -24,7 +24,7 @@ export function CurrentArrows({
                                   enabled = true
                               }: CurrentArrowsParams) {
 
-    const currentData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+    const currentData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["10.1.2", "10.1.3"])], [data, resolution, viewportBounds])
 
     if (!enabled) return
 

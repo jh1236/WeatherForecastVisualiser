@@ -18,7 +18,7 @@ interface WindColorsProps {
 
 export function WindColors({data, viewportBounds, darkModeRender, resolution = 60}: WindColorsProps) {
 
-    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds)], [data, resolution, viewportBounds])
+    const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.2.2", "0.2.3"])], [data, resolution, viewportBounds])
 
     return windBarbData.map((dataPoint, i) => {
             return <SingleWindColor

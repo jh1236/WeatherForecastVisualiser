@@ -55,13 +55,11 @@ export function VelocityLayer(props: VelocityLayerProps): React.ReactElement | n
     const propsRef = useRef(props)
     useEffect(() => {
         if (!props.data?.length) return
-        console.log("remounted")
         const layer = L.velocityLayer(props);
         layerRef.current = layer;
         // (layerRef.current as unknown as { onDrawLayer: () => void }).onDrawLayer = onDrawLayer
         const container = context.layerContainer || context.map
         container.addLayer(layerRef.current!)
-        // Remove setData([]) — let the second effect handle data
         return () => {
             container.removeLayer(layer)
         }

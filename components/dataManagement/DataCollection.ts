@@ -2,8 +2,6 @@ import {useEffect, useMemo, useState} from "react";
 import {WeatherData} from "@/components/types";
 import {useSettings} from "@/components/settings";
 
-const SERVER_ADDRESS = "http://flun.in:25565";
-
 //http://boreas.mywire.org:8080/thredds/catalog/catalog.html
 //https://boreas.mywire.org:8043/sailing
 
@@ -88,14 +86,13 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
     useEffect(() => {
         if (!isLoaded) return;
         if (settings.dataSource === 'netCDF') {
-            fetch(SERVER_ADDRESS + `/api/dataFromThredds`, {
+            fetch(`/api/dataFromThredds`, {
                 method: "POST",
                 body: JSON.stringify({
                     year: date.getFullYear(),
                     month: date.getMonth() + 1,
                     day: date.getDate(),
-                    region: settings.region,
-                    type: settings.dataType
+                    region: settings.region
                 }),
             }).then(res =>
                 res.json().then(({data}: { data: WeatherData }) => {
@@ -105,7 +102,7 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
                 )
             )
         } else {
-            fetch(SERVER_ADDRESS + `/api/dataFromGrib`, {
+            fetch(`/api/dataFromGrib`, {
                 method: "POST",
                 body: JSON.stringify({file: settings.gribFile}),
             }).then(res =>
@@ -116,7 +113,7 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
                 )
             )
         }
-    }, [date, isLoaded, settings.dataSource, settings.dataType, settings.gribFile, settings.region])
+    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.region])
     return {
         data: data,
         reset: () => {

@@ -280,13 +280,13 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                 Values over 40 may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
-                            Opacity: {round(100 * settings["temperatureColors.opacity"])}%
+                            Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
                         </MenubarLabel>
                         <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider style={{width: '120px'}} min={0} value={[settings["temperatureColors.opacity"]]}
+                            <Slider style={{width: '120px'}} min={0} value={[settings["oceanTemperatureColors.opacity"]]}
                                     max={1}
                                     step={0.05}
-                                    onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
+                                    onValueChange={([v]) => setSetting("oceanTemperatureColors.opacity", v)}></Slider>
                         </MenubarItem>
                     </MenubarGroup>
                 </MenubarContent>

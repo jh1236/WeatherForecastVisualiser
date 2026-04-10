@@ -1,5 +1,4 @@
 import {WeatherMenubar} from "@/components/ui/WeatherMenubar";
-import {WeatherMap} from "@/components/weatherRenderers/WeatherMap";
 import {DatePicker} from "@/components/ui/datePicker";
 import {Slider} from "@/components/ui/slider";
 import {Button} from "@/components/ui/button";
@@ -9,9 +8,16 @@ import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollect
 import {useSettings} from "@/components/settings";
 
 import "@/components/pages/homepage.module.css"
+import dynamic from "next/dynamic";
+
+const WeatherMap = dynamic(
+    () => import('@/components/weatherRenderers/WeatherMap').then(mod => mod.WeatherMap),
+    {ssr: false}
+);
 
 export function HomePage() {
     const [date, setDate] = useState(new Date());
+    const [mounted, setMounted] = useState(false);
     const {data, reset, populated} = useDataFromSettingsSource(date);
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
@@ -22,10 +28,9 @@ export function HomePage() {
     const {settings} = useSettings();
 
     useEffect(() => {
-        if (populated) {
-            console.log(data);
-        }
-    }, [populated]);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (playbackSpeed > 0) {
@@ -40,7 +45,7 @@ export function HomePage() {
     return <div style={{width: '100vw', height: '100vh'}}>
         {populated && <div style={{}}></div>}
         <div style={{width: '100%'}}>
-            <WeatherMenubar resetData={reset}></WeatherMenubar>
+            {mounted && <WeatherMenubar resetData={reset}></WeatherMenubar>}
         </div>
         <div>
             <div style={{width: '100vw', height: '86vh', display: 'flex', flexDirection: 'row'}}>

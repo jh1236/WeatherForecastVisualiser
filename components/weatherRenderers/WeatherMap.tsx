@@ -192,6 +192,7 @@ export function WeatherMap({
                 {settings["temperatureColors.enabled"] &&
                     <TemperatureColors
                         data={data?.gribFrames}
+                        opacity={settings["temperatureColors.opacity"]}
                         resolution={settings["temperatureColors.count"]}
                         viewportBounds={viewportBounds}
                         darkModeRender={darkModeRender}>
@@ -199,6 +200,7 @@ export function WeatherMap({
                 }
                 {settings["oceanTemperatureColors.enabled"] &&
                     <TemperatureColors
+                        opacity={settings["oceanTemperatureColors.opacity"]}
                         data={data?.gribFrames}
                         resolution={settings["oceanTemperatureColors.count"]}
                         viewportBounds={viewportBounds}

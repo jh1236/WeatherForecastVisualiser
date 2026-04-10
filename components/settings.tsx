@@ -59,7 +59,7 @@ const defaultSettings: Settings = {
     currentSpeedUnit: 'km/h',
     temperatureUnit: 'C',
 
-    "currentArrows.count": 15,
+    "currentArrows.count": 30,
     "currentArrows.enabled": false,
 
     "oceanTemperatureColors.enabled": false,

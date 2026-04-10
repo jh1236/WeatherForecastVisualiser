@@ -10,17 +10,18 @@ import {
 } from "./gribUtils";
 import {round} from "@floating-ui/utils";
 
-export function* mapToBounds(gribFrames: GribFrame[], resolution: number | number[], viewportBounds: LatLngBounds | undefined): Generator<WeatherDataPoint> {
-    if (gribFrames === undefined || gribFrames.length === 0 || viewportBounds === undefined) return {
+export function* mapToBounds(gribFrames: GribFrame[], resolution: number | number[], viewportBounds: LatLngBounds | undefined, relevantCodes?: string[]): Generator<WeatherDataPoint> {
+    const relevantFrames = gribFrames?.filter(it => relevantCodes?.includes(getCodeFromHeader(it.header)))
+    if (relevantFrames === undefined || relevantFrames.length === 0 || viewportBounds === undefined) return {
         bounds: new LatLngBounds([[0, 0], [0, 0]]),
         data: {},
         time: 0,
         isKeyFrame: false
     }
 
-    const targetBounds = latLngBndsIntersection(maxBoundsFromGribFrames(gribFrames), viewportBounds.pad(0.2));
+    const targetBounds = latLngBndsIntersection(maxBoundsFromGribFrames(relevantFrames), viewportBounds.pad(0.2));
     for (const i of iterateOverBounds(targetBounds, resolution)) {
-        yield getWeatherDataPointForArea(gribFrames, i);
+        yield getWeatherDataPointForArea(relevantFrames, i);
     }
 }
 
