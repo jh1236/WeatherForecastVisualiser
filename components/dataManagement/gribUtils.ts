@@ -1,7 +1,7 @@
 import {GribFrame, GribHeader} from "@/components/types";
 import {LatLngBounds} from "leaflet";
 
-export function getCodeFromHeader(header: GribHeader) {
+export function codeFromGribFrame({header}: {header: GribHeader}) {
     return `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`;
 }
 
@@ -20,13 +20,18 @@ export function latLngBndsIntersection(in1: LatLngBounds, in2: LatLngBounds): La
     return new LatLngBounds([[north, east], [south, west]])
 }
 
-export function maxBoundsFromGribFrames(frames: GribFrame[]) {
+export function maxBoundsFromGribFrames(framesIn: GribFrame[], codes?: string[]) {
+    const frames = codes ? framesIn.filter((it) => codes.includes(codeFromGribFrame(it))) : framesIn
+    if (!frames || !frames.length) {
+        return new LatLngBounds([[0, 0], [0, 0]])
+    }
     const minLat = Math.min(...frames.map(it => it.header.la1))
     const maxLat = Math.max(...frames.map(it => it.header.la2))
     const minLng = Math.min(...frames.map(it => it.header.lo1))
     const maxLng = Math.max(...frames.map(it => it.header.lo2))
     return new LatLngBounds([[minLat, minLng], [maxLat, maxLng]])
 }
+
 export function boundsFromGribFrame({header}: GribFrame) {
     return new LatLngBounds([[header.la1, header.lo1], [header.la2, header.lo2]])
 }
@@ -52,7 +57,7 @@ export function* iterateOverBounds(targetBounds: LatLngBounds, maxResolution: nu
         deltaX = deltaY;
     }
 
-    //these correction values ensure that the grid is aligned on ea
+    //these correction values ensure that the grid is aligned
     const correctionLat = (latWindow - (Math.floor(latWindow / deltaY) * deltaY)) / 2;
     const correctionLng = (lngWindow - (Math.floor(lngWindow / deltaX) * deltaX)) / 2;
 

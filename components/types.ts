@@ -7,7 +7,7 @@ export interface WeatherDataPoint {
     currentU?: number;
     currentV?: number;
     temperature?: number;
-    bounds?: LatLngBounds;
+    bounds: LatLngBounds;
     debugData?: string;
     nanPercentage?: number;
 }

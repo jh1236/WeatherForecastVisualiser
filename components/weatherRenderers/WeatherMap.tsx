@@ -1,4 +1,4 @@
-import {LayersControl, MapContainer, Rectangle, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayersControl, MapContainer, Rectangle, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -106,6 +106,7 @@ export function WeatherMap({
     const darkModeRender = resolvedTheme === 'dark' || baseLayer === 'Satellite'
 
 
+    const dataBounds = maxBoundsFromGribFrames(data?.gribFrames);
     return <>
         {resolvedTheme === 'dark' && (
             //works to invert the colors on the white controls in dark mode
@@ -134,7 +135,7 @@ export function WeatherMap({
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
             {settings.displayDataArea && populated &&
-                <Rectangle bounds={maxBoundsFromGribFrames(data.gribFrames)} opacity={0.5}
+                <Rectangle bounds={dataBounds} opacity={0.5}
                            fillOpacity={0.1}></Rectangle>}
             <MapEventHandler
                 viewportBounds={viewportBounds}
@@ -143,6 +144,54 @@ export function WeatherMap({
                 data={data}
                 populated={populated}/>
             {populated && <>
+                <SVGOverlay bounds={dataBounds}>
+                    {settings["currentArrows.enabled"] &&
+                        <CurrentArrows
+                            data={data?.gribFrames}
+                            resolution={settings["currentArrows.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </CurrentArrows>
+                    }
+                    {settings["windBarbs.enabled"] &&
+                        <WindBarbs
+                            data={data?.gribFrames}
+                            resolution={settings["windBarbs.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </WindBarbs>
+                    }
+
+
+                    {settings["windColors.enabled"] &&
+                        <WindColors
+                            data={data?.gribFrames}
+                            resolution={settings["windColors.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </WindColors>
+                    }
+
+                    {settings["temperatureColors.enabled"] &&
+                        <TemperatureColors
+                            data={data?.gribFrames}
+                            opacity={settings["temperatureColors.opacity"]}
+                            resolution={settings["temperatureColors.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </TemperatureColors>
+                    }
+                    {settings["oceanTemperatureColors.enabled"] &&
+                        <TemperatureColors
+                            opacity={settings["oceanTemperatureColors.opacity"]}
+                            data={data?.gribFrames}
+                            resolution={settings["oceanTemperatureColors.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}
+                            tempKey={"oceanTemperature"}>
+                        </TemperatureColors>
+                    }
+                </SVGOverlay>
                 {settings["windParticles.enabled"] &&
                     <VelocityLayer
                         data={data?.gribFrames.filter(it => it.header.discipline === 0)}
@@ -153,14 +202,7 @@ export function WeatherMap({
                         colorScale={Array.from({length: 10}).map((_, i) =>
                             getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
                 }
-                {settings["currentArrows.enabled"] &&
-                    <CurrentArrows
-                        data={data?.gribFrames}
-                        resolution={settings["currentArrows.count"]}
-                        viewportBounds={viewportBounds}
-                        darkModeRender={darkModeRender}>
-                    </CurrentArrows>
-                }
+
                 {settings["currentParticles.enabled"] &&
                     <VelocityLayer
                         data={data?.gribFrames.filter(it => it.header.discipline === 10)}
@@ -170,44 +212,7 @@ export function WeatherMap({
                         displayValues={false}>
                     </VelocityLayer>
                 }
-                {settings["windBarbs.enabled"] &&
-                    <WindBarbs
-                        data={data?.gribFrames}
-                        resolution={settings["windBarbs.count"]}
-                        viewportBounds={viewportBounds}
-                        darkModeRender={darkModeRender}>
-                    </WindBarbs>
-                }
 
-
-                {settings["windColors.enabled"] &&
-                    <WindColors
-                        data={data?.gribFrames}
-                        resolution={settings["windColors.count"]}
-                        viewportBounds={viewportBounds}
-                        darkModeRender={darkModeRender}>
-                    </WindColors>
-                }
-
-                {settings["temperatureColors.enabled"] &&
-                    <TemperatureColors
-                        data={data?.gribFrames}
-                        opacity={settings["temperatureColors.opacity"]}
-                        resolution={settings["temperatureColors.count"]}
-                        viewportBounds={viewportBounds}
-                        darkModeRender={darkModeRender}>
-                    </TemperatureColors>
-                }
-                {settings["oceanTemperatureColors.enabled"] &&
-                    <TemperatureColors
-                        opacity={settings["oceanTemperatureColors.opacity"]}
-                        data={data?.gribFrames}
-                        resolution={settings["oceanTemperatureColors.count"]}
-                        viewportBounds={viewportBounds}
-                        darkModeRender={darkModeRender}
-                        tempKey={"oceanTemperature"}>
-                    </TemperatureColors>
-                }
 
                 {settings.showDataOnMouseOver &&
                     <DataMouseOver

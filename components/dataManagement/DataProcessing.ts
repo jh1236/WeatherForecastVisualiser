@@ -3,7 +3,7 @@ import {GribFrame, GribHeader, WeatherDataPoint} from "@/components/types";
 import {floorCeil, lerp} from "@/components/utilities";
 import {
     boundsFromGribFrame,
-    getCodeFromHeader,
+    codeFromGribFrame,
     iterateOverBounds,
     latLngBndsIntersection,
     maxBoundsFromGribFrames
@@ -11,7 +11,7 @@ import {
 import {round} from "@floating-ui/utils";
 
 export function* mapToBounds(gribFrames: GribFrame[], resolution: number | number[], viewportBounds: LatLngBounds | undefined, relevantCodes?: string[]): Generator<WeatherDataPoint> {
-    const relevantFrames = gribFrames?.filter(it => relevantCodes?.includes(getCodeFromHeader(it.header)))
+    const relevantFrames = gribFrames?.filter(it => relevantCodes?.includes(codeFromGribFrame(it)))
     if (relevantFrames === undefined || relevantFrames.length === 0 || viewportBounds === undefined) return {
         bounds: new LatLngBounds([[0, 0], [0, 0]]),
         data: {},
@@ -111,7 +111,7 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 
 
 function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, value: number) {
-    const code = getCodeFromHeader(header)
+    const code = codeFromGribFrame({header})
 
     switch (code) {
         case "0.0.0":
@@ -148,7 +148,7 @@ export function getWeatherDataPointForArea(weatherIn: GribFrame[], area: LatLngB
 
 export function getWeatherDataPointForPoint(weatherIn: GribFrame[], point: LatLng, interpolate: boolean = true): WeatherDataPoint | undefined {
     if (weatherIn === undefined) return undefined
-    const out: WeatherDataPoint = {}
+    const out: WeatherDataPoint = {bounds: point.toBounds(0)}
     for (const i of weatherIn) {
         if (!boundsFromGribFrame(i).contains(point)) continue
         const datum = interpolate ? getInterpolatedDatumForLatLong(i, point) : getClosestDatumForLatLong(i, point);

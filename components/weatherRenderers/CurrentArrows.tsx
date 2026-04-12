@@ -62,9 +62,7 @@ function SingleCurrentArrow({viewportBounds, dataPoint, darkModeRender}: SingleC
     }
     const stroke = roundTo(magnitudeKnots * 0.7, 4) + 2
     const length = 5 * magnitudeKnots + 7;
-    return <SVGOverlay
-        bounds={tileBounds!.pad(0.5)}
-    >
+    return <>
         <defs>
             <marker
                 id="arrow"
@@ -89,6 +87,6 @@ function SingleCurrentArrow({viewportBounds, dataPoint, darkModeRender}: SingleC
             stroke={color}
             strokeWidth={stroke}
             markerEnd="url(#arrow)"/>
-    </SVGOverlay>
+    </>
 
 }
