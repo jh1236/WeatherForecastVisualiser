@@ -150,15 +150,6 @@ export function WeatherMap({
                               strokeOpacity={0.5}
                         />}
 
-                    {settings["currentArrows.enabled"] &&
-                        <CurrentArrows
-                            data={data?.gribFrames}
-                            resolution={settings["currentArrows.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </CurrentArrows>
-                    }
-
 
                     {settings["windColors.enabled"] &&
                         <WindColors
@@ -195,6 +186,15 @@ export function WeatherMap({
                             viewportBounds={viewportBounds}
                             darkModeRender={darkModeRender}>
                         </WindBarbs>
+                    }
+
+                    {settings["currentArrows.enabled"] &&
+                        <CurrentArrows
+                            data={data?.gribFrames}
+                            resolution={settings["currentArrows.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </CurrentArrows>
                     }
 
                 </SVGOverlay>
