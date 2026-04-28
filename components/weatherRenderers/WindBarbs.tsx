@@ -1,12 +1,11 @@
 import {useMemo} from "react";
 import {magnitude, normalised, rotatedBy} from "@/components/vectorUtils";
-import {SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {mpsToKnots} from "@/components/unitsUtils";
 import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
-import {getColorFromWindSpeedKts} from "@/components/utilities";
+import {lerp} from "@/components/utilities";
 
 
 interface WindBarbsParams {
@@ -52,51 +51,48 @@ interface SingleWindBarbProps {
 }
 
 
+export function mapToBigBox(coord: number | string, delta: number | string, t: number | string) {
+    const trueCoord = typeof coord === 'number' ? coord : Number(coord.replace(/%$/, ''))
+    const trueDelta = typeof delta === 'number' ? delta : Number(delta.replace(/%$/, ''))
+    const trueT = typeof t === 'number' ? t : (Number(t.replace(/%$/, '')) / 100)
+    return `${lerp(trueCoord, trueCoord + trueDelta, trueT)}%`
+}
+
 function SingleWindBarb({
                             viewportBounds,
                             dataPoint,
                             darkModeRender,
-                            x: xPercent,
-                            y: yPercent,
-                            w: wPercent,
-                            h: hPercent
+                            x,
+                            y,
+                            w,
+                            h
                         }: SingleWindBarbProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
     const magnitudeKnots = Math.round(5 * mpsToKnots(magnitude([windU!, windV!]))) / 5;
-    const [x, y, w, h] = [xPercent, yPercent, wPercent, hPercent].map(it => Number(it.replace("%", "")));
-    const out = [<rect
-        key={x + 100 * y}
-        z={-100}
-        x={`${x}%`}
-        y={`${y}%`}
-        width={`${w}%`}
-        height={`${h}%`}
-        fillOpacity={0}
-        opacity={0.5}
-    >
-    </rect>]
+    const strokeWidth = `${Number(w.replace(/%$/, '')) / 30}%`
+    const out = []
     const opacity = darkModeRender ? 1 : 0.5;
     const color = darkModeRender ? "white" : "black";
-    const [centerX, centerY] = [[x, w], [y, h]].map(([left, delta]) => left + delta / 2);
-    const d = Math.min(w, h) / 2
     if (magnitudeKnots === 0) {
-        out.push(<circle cx={`${centerX}%`} cy={`${centerY}%`} r={`${d}%`} fillOpacity={0.0} stroke={color}
-                         opacity={opacity}
-                         strokeWidth={3}/>)
+        const radius = `${Number(w.replace(/%$/, '')) / 10}%`
+        out.push(<circle cx={mapToBigBox(x, w, "50%")} cy={mapToBigBox(y, h, "50%")} r={radius} fillOpacity={0.0}
+                         stroke={color} opacity={opacity}
+                         strokeWidth={strokeWidth}/>)
     } else {
         let magnitudeLeftToRepresent = Math.round(magnitudeKnots / 5) * 5
         const tailDir = rotatedBy(windDir, 290);
-        const tailLen = 4
+        const tailLen = 15
+        const bodyLen = 30
         out.push(<line
             key={0}
             opacity={opacity}
-            x1={`${Math.round(centerX - windDir[0] * w * 0.5)}%`}
-            y1={`${Math.round(centerY - windDir[1] * h * 0.5)}%`}
-            x2={`${Math.round(centerX + windDir[0] * w * 0.5)}%`}
-            y2={`${Math.round(centerY + windDir[1] * h * 0.5)}%`}
+            x1={mapToBigBox(x, w, `${Math.round(50 - windDir[0] * bodyLen)}%`)}
+            y1={mapToBigBox(y, h, `${Math.round(50 - windDir[1] * bodyLen)}%`)}
+            x2={mapToBigBox(x, w, `${Math.round(50 + windDir[0] * bodyLen)}%`)}
+            y2={mapToBigBox(y, h, `${Math.round(50 + windDir[1] * bodyLen)}%`)}
             stroke={color}
-            strokeWidth={3}/>)
+            strokeWidth={strokeWidth}/>)
         let key = 1
         if (magnitudeLeftToRepresent % 10 >= 5 || magnitudeLeftToRepresent <= 5) {
             const isOnlyTail = magnitudeLeftToRepresent <= 5
@@ -105,17 +101,17 @@ function SingleWindBarb({
             } else {
                 magnitudeLeftToRepresent += 5;
             }
-            const stemStartX = Math.round(centerX + windDir[0] * (19 - magnitudeLeftToRepresent / 2) * 0.2);
-            const stemStartY = Math.round(centerY + windDir[1] * (19 - magnitudeLeftToRepresent / 2) * 0.2);
+            const stemStartX = Math.round(50 + windDir[0] * (30 - magnitudeLeftToRepresent));
+            const stemStartY = Math.round(50 + windDir[1] * (30 - magnitudeLeftToRepresent));
             out.push(
                 <line
                     opacity={opacity}
-                    x1={`${stemStartX}%`}
-                    y1={`${stemStartY}%`}
-                    x2={`${stemStartX + tailDir[0] * tailLen / 2}%`}
-                    y2={`${stemStartY + tailDir[1] * tailLen / 2}%`}
+                    x1={mapToBigBox(x, w, `${stemStartX}%`)}
+                    y1={mapToBigBox(y, h, `${stemStartY}%`)}
+                    x2={mapToBigBox(x, w, `${stemStartX + tailDir[0] * tailLen / 2}%`)}
+                    y2={mapToBigBox(y, h, `${stemStartY + tailDir[1] * tailLen / 2}%`)}
                     stroke={color}
-                    strokeWidth={3}
+                    strokeWidth={strokeWidth}
                     key={key}
                 />
             )
@@ -127,18 +123,18 @@ function SingleWindBarb({
             key++
         }
         while (magnitudeLeftToRepresent >= 10) {
-            const stemStartX = Math.round(centerX + windDir[0] * (d - magnitudeLeftToRepresent / 2));
-            const stemStartY = Math.round(centerY + windDir[1] * (d - magnitudeLeftToRepresent / 2));
+            const stemStartX = Math.round(50 + windDir[0] * (30 - magnitudeLeftToRepresent));
+            const stemStartY = Math.round(50 + windDir[1] * (30 - magnitudeLeftToRepresent));
             out.push(
                 <line
 
                     opacity={opacity}
-                    x1={`${stemStartX}%`}
-                    y1={`${stemStartY}%`}
-                    x2={`${stemStartX + tailDir[0] * tailLen}%`}
-                    y2={`${stemStartY + tailDir[1] * tailLen}%`}
+                    x1={mapToBigBox(x, w, `${stemStartX}%`)}
+                    y1={mapToBigBox(y, h, `${stemStartY}%`)}
+                    x2={mapToBigBox(x, w, `${stemStartX + tailDir[0] * tailLen}%`)}
+                    y2={mapToBigBox(y, h, `${stemStartY + tailDir[1] * tailLen}%`)}
                     stroke={color}
-                    strokeWidth={3}
+                    strokeWidth={strokeWidth}
                     key={key}
                 />
             )

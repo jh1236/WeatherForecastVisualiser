@@ -1,4 +1,4 @@
-import {LayersControl, MapContainer, Rectangle, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {LayersControl, MapContainer, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -99,11 +99,11 @@ export function WeatherMap({
                                populated
                            }: WindMapParams) {
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
-    const [baseLayer, setBaseLayer] = useState<string>("Satellite")
-    const {settings} = useSettings()
+    const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
 
-    const darkModeRender = resolvedTheme === 'dark' || baseLayer === 'Satellite'
+    const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
+
 
 
     const dataBounds = maxBoundsFromGribFrames(data?.gribFrames);
@@ -124,7 +124,7 @@ export function WeatherMap({
                       style={{height: '100%', width: `100%`}}>
             {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
                                  style={{
-                                     color: resolvedTheme === 'dark' || baseLayer === 'Satellite' ? 'white' : 'black',
+                                     color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
                                      fontSize: '5em',
                                      fontWeight: 400,
                                      padding: 20,
@@ -134,17 +134,23 @@ export function WeatherMap({
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
-            {settings.displayDataArea && populated &&
-                <Rectangle bounds={dataBounds} opacity={0.5}
-                           fillOpacity={0.1}></Rectangle>}
+
             <MapEventHandler
                 viewportBounds={viewportBounds}
                 setViewportBounds={setViewportBounds}
-                setBaseLayer={setBaseLayer}
+                setBaseLayer={layer => setSetting("baseLayer", (layer as 'Satellite' | 'Street Map'))}
                 data={data}
                 populated={populated}/>
             {populated && <>
                 <SVGOverlay bounds={dataBounds}>
+                    {settings.displayDataArea &&
+                        <rect x="0%" width="100%" y="0%" height="100%"
+                              fill={darkModeRender ? 'lightblue' : 'blue'}
+                              stroke="blue"
+                              fillOpacity={0.1}
+                              strokeOpacity={0.5}
+                        />}
+
                     {settings["currentArrows.enabled"] &&
                         <CurrentArrows
                             data={data?.gribFrames}
@@ -152,14 +158,6 @@ export function WeatherMap({
                             viewportBounds={viewportBounds}
                             darkModeRender={darkModeRender}>
                         </CurrentArrows>
-                    }
-                    {settings["windBarbs.enabled"] &&
-                        <WindBarbs
-                            data={data?.gribFrames}
-                            resolution={settings["windBarbs.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </WindBarbs>
                     }
 
 
@@ -191,6 +189,15 @@ export function WeatherMap({
                             tempKey={"oceanTemperature"}>
                         </TemperatureColors>
                     }
+                    {settings["windBarbs.enabled"] &&
+                        <WindBarbs
+                            data={data?.gribFrames}
+                            resolution={settings["windBarbs.count"]}
+                            viewportBounds={viewportBounds}
+                            darkModeRender={darkModeRender}>
+                        </WindBarbs>
+                    }
+
                 </SVGOverlay>
                 {settings["windParticles.enabled"] &&
                     <VelocityLayer
@@ -221,13 +228,13 @@ export function WeatherMap({
                 }
             </>}
             <LayersControl position="topright" autoZIndex>
-                <LayersControl.BaseLayer checked name="Satellite">
+                <LayersControl.BaseLayer checked={settings.baseLayer === 'Satellite'} name="Satellite">
                     <TileLayer
                         attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                     />
                 </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name="Street Map">
+                <LayersControl.BaseLayer checked={settings.baseLayer === 'Street Map'} name="Street Map">
                     <TileLayer
                         attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}

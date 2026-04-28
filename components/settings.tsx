@@ -5,6 +5,7 @@ import {useLocalStorage} from "react-use";
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 
 export interface Settings {
+    baseLayer: 'Satellite' | 'Street Map';
     showDataOnMouseOver: boolean;
     interpolateDataMouseOver: boolean;
     displayDataArea: boolean;
@@ -46,7 +47,10 @@ export interface Settings {
     gribFile: null | string;
 }
 
+const DEFAULT_GRID_RESOLUTION = 60
+
 const defaultSettings: Settings = {
+    baseLayer: 'Satellite',
     showDataOnMouseOver: true,
     interpolateDataMouseOver: true,
     displayDataArea: false,
@@ -63,7 +67,7 @@ const defaultSettings: Settings = {
     "currentArrows.enabled": false,
 
     "oceanTemperatureColors.enabled": false,
-    "oceanTemperatureColors.count": 30,
+    "oceanTemperatureColors.count": DEFAULT_GRID_RESOLUTION,
     "oceanTemperatureColors.opacity": 0.6,
 
     "currentParticles.enabled": false,
@@ -74,7 +78,7 @@ const defaultSettings: Settings = {
     "windBarbs.count": 15,
 
     "windColors.enabled": false,
-    "windColors.count": 30,
+    "windColors.count": DEFAULT_GRID_RESOLUTION,
     "windColors.opacity": 0.6,
 
     "windParticles.enabled": true,
@@ -82,7 +86,7 @@ const defaultSettings: Settings = {
     "windParticles.opacity": 0.97,
 
     "temperatureColors.enabled": false,
-    "temperatureColors.count": 30,
+    "temperatureColors.count": DEFAULT_GRID_RESOLUTION,
     "temperatureColors.opacity": 0.6,
 
     displayTempScale: true,

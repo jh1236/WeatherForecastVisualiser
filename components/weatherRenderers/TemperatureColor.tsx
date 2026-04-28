@@ -69,7 +69,6 @@ function SingleTempColor({viewportBounds, dataPoint, tempKey, opacity, x, y, w, 
     }
 
     return <>
-
         <rect
             z={-100}
             x={x}
@@ -79,9 +78,6 @@ function SingleTempColor({viewportBounds, dataPoint, tempKey, opacity, x, y, w, 
             fillOpacity={opacity}
             fill={getColorFromTemperature(temperature!)}>
         </rect>
-        {/*<Rectangle bounds={dataPoint.bounds!} fillOpacity={isSatellite ? 0.8 : 0.5} opacity={0}*/}
-        {/*           color={getColorFromWindSpeedKts(strength)}>*/}
-        {/*</Rectangle>*/}
     </>
 
 }

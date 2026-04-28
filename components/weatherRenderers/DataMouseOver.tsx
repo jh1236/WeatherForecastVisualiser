@@ -45,14 +45,14 @@ export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
                 {wind && <div><i
                     style={{fontWeight: 600}}>Wind: </i>{roundTo(windSpeed, 2)}{settings.windSpeedUnit} @ {Math.round(windBearing ?? 0)}°
                 </div>}
-                {temperature &&
+                {!!temperature &&
                     <div><i
                         style={{fontWeight: 600}}>Temperature: </i>{roundTo(temperature, 1)}°{settings.temperatureUnit}
                     </div>}
                 {current && <div><i
                     style={{fontWeight: 600}}>Current: </i>{roundTo(currentSpeed, 2)}{settings.currentSpeedUnit} @ {Math.round(currentBearing ?? 0)}°
                 </div>}
-                {oceanTemperature &&
+                {!!oceanTemperature &&
                     <div><i style={{fontWeight: 600}}>Ocean
                         Temperature: </i>{roundTo(oceanTemperature, 1)}°{settings.temperatureUnit}</div>}
                 <i>{dataPoint.debugData}</i> {'\n'}

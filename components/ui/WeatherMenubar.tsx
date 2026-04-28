@@ -41,6 +41,10 @@ function MenubarEnabler({settings, setSetting, settingName}: MenubarEnablerParam
     </MenubarCheckboxItem>;
 }
 
+const MIN_GRID_RESOLUTION = 40
+const WARN_GRID_RESOLUTION = 100
+const MAX_GRID_RESOLUTION = 130
+
 export function WeatherMenubar({resetData}: WeatherMenubarProps) {
     const {settings, setSetting} = useSettings()
     const {theme, resolvedTheme, setTheme} = useTheme()
@@ -215,19 +219,19 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         <MenubarItem inset onSelect={e => e.preventDefault()}>
                             <Slider
                                 style={{width: '120px',}}
-                                min={20}
+                                min={MIN_GRID_RESOLUTION}
                                 value={[settings["windColors.count"]]}
-                                max={60}
+                                max={MAX_GRID_RESOLUTION}
                                 step={5}
                                 onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
                         </MenubarItem>
-                        {settings["windColors.count"] > 40 &&
+                        {settings["windColors.count"] >= WARN_GRID_RESOLUTION &&
                             <MenubarLabel style={{
                                 fontWeight: 600,
                                 color: resolvedTheme === 'dark' ? 'red' : 'darkred',
                                 fontSize: 8
                             }}>
-                                Values over 40 may impact performance!
+                                Values over {WARN_GRID_RESOLUTION} may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
                             Opacity: {round(100 * settings["windColors.opacity"])}%
@@ -265,19 +269,19 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         <MenubarItem inset onSelect={e => e.preventDefault()}>
                             <Slider
                                 style={{width: '120px',}}
-                                min={20}
+                                min={MIN_GRID_RESOLUTION}
                                 value={[settings["oceanTemperatureColors.count"]]}
-                                max={60}
+                                max={MAX_GRID_RESOLUTION}
                                 step={5}
                                 onValueChange={([v]) => setSetting("oceanTemperatureColors.count", v)}></Slider>
                         </MenubarItem>
-                        {settings["oceanTemperatureColors.count"] > 40 &&
+                        {settings["oceanTemperatureColors.count"] >= WARN_GRID_RESOLUTION &&
                             <MenubarLabel style={{
                                 fontWeight: 600,
                                 color: resolvedTheme === 'dark' ? 'red' : 'darkred',
                                 fontSize: 8
                             }}>
-                                Values over 40 may impact performance!
+                                Values over {WARN_GRID_RESOLUTION} may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
                             Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
@@ -303,19 +307,19 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         <MenubarItem inset onSelect={e => e.preventDefault()}>
                             <Slider
                                 style={{width: '120px',}}
-                                min={20}
+                                min={MIN_GRID_RESOLUTION}
                                 value={[settings["temperatureColors.count"]]}
-                                max={60}
+                                max={MAX_GRID_RESOLUTION}
                                 step={5}
                                 onValueChange={([v]) => setSetting("temperatureColors.count", v)}></Slider>
                         </MenubarItem>
-                        {settings["temperatureColors.count"] > 40 &&
+                        {settings["temperatureColors.count"] >= WARN_GRID_RESOLUTION &&
                             <MenubarLabel style={{
                                 fontWeight: 600,
                                 color: resolvedTheme === 'dark' ? 'red' : 'darkred',
                                 fontSize: 8
                             }}>
-                                Values over 40 may impact performance!
+                                Values over {WARN_GRID_RESOLUTION} may impact performance!
                             </MenubarLabel>}
                         <MenubarLabel inset>
                             Opacity: {round(100 * settings["temperatureColors.opacity"])}%

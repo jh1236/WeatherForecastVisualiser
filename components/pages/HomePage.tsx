@@ -42,33 +42,32 @@ export function HomePage() {
     }, [currentTimeStamp, currentTimeStampIndex, playbackSpeed, timestamps])
 
 
-    return <div style={{width: '100vw', height: '100vh'}}>
-        {populated && <div style={{}}></div>}
+    return <div style={{
+        width: '100svw',
+        height: '100svh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+    }}>
         <div style={{width: '100%'}}>
             {mounted && <WeatherMenubar resetData={reset}></WeatherMenubar>}
         </div>
-        <div>
-            <div style={{width: '100vw', height: '86vh', display: 'flex', flexDirection: 'row'}}>
+        <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
+            <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
                 <WeatherMap data={data.times?.[currentTimeStamp]} populated={populated} />
             </div>
-            <div style={{display: 'flex', flexDirection: 'row', padding: '30px', width: '100%', height: '20%'}}>
-                <div style={{
-                    width: '20%',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    display: 'flex'
-                }}>
-                    {settings.dataSource === 'netCDF' && <DatePicker date={date} setDate={(date) => {
-                        reset()
-                        setDate(date)
-                    }}/>} &nbsp;
-                    {currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(settings.dataSource === 'netCDF' ? 16 : 0, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}
-                </div>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-evenly', flexDirection: 'row', padding: '12px', width: '100%'}}>
+                {settings.dataSource === 'netCDF' && <DatePicker date={date} setDate={(date) => {
+                    reset()
+                    setDate(date)
+                }}/>}
+                <p style={{paddingLeft: 20, paddingRight: 20}}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(settings.dataSource === 'netCDF' ? 16 : 0, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
+
                 <Slider
                     min={timestamps.reduce((a, b) => Math.min(a, b), Number.MAX_VALUE)}
                     max={timestamps.reduce((a, b) => Math.max(a, b), 0)}
                     value={[isDragging ? dragValue : currentTimeStamp]}
-                    style={{width: '60%', margin: 'auto'}}
+                    style={{flex: 1, margin: 'auto'}}
                     onValueChange={([v]) => {
                         if (timestamps.length) {
                             setIsDragging(true);
