@@ -160,7 +160,7 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             >Celsius</MenubarRadioItem>
                             <MenubarRadioItem
                                 value="K"
-                            >Knots</MenubarRadioItem>
+                            >Kelvin</MenubarRadioItem>
                             <MenubarRadioItem
                                 value="F"
                             >Fahrenheit</MenubarRadioItem>
