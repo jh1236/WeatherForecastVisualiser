@@ -3,7 +3,7 @@ import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromTemperature} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
-import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 
 interface WindColorsProps {
     viewportBounds: LatLngBounds | undefined;
@@ -26,7 +26,7 @@ export function TemperatureColors({
 
     const temperatureData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.0.0", "10.3.0"])], [data, resolution, viewportBounds])
 
-    const svgSize = maxBoundsFromGribFrames(data)
+    const svgSize = latLngBndsIntersection(maxBoundsFromGribFrames(data), viewportBounds!)
     const latWidth = svgSize.getEast() - svgSize.getWest()
     const lngHeight = svgSize.getNorth() - svgSize.getSouth()
 

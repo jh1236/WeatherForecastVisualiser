@@ -6,7 +6,7 @@ import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {mpsToKnots} from "@/components/unitsUtils";
 import {roundTo} from "@/components/utilities";
 import {mapToBigBox} from "@/components/weatherRenderers/WindBarbs";
-import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 
 
 interface CurrentArrowsParams {
@@ -25,7 +25,7 @@ export function CurrentArrows({
 
     const currentData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["10.1.2", "10.1.3"])], [data, resolution, viewportBounds])
 
-    const svgSize = maxBoundsFromGribFrames(data)
+    const svgSize = latLngBndsIntersection(maxBoundsFromGribFrames(data), viewportBounds!)
 
     const latWidth = svgSize.getEast() - svgSize.getWest()
     const lngHeight = svgSize.getNorth() - svgSize.getSouth()

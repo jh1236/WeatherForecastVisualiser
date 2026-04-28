@@ -1,13 +1,12 @@
 import {useMemo} from "react";
 import {magnitude} from "@/components/vectorUtils";
-import {Rectangle, SVGOverlay} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
 import {getColorFromWindSpeedKts} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {useSettings} from "@/components/settings";
 import {mpsToKnots} from "@/components/unitsUtils";
-import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 
 interface WindColorsProps {
     viewportBounds: LatLngBounds | undefined;
@@ -21,7 +20,7 @@ export function WindColors({data, viewportBounds, darkModeRender, resolution = 6
 
     const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.2.2", "0.2.3"])], [data, resolution, viewportBounds])
 
-    const svgSize = maxBoundsFromGribFrames(data)
+    const svgSize = latLngBndsIntersection(maxBoundsFromGribFrames(data), viewportBounds!)
     const latWidth = svgSize.getEast() - svgSize.getWest()
     const lngHeight = svgSize.getNorth() - svgSize.getSouth()
 

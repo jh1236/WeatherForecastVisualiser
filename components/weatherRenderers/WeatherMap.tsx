@@ -10,7 +10,7 @@ import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
 import {ColorRange} from "@/components/weatherRenderers/ColorRange";
-import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 import {cn} from "@/lib/utils";
 import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
@@ -105,7 +105,6 @@ export function WeatherMap({
     const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
 
 
-
     const dataBounds = maxBoundsFromGribFrames(data?.gribFrames);
     return <>
         {resolvedTheme === 'dark' && (
@@ -142,7 +141,7 @@ export function WeatherMap({
                 data={data}
                 populated={populated}/>
             {populated && <>
-                <SVGOverlay bounds={dataBounds}>
+                <SVGOverlay bounds={latLngBndsIntersection(dataBounds, viewportBounds!)}>
                     {settings.displayDataArea &&
                         <rect x="0%" width="100%" y="0%" height="100%"
                               fill={darkModeRender ? 'lightblue' : 'blue'}
@@ -253,16 +252,18 @@ export function WeatherMap({
                 textCount={11}/>
         </div>}
         {settings.displayTempScale && settings.displayWindScale &&
-            <div style={{width: '5px', textAlign: 'center'}}></div>}
-        {settings.displayTempScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
-            <ColorRange
-                colorFunc={getColorFromTemperature}
-                textFunc={n => `${Math.round(n - 2.5)}°C`}
-                top={52.5}
-                bottom={-2.5}
-                resolution={100}
-                textCount={11}></ColorRange>
-        </div>
+            <div style={{width: '5px', textAlign: 'center'}}></div>
+        }
+        {settings.displayTempScale &&
+            <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
+                <ColorRange
+                    colorFunc={getColorFromTemperature}
+                    textFunc={n => `${Math.round(n - 2.5)}°C`}
+                    top={52.5}
+                    bottom={-2.5}
+                    resolution={100}
+                    textCount={11}></ColorRange>
+            </div>
         }
 
     </>

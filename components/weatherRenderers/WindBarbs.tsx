@@ -4,7 +4,7 @@ import {LatLng, LatLngBounds} from "leaflet";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {mpsToKnots} from "@/components/unitsUtils";
-import {maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 import {lerp} from "@/components/utilities";
 
 
@@ -19,7 +19,7 @@ export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25
 
     const windBarbData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.2.2", "0.2.3"])], [data, resolution, viewportBounds])
 
-    const svgSize = maxBoundsFromGribFrames(data)
+    const svgSize = latLngBndsIntersection(maxBoundsFromGribFrames(data), viewportBounds!)
 
     const latWidth = svgSize.getEast() - svgSize.getWest()
     const lngHeight = svgSize.getNorth() - svgSize.getSouth()
@@ -41,7 +41,7 @@ export function WindBarbs({viewportBounds, data, darkModeRender, resolution = 25
 interface SingleWindBarbProps {
     dataPoint: WeatherDataPoint
     viewportBounds: LatLngBounds | undefined,
-    count?: number,
+    count: number,
     trueLatLng?: LatLng,
     darkModeRender: boolean,
     x: string,
