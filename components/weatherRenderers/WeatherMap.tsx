@@ -5,7 +5,7 @@ import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
 import {LatLngBounds} from "leaflet";
 import {useEffect, useState} from "react";
-import {WeatherDataTimeSnapshot} from "@/components/types";
+import {WeatherData, WeatherDataTimeSnapshot} from "@/components/types";
 import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
@@ -16,10 +16,12 @@ import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
 import {knotsToMps} from "@/components/unitsUtils";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
+import {PointGrapher} from "@/components/weatherRenderers/PointGrapher/PointGrapher";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds,
-    data: WeatherDataTimeSnapshot,
+    data: WeatherData,
+    currentTimeStamp: number
     populated: boolean
 }
 
@@ -95,9 +97,11 @@ function MapEventHandler({viewportBounds, setViewportBounds, setBaseLayer, data,
 
 export function WeatherMap({
                                defaultBounds = new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]),
-                               data,
-                               populated
+                               data: allData,
+                               populated,
+                               currentTimeStamp
                            }: WindMapParams) {
+    const data = allData.times?.[currentTimeStamp]
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
@@ -196,7 +200,6 @@ export function WeatherMap({
                             darkModeRender={darkModeRender}>
                         </CurrentArrows>
                     }
-
                 </SVGOverlay>
                 {settings["windParticles.enabled"] &&
                     <VelocityLayer
@@ -218,6 +221,8 @@ export function WeatherMap({
                         displayValues={false}>
                     </VelocityLayer>
                 }
+
+                <PointGrapher viewportBounds={viewportBounds} data={allData} currentTimeStamp={currentTimeStamp}></PointGrapher>
 
 
                 {settings.showDataOnMouseOver &&

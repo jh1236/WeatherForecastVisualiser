@@ -54,7 +54,7 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap data={data.times?.[currentTimeStamp]} populated={populated} />
+                <WeatherMap data={data} populated={populated} currentTimeStamp={currentTimeStamp} />
             </div>
             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-evenly', flexDirection: 'row', padding: '12px', width: '100%'}}>
                 {settings.dataSource === 'netCDF' && <DatePicker date={date} setDate={(date) => {

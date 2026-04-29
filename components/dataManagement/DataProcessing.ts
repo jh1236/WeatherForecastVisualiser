@@ -146,7 +146,7 @@ export function getWeatherDataPointForArea(weatherIn: GribFrame[], area: LatLngB
     return out
 }
 
-export function getWeatherDataPointForPoint(weatherIn: GribFrame[], point: LatLng, interpolate: boolean = true): WeatherDataPoint | undefined {
+export function getWeatherDataPointForPoint(weatherIn: GribFrame[] | undefined, point: LatLng, interpolate: boolean = true): WeatherDataPoint | undefined {
     if (weatherIn === undefined) return undefined
     const out: WeatherDataPoint = {bounds: point.toBounds(0)}
     for (const i of weatherIn) {
