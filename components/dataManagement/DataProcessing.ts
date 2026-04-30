@@ -101,7 +101,7 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
             }
         }
     }
-    if (nanCount > (nanCount + values.length) * discardThreshold) {
+    if (nanCount) {
         //if at least half of the values are bad, throw away this cell
         return NaN
     }

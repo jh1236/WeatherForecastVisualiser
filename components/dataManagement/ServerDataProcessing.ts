@@ -1,6 +1,8 @@
 import {zip} from "@/components/utilities";
 import {NumberOrNDArray} from "@/components/dataManagement/jsdapWrapper";
 import {WeatherData, WeatherDataTimeSnapshot} from "@/components/types";
+import {geoContains} from "d3-geo"
+import ausCoastline from "@/public/aus_coast.json"
 
 export function realignDataToGrid(latRho: number[][], lngRho: number[][], ...data: number[][][][]): {
     lat: number[],
@@ -17,17 +19,27 @@ export function realignDataToGrid(latRho: number[][], lngRho: number[][], ...dat
     const dLng = (maxLng - minLng) / nLng;
 
     const datas: (number[] | number)[][][] = data.map(t => t.map(() => latRho.flat().map(() => [])))
-
+    const latOut = []
+    const lngOut = []
+    for (let i = 0; i < latRho.length; i++) {
+        latOut.push(minLat + i * dLat);
+    }
+    for (let j = 0; j < lngRho[0].length; j++) {
+        lngOut.push(minLng + j * dLng);
+    }
     for (let i = 0; i < nLat; i++) {
         for (let j = 0; j < nLng; j++) {
             const lat = latRho[i][j];
             const lng = lngRho[i][j];
             const latIdx = Math.max(0, Math.min(nLat - 1, Math.round((lat - minLat) / dLat)));
+            const newLat = latOut[latIdx];
             const lngIdx = Math.max(0, Math.min(nLng - 1, Math.round((lng - minLng) / dLng)));
+            const newLng = lngOut[lngIdx];
             for (let k = 0; k < data.length; k++) {
                 for (let t = 0; t < data[k].length; t++) {
                     const value = data[k][t][i][j];
-                    if (value > 1e30) {
+                    // @ts-expect-error caused by the ts import not working properly
+                    if (value > 1e30 || geoContains(ausCoastline, [newLat, newLng])) {
                         // the cell does not have a datapoint; we don't want to use it for smoothing
                         datas[k][t][latIdx * nLng + lngIdx] = NaN
                     } else {
@@ -47,16 +59,10 @@ export function realignDataToGrid(latRho: number[][], lngRho: number[][], ...dat
             }
         }
     }
-    const latOut = []
-    const lngOut = []
-    for (let i = 0; i < latRho.length; i++) {
-        latOut.push(minLat + i * dLat);
-    }
-    for (let j = 0; j < lngRho[0].length; j++) {
-        lngOut.push(minLng + j * dLng);
-    }
+
     const ret = datas.map(it => it.map(it2 => it2.map(it3 => {
         if (Array.isArray(it3)) {
+            if (it3.length === 0) return NaN
             // this cell was never set directly; so we average all the cells that were set nearby
             return it3.reduce((a, b) => a + b, 0) / it3.length
         } else {
@@ -174,10 +180,14 @@ function addDataToWeatherTimeSnapshot(data: Bound,
         const outputDatas: number[][] = scalars.map(it => Array.isArray(it[t][0]) ? ([] as number[]) : (it as number[][])[t])
 
         for (let lat = 0; lat < lats.length; lat++) {
-            for (let lng= 0; lng< longs.length; lng++) {
+            for (let lng = 0; lng < longs.length; lng++) {
                 for (let key = 0; key < scalars.length; key++) {
                     if (!Array.isArray(scalars[key][t][0])) continue;
-                    const value = (scalars as number[][][][])[key][t][lat][lng];
+                    let value = (scalars as number[][][][])[key][t][lat][lng];
+                    // @ts-expect-error caused by the ts import not working properly
+                    if (geoContains(ausCoastline, [lats[lat], longs[lng]])) {
+                        value = NaN;
+                    }
                     outputDatas[key].push(value)
                 }
             }
@@ -218,12 +228,14 @@ export function convertThreddsToGrib(
         const {
             data: fixed,
             lat,
-            lng        } = realignDataToGrid(bound.latRho, bound.lngRho, ...toFix.map(it => bound[it] as number[][][]))
+            lng
+        } = realignDataToGrid(bound.latRho, bound.lngRho, ...toFix.map(it => bound[it] as number[][][]))
         for (const [k, data] of zip(toFix, fixed)) {
             bound[k] = data as never;
         }
         lats = lat
-        longs = lng    } else {
+        longs = lng
+    } else {
         if (Array.isArray(bound.lat?.[0])) {
             lats = (bound.lat as number[][]).map(it => it[0])
         } else {
@@ -248,7 +260,7 @@ export function convertThreddsToGrib(
 }
 
 export function mergeWeatherDatas(...weatherDatas: WeatherData[]): WeatherData {
-    const out: WeatherData= {times: {}};
+    const out: WeatherData = {times: {}};
     for (const data of weatherDatas) {
         for (const [time, wds] of Object.entries(data.times)) {
             if (time in out.times) {

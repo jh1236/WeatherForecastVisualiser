@@ -1,4 +1,4 @@
-import {LayersControl, MapContainer, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {GeoJSON, LayersControl, MapContainer, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
 import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -101,9 +101,14 @@ export function WeatherMap({
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
-
+    const [ausCoast, setAusCoast] = useState()
     const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
 
+    useEffect(() => {
+        fetch('/aus_coast.json').then(it => it.json()).then(it => {
+            setAusCoast(it)
+        })
+    }, []);
 
     const dataBounds = maxBoundsFromGribFrames(data?.gribFrames);
     return <>
@@ -133,7 +138,7 @@ export function WeatherMap({
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
-
+            {ausCoast && <GeoJSON data={ausCoast}></GeoJSON>}
             <MapEventHandler
                 viewportBounds={viewportBounds}
                 setViewportBounds={setViewportBounds}
@@ -238,7 +243,6 @@ export function WeatherMap({
                         attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
                     />
-
                 </LayersControl.BaseLayer>
             </LayersControl>
 
