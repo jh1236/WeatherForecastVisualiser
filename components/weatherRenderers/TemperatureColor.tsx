@@ -5,13 +5,14 @@ import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
 
-interface WindColorsProps {
+interface TemperatureColorsProps {
     viewportBounds: LatLngBounds | undefined;
     data: GribFrame[];
     darkModeRender: boolean;
     resolution?: number;
     tempKey?: keyof WeatherDataPoint;
     opacity: number;
+    shouldRender?: (pos: LatLng) => boolean;
 }
 
 
@@ -21,8 +22,9 @@ export function TemperatureColors({
                                       darkModeRender,
                                       resolution = 60,
                                       tempKey = 'temperature',
-                                      opacity
-                                  }: WindColorsProps) {
+                                      opacity,
+                                      shouldRender = () => true
+                                  }: TemperatureColorsProps) {
 
     const temperatureData = useMemo(() => [...mapToBounds(data ?? [], resolution, viewportBounds, ["0.0.0", "10.3.0"])], [data, resolution, viewportBounds])
 
@@ -30,20 +32,19 @@ export function TemperatureColors({
     const latWidth = svgSize.getEast() - svgSize.getWest()
     const lngHeight = svgSize.getNorth() - svgSize.getSouth()
 
-    return temperatureData.map((dataPoint, i) => {
-            return <SingleTempColor
-                tempKey={tempKey}
-                key={i}
-                viewportBounds={viewportBounds}
-                x={100 * (dataPoint.bounds!.getWest() - svgSize.getWest()) / latWidth + "%"}
-                y={(100 * (svgSize.getNorth() - dataPoint.bounds!.getNorth()) / lngHeight) + "%"}
-                w={100 * (dataPoint.bounds!.getEast() - dataPoint.bounds.getWest()) / latWidth + "%"}
-                h={100 * (dataPoint.bounds!.getNorth() - dataPoint.bounds.getSouth()) / lngHeight + "%"}
-                dataPoint={dataPoint}
-                darkModeRender={darkModeRender}
-                opacity={opacity}
-            />;
-        }
+    return temperatureData.filter(it => shouldRender(it.bounds.getCenter())).map((dataPoint, i) =>
+        <SingleTempColor
+            tempKey={tempKey}
+            key={i}
+            viewportBounds={viewportBounds}
+            x={100 * (dataPoint.bounds!.getWest() - svgSize.getWest()) / latWidth + "%"}
+            y={(100 * (svgSize.getNorth() - dataPoint.bounds!.getNorth()) / lngHeight) + "%"}
+            w={100 * (dataPoint.bounds!.getEast() - dataPoint.bounds.getWest()) / latWidth + "%"}
+            h={100 * (dataPoint.bounds!.getNorth() - dataPoint.bounds.getSouth()) / lngHeight + "%"}
+            dataPoint={dataPoint}
+            darkModeRender={darkModeRender}
+            opacity={opacity}
+        />
     )
 }
 

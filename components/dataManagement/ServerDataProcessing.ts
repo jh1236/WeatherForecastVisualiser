@@ -1,8 +1,6 @@
 import {zip} from "@/components/utilities";
 import {NumberOrNDArray} from "@/components/dataManagement/jsdapWrapper";
 import {WeatherData, WeatherDataTimeSnapshot} from "@/components/types";
-import {geoContains} from "d3-geo"
-import ausCoastline from "@/public/aus_coast.json"
 
 export function realignDataToGrid(latRho: number[][], lngRho: number[][], ...data: number[][][][]): {
     lat: number[],
@@ -32,29 +30,26 @@ export function realignDataToGrid(latRho: number[][], lngRho: number[][], ...dat
             const lat = latRho[i][j];
             const lng = lngRho[i][j];
             const latIdx = Math.max(0, Math.min(nLat - 1, Math.round((lat - minLat) / dLat)));
-            const newLat = latOut[latIdx];
             const lngIdx = Math.max(0, Math.min(nLng - 1, Math.round((lng - minLng) / dLng)));
-            const newLng = lngOut[lngIdx];
             for (let k = 0; k < data.length; k++) {
                 for (let t = 0; t < data[k].length; t++) {
                     const value = data[k][t][i][j];
-                    // @ts-expect-error caused by the ts import not working properly
-                    if (value > 1e30 || geoContains(ausCoastline, [newLat, newLng])) {
+                    if (value > 1e30) {
                         // the cell does not have a datapoint; we don't want to use it for smoothing
-                        datas[k][t][latIdx * nLng + lngIdx] = NaN
-                    } else {
-                        datas[k][t][latIdx * nLng + lngIdx] = value // set the value firmly for our true closest
-                        for (let d1 = -1; d1 <= 1; d1++) {
-                            for (let d2 = -1; d2 <= 1; d2++) {
-                                if (d1 === 0 && d2 === 0) continue; //don't fill the centre square here; we fill it outside
-                                const wiggleLatIdx = Math.max(0, Math.min(nLat - 1, latIdx + d1));
-                                const wiggleLngIdx = Math.max(0, Math.min(nLng - 1, lngIdx + d2));
-                                if (Array.isArray(datas[k][t][wiggleLatIdx * nLng + wiggleLngIdx])) {
-                                    (datas[k][t][wiggleLatIdx * nLng + wiggleLngIdx] as number[]).push(value)
-                                }
+                        continue
+                    }
+                    datas[k][t][latIdx * nLng + lngIdx] = value // set the value firmly for our true closest
+                    for (let d1 = -1; d1 <= 1; d1++) {
+                        for (let d2 = -1; d2 <= 1; d2++) {
+                            if (d1 === 0 && d2 === 0) continue; //don't fill the centre square here; we fill it outside
+                            const wiggleLatIdx = Math.max(0, Math.min(nLat - 1, latIdx + d1));
+                            const wiggleLngIdx = Math.max(0, Math.min(nLng - 1, lngIdx + d2));
+                            if (Array.isArray(datas[k][t][wiggleLatIdx * nLng + wiggleLngIdx])) {
+                                (datas[k][t][wiggleLatIdx * nLng + wiggleLngIdx] as number[]).push(value)
                             }
                         }
                     }
+
                 }
             }
         }
@@ -183,12 +178,7 @@ function addDataToWeatherTimeSnapshot(data: Bound,
             for (let lng = 0; lng < longs.length; lng++) {
                 for (let key = 0; key < scalars.length; key++) {
                     if (!Array.isArray(scalars[key][t][0])) continue;
-                    let value = (scalars as number[][][][])[key][t][lat][lng];
-                    // @ts-expect-error caused by the ts import not working properly
-                    if (geoContains(ausCoastline, [lats[lat], longs[lng]])) {
-                        value = NaN;
-                    }
-                    outputDatas[key].push(value)
+                    outputDatas[key].push((scalars as number[][][][])[key][t][lat][lng])
                 }
             }
         }

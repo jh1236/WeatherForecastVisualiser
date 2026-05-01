@@ -1,5 +1,5 @@
-import {GeoJSON, LayersControl, MapContainer, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
-import {VelocityLayer} from "@/components/weatherRenderers/LeafletVelocityWrapper/ParticleLayers";
+import {LayersControl, MapContainer, Pane, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {VelocityLayer} from "@/components/ReactLeafletWrappers/LeafletVelocity/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
@@ -16,6 +16,10 @@ import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
 import {knotsToMps} from "@/components/unitsUtils";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
+import {GeoJSON as GeoJSONType} from "geojson";
+import {MaskedTileLayer} from "@/components/ReactLeafletWrappers/LeafletMaskTile/MaskedTileLayer";
+import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryCanvas/BoundaryCanvas";
+
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds,
@@ -28,10 +32,16 @@ interface MapEventHandlerParams {
     setViewportBounds: (bounds: LatLngBounds) => void;
     setBaseLayer: (layer: string) => void;
     data: WeatherDataTimeSnapshot;
-    populated: boolean
+    populated: boolean;
 }
 
-function MapEventHandler({viewportBounds, setViewportBounds, setBaseLayer, data, populated}: MapEventHandlerParams,) {
+function MapEventHandler({
+                             viewportBounds,
+                             setViewportBounds,
+                             setBaseLayer,
+                             data,
+                             populated,
+                         }: MapEventHandlerParams) {
     const map1 = useMap();
     const {setSetting} = useSettings();
     useEffect(() => {
@@ -101,12 +111,12 @@ export function WeatherMap({
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
-    const [ausCoast, setAusCoast] = useState()
+    const [westAusBbox, setWestAusBbox] = useState<GeoJSONType>()
     const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
 
     useEffect(() => {
-        fetch('/aus_coast.json').then(it => it.json()).then(it => {
-            setAusCoast(it)
+        fetch('/west_aus_coast_mp.json').then(it => it.json()).then(it => {
+            setWestAusBbox(it)
         })
     }, []);
 
@@ -138,7 +148,6 @@ export function WeatherMap({
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
             </div>)}
-            {ausCoast && <GeoJSON data={ausCoast}></GeoJSON>}
             <MapEventHandler
                 viewportBounds={viewportBounds}
                 setViewportBounds={setViewportBounds}
@@ -174,16 +183,7 @@ export function WeatherMap({
                             darkModeRender={darkModeRender}>
                         </TemperatureColors>
                     }
-                    {settings["oceanTemperatureColors.enabled"] &&
-                        <TemperatureColors
-                            opacity={settings["oceanTemperatureColors.opacity"]}
-                            data={data?.gribFrames}
-                            resolution={settings["oceanTemperatureColors.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}
-                            tempKey={"oceanTemperature"}>
-                        </TemperatureColors>
-                    }
+
                     {settings["windBarbs.enabled"] &&
                         <WindBarbs
                             data={data?.gribFrames}
@@ -193,16 +193,32 @@ export function WeatherMap({
                         </WindBarbs>
                     }
 
-                    {settings["currentArrows.enabled"] &&
-                        <CurrentArrows
-                            data={data?.gribFrames}
-                            resolution={settings["currentArrows.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </CurrentArrows>
-                    }
-
                 </SVGOverlay>
+                <Pane name="ocean" style={{zIndex: 380}}>
+                    <SVGOverlay bounds={latLngBndsIntersection(dataBounds, viewportBounds!)}>
+                        {settings["oceanTemperatureColors.enabled"] &&
+                            <TemperatureColors
+                                opacity={settings["oceanTemperatureColors.opacity"]}
+                                data={data?.gribFrames}
+                                resolution={settings["oceanTemperatureColors.count"]}
+                                viewportBounds={viewportBounds}
+                                darkModeRender={darkModeRender}
+                                tempKey={"oceanTemperature"}
+                            >
+                            </TemperatureColors>
+                        }
+
+                        {settings["currentArrows.enabled"] &&
+                            <CurrentArrows
+                                data={data?.gribFrames}
+                                resolution={settings["currentArrows.count"]}
+                                viewportBounds={viewportBounds}
+                                darkModeRender={darkModeRender}>
+                            </CurrentArrows>
+                        }
+
+                    </SVGOverlay>
+                </Pane>
                 {settings["windParticles.enabled"] &&
                     <VelocityLayer
                         data={data?.gribFrames.filter(it => it.header.discipline === 0)}
@@ -215,13 +231,15 @@ export function WeatherMap({
                 }
 
                 {settings["currentParticles.enabled"] &&
-                    <VelocityLayer
-                        data={data?.gribFrames.filter(it => it.header.discipline === 10)}
-                        maxVelocity={2}
-                        velocityScale={darkModeRender ? 0.075 : 0.125}
-                        opacity={settings["currentParticles.opacity"]}
-                        displayValues={false}>
-                    </VelocityLayer>
+                        <VelocityLayer
+                            data={data?.gribFrames.filter(it => it.header.discipline === 10)}
+                            maxVelocity={2}
+                            velocityScale={darkModeRender ? 0.075 : 0.125}
+                            opacity={settings["currentParticles.opacity"]}
+                            displayValues={false}
+                            paneName="ocean"
+                        >
+                        </VelocityLayer>
                 }
 
 
@@ -245,6 +263,17 @@ export function WeatherMap({
                     />
                 </LayersControl.BaseLayer>
             </LayersControl>
+            <Pane name="above" style={{zIndex: 390}}>
+                {westAusBbox && <BoundaryCanvas
+                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url={settings.baseLayer === 'Satellite' ?
+                        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" :
+                        resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' :
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                    // url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    boundary={westAusBbox}
+                    zIndex={10}/>}
+            </Pane>
 
         </MapContainer>
         {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>

@@ -15,7 +15,7 @@ interface WindDataMouseOverProps {
 }
 
 
-export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
+export function DataMouseOver({data, viewportBounds}: WindDataMouseOverProps) {
     const [latLng, setLatLng] = useState<LatLng>(new LatLng(0, 0));
     const dataPoint = useMemo(() => (viewportBounds && viewportBounds.contains(latLng)) ? getWeatherDataPointForPoint(data, latLng) : undefined, [data, latLng, viewportBounds])
     const windSpeed = useWindSpeedInUserUnits(magnitude([dataPoint?.windU ?? 0, dataPoint?.windV ?? 0]), 'm/s')

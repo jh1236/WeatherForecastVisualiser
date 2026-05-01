@@ -101,13 +101,12 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
             }
         }
     }
-    if (nanCount) {
+    if (nanCount > (nanCount + values.length) * discardThreshold) {
         //if at least half of the values are bad, throw away this cell
         return NaN
     }
     return values.reduce((a, b) => a + b, 0) / values.length
 }
-
 
 
 function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, value: number) {
