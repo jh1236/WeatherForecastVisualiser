@@ -30,11 +30,12 @@ import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryC
 
 import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
 
-interface WindMapParams {
+interface WindMapProps {
     defaultBounds?: LatLngBounds,
     data: WeatherData,
-    currentTimeStamp: number
-    populated: boolean
+    currentTimeStamp: number,
+    populated: boolean,
+    playbackSpeed: number
 }
 
 interface MapEventHandlerParams {
@@ -117,8 +118,9 @@ export function WeatherMap({
                                defaultBounds = new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]),
                                data: allData,
                                populated,
-                               currentTimeStamp
-                           }: WindMapParams) {
+                               currentTimeStamp,
+                               playbackSpeed
+                           }: WindMapProps) {
     const data = allData.times?.[currentTimeStamp]
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
@@ -145,186 +147,187 @@ export function WeatherMap({
                 {'}'}
             </style>
         )}
-        <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
-                      style={{height: '100%', width: `100%`}}>
-            {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
-                                 style={{
-                                     color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
-                                     fontSize: '5em',
-                                     fontWeight: 400,
-                                     padding: 20,
-                                     display: 'flex',
-                                     flexDirection: 'row',
-                                     justifyContent: 'space-between'
-                                 }}>
-                <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
-            </div>)}
-            <MapEventHandler
-                viewportBounds={viewportBounds}
-                setViewportBounds={setViewportBounds}
-                setBaseLayer={layer => setSetting("baseLayer", (layer as 'Satellite' | 'Street Map'))}
-                data={data}
-                populated={populated}/>
-            {populated && <>
-                <SVGOverlay bounds={latLngBndsIntersection(dataBounds, viewportBounds!)}>
-                    {settings.displayDataArea &&
-                        <rect x="0%" width="100%" y="0%" height="100%"
-                              fill={darkModeRender ? 'lightblue' : 'blue'}
-                              stroke="blue"
-                              fillOpacity={0.1}
-                              strokeOpacity={0.5}
-                        />}
-
-
-                    {settings["windColors.enabled"] &&
-                        <WindColors
-                            data={data?.gribFrames}
-                            resolution={settings["windColors.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </WindColors>
-                    }
-
-                    {settings["temperatureColors.enabled"] &&
-                        <TemperatureColors
-                            data={data?.gribFrames}
-                            opacity={settings["temperatureColors.opacity"]}
-                            resolution={settings["temperatureColors.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </TemperatureColors>
-                    }
-
-                    {settings["windBarbs.enabled"] &&
-                        <WindBarbs
-                            data={data?.gribFrames}
-                            resolution={settings["windBarbs.count"]}
-                            viewportBounds={viewportBounds}
-                            darkModeRender={darkModeRender}>
-                        </WindBarbs>
-                    }
-
-                </SVGOverlay>
-                <Pane name="ocean" style={{zIndex: 380}}>
+            <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
+                          style={{height: '100%', width: `100%`}}>
+                {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
+                                     style={{
+                                         color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
+                                         fontSize: '5em',
+                                         fontWeight: 400,
+                                         padding: 20,
+                                         display: 'flex',
+                                         flexDirection: 'row',
+                                         justifyContent: 'space-between'
+                                     }}>
+                    <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
+                </div>)}
+                <MapEventHandler
+                    viewportBounds={viewportBounds}
+                    setViewportBounds={setViewportBounds}
+                    setBaseLayer={layer => setSetting("baseLayer", (layer as 'Satellite' | 'Street Map'))}
+                    data={data}
+                    populated={populated}/>
+                {populated && <>
                     <SVGOverlay bounds={latLngBndsIntersection(dataBounds, viewportBounds!)}>
-                        {settings["oceanTemperatureColors.enabled"] &&
-                            <TemperatureColors
-                                opacity={settings["oceanTemperatureColors.opacity"]}
+                        {settings.displayDataArea &&
+                            <rect x="0%" width="100%" y="0%" height="100%"
+                                  fill={darkModeRender ? 'lightblue' : 'blue'}
+                                  stroke="blue"
+                                  fillOpacity={0.1}
+                                  strokeOpacity={0.5}
+                            />}
+
+
+                        {settings["windColors.enabled"] &&
+                            <WindColors
                                 data={data?.gribFrames}
-                                resolution={settings["oceanTemperatureColors.count"]}
+                                resolution={settings["windColors.count"]}
                                 viewportBounds={viewportBounds}
-                                darkModeRender={darkModeRender}
-                                tempKey={"oceanTemperature"}
-                            >
+                                darkModeRender={darkModeRender}>
+                            </WindColors>
+                        }
+
+                        {settings["temperatureColors.enabled"] &&
+                            <TemperatureColors
+                                data={data?.gribFrames}
+                                opacity={settings["temperatureColors.opacity"]}
+                                resolution={settings["temperatureColors.count"]}
+                                viewportBounds={viewportBounds}
+                                darkModeRender={darkModeRender}>
                             </TemperatureColors>
                         }
 
-                        {settings["currentArrows.enabled"] &&
-                            <CurrentArrows
+                        {settings["windBarbs.enabled"] &&
+                            <WindBarbs
                                 data={data?.gribFrames}
-                                resolution={settings["currentArrows.count"]}
+                                resolution={settings["windBarbs.count"]}
                                 viewportBounds={viewportBounds}
                                 darkModeRender={darkModeRender}>
-                            </CurrentArrows>
+                            </WindBarbs>
                         }
 
                     </SVGOverlay>
-                </Pane>
-                {settings["windParticles.enabled"] &&
-                    <VelocityLayer
-                        data={data?.gribFrames.filter(it => it.header.discipline === 0)}
-                        maxVelocity={knotsToMps(50)}
-                        velocityScale={0.01 * settings["windParticles.particleMultiplier"]}
-                        opacity={settings["windParticles.opacity"]}
-                        displayValues={false}
-                        colorScale={Array.from({length: 10}).map((_, i) =>
-                            getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
-                }
-
-                {settings["currentParticles.enabled"] &&
-                    <VelocityLayer
-                        data={data?.gribFrames.filter(it => it.header.discipline === 10)}
-                        maxVelocity={2}
-                        velocityScale={darkModeRender ? 0.075 : 0.125}
-                        opacity={settings["currentParticles.opacity"]}
-                        displayValues={false}
-                        paneName="ocean"
-                    >
-                    </VelocityLayer>
-                }
-
-                {settings.displayDataPickerPoints && <PointsGrapher viewportBounds={viewportBounds!} data={allData}
-                                                                    currentTimeStamp={currentTimeStamp}></PointsGrapher>}
-
-
-                {settings.showDataOnMouseOver &&
-                    <DataMouseOver
-                        data={data?.gribFrames}
-                        viewportBounds={viewportBounds}/>
-                }
-            </>}
-            <LayersControl position="topright" autoZIndex>
-                <LayersControl.BaseLayer checked={settings.baseLayer === 'Satellite'} name="Satellite">
-                    <LayerGroup>
-                        <TileLayer
-                            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        />
-                        <Pane name="aboveSatellite" style={{zIndex: 390}}>
-                            {westAusBbox && <BoundaryCanvas
-                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                                boundary={westAusBbox}
-                                zIndex={10}/>}
-                        </Pane>
-                    </LayerGroup>
-                </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer checked={settings.baseLayer === 'Street Map'} name="Street Map">
-                    <LayerGroup>
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-                        />
-                        <Pane name="aboveStreet" style={{zIndex: 390}}>
-                            {westAusBbox && resolvedTheme === 'dark' ? <BoundaryCanvas
-                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png"
-                                boundary={westAusBbox}
-                                zIndex={10}/> : <BoundaryCanvas
-                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                boundary={westAusBbox}
-                                zIndex={10}/>
+                    <Pane name="ocean" style={{zIndex: 380}}>
+                        <SVGOverlay bounds={latLngBndsIntersection(dataBounds, viewportBounds!)}>
+                            {settings["oceanTemperatureColors.enabled"] &&
+                                <TemperatureColors
+                                    opacity={settings["oceanTemperatureColors.opacity"]}
+                                    data={data?.gribFrames}
+                                    resolution={settings["oceanTemperatureColors.count"]}
+                                    viewportBounds={viewportBounds}
+                                    darkModeRender={darkModeRender}
+                                    tempKey={"oceanTemperature"}
+                                >
+                                </TemperatureColors>
                             }
-                        </Pane>
-                    </LayerGroup>
-                </LayersControl.BaseLayer>
-            </LayersControl>
+
+                            {settings["currentArrows.enabled"] &&
+                                <CurrentArrows
+                                    data={data?.gribFrames}
+                                    resolution={settings["currentArrows.count"]}
+                                    viewportBounds={viewportBounds}
+                                    darkModeRender={darkModeRender}>
+                                </CurrentArrows>
+                            }
+
+                        </SVGOverlay>
+                    </Pane>
+                    {settings["windParticles.enabled"] &&
+                        <VelocityLayer
+                            data={data?.gribFrames.filter(it => it.header.discipline === 0)}
+                            maxVelocity={knotsToMps(50)}
+                            velocityScale={0.01 * settings["windParticles.particleMultiplier"]}
+                            opacity={settings["windParticles.opacity"]}
+                            displayValues={false}
+                            colorScale={Array.from({length: 10}).map((_, i) =>
+                                getColorFromWindSpeedKts(50 * (i) / 10))}></VelocityLayer>
+                    }
+
+                    {settings["currentParticles.enabled"] &&
+                        <VelocityLayer
+                            data={data?.gribFrames.filter(it => it.header.discipline === 10)}
+                            maxVelocity={2}
+                            velocityScale={darkModeRender ? 0.075 : 0.125}
+                            opacity={settings["currentParticles.opacity"]}
+                            displayValues={false}
+                            paneName="ocean"
+                        >
+                        </VelocityLayer>
+                    }
+
+                    {settings.displayDataPickerPoints && <PointsGrapher viewportBounds={viewportBounds!} data={allData}
+                                                                        currentTimeStamp={currentTimeStamp}
+                                                                        draggable={playbackSpeed === 0}></PointsGrapher>}
 
 
-        </MapContainer>
-        {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
-            <ColorRange
-                colorFunc={getColorFromWindSpeedKts} textFunc={n => `${Math.round(n - 2.5)}kt`}
-                top={52.5}
-                bottom={-2.5}
-                resolution={100}
-                textCount={11}/>
-        </div>}
-        {settings.displayTempScale && settings.displayWindScale &&
-            <div style={{width: '5px', textAlign: 'center'}}></div>
-        }
-        {settings.displayTempScale &&
-            <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
+                    {settings.showDataOnMouseOver &&
+                        <DataMouseOver
+                            data={data?.gribFrames}
+                            viewportBounds={viewportBounds}/>
+                    }
+                </>}
+                <LayersControl position="topright" autoZIndex>
+                    <LayersControl.BaseLayer checked={settings.baseLayer === 'Satellite'} name="Satellite">
+                        <LayerGroup>
+                            <TileLayer
+                                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            />
+                            <Pane name="aboveSatellite" style={{zIndex: 390}}>
+                                {westAusBbox && <BoundaryCanvas
+                                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                    boundary={westAusBbox}
+                                    zIndex={10}/>}
+                            </Pane>
+                        </LayerGroup>
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer checked={settings.baseLayer === 'Street Map'} name="Street Map">
+                        <LayerGroup>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                            />
+                            <Pane name="aboveStreet" style={{zIndex: 390}}>
+                                {westAusBbox && resolvedTheme === 'dark' ? <BoundaryCanvas
+                                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png"
+                                    boundary={westAusBbox}
+                                    zIndex={10}/> : <BoundaryCanvas
+                                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    boundary={westAusBbox}
+                                    zIndex={10}/>
+                                }
+                            </Pane>
+                        </LayerGroup>
+                    </LayersControl.BaseLayer>
+                </LayersControl>
+
+
+            </MapContainer>
+            {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
                 <ColorRange
-                    colorFunc={getColorFromTemperature}
-                    textFunc={n => `${Math.round(n - 2.5)}°C`}
+                    colorFunc={getColorFromWindSpeedKts} textFunc={n => `${Math.round(n - 2.5)}kt`}
                     top={52.5}
                     bottom={-2.5}
                     resolution={100}
-                    textCount={11}></ColorRange>
-            </div>
-        }
+                    textCount={11}/>
+            </div>}
+            {settings.displayTempScale && settings.displayWindScale &&
+                <div style={{width: '5px', textAlign: 'center'}}></div>
+            }
+            {settings.displayTempScale &&
+                <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
+                    <ColorRange
+                        colorFunc={getColorFromTemperature}
+                        textFunc={n => `${Math.round(n - 2.5)}°C`}
+                        top={52.5}
+                        bottom={-2.5}
+                        resolution={100}
+                        textCount={11}></ColorRange>
+                </div>
+            }
 
     </>
 }

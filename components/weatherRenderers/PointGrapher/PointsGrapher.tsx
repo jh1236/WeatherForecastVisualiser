@@ -11,13 +11,14 @@ interface PointsGrapherProps {
     currentTimeStamp: number,
     data: WeatherData,
     portalTarget?: HTMLDivElement
+    draggable: boolean
 }
 
 export const COLORS = ['blue', 'red', 'green', 'orange', 'pink'] as const
 
 export type MapGraphPointer = { pos: LatLng, color: typeof COLORS[number] };
 
-export function PointsGrapher({data, viewportBounds}: PointsGrapherProps) {
+export function PointsGrapher({data, viewportBounds, draggable}: PointsGrapherProps) {
     const [points, setPoints] = useState<MapGraphPointer[]>([{pos: viewportBounds.getCenter(), color: 'blue'}]);
     const parentRef = useRef<HTMLDivElement>(null);
     const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
@@ -53,6 +54,7 @@ export function PointsGrapher({data, viewportBounds}: PointsGrapherProps) {
         </div>
         {points.map((point, index) =>
             <Point key={index} point={point}
+                   draggable={draggable}
                    id={index}
                    setPoint={(newPos) => setPoints(prev => prev.map((p, i) => i === index ? newPos : p))}></Point>
         )}
@@ -64,10 +66,11 @@ export function PointsGrapher({data, viewportBounds}: PointsGrapherProps) {
 interface PointProps {
     id: number,
     point: MapGraphPointer,
-    setPoint: (point: MapGraphPointer) => void
+    setPoint: (point: MapGraphPointer) => void,
+    draggable: boolean
 }
 
-function Point({point, setPoint}: PointProps) {
+function Point({point, setPoint, draggable}: PointProps) {
     const markerRef = useRef<MarkerType>(null)
     const eventHandlers = useMemo(
         () => ({
@@ -91,7 +94,7 @@ function Point({point, setPoint}: PointProps) {
                 shadowUrl: '/draggable_shadow.png',
                 shadowSize
             })}
-            draggable
+            draggable={draggable}
             eventHandlers={eventHandlers}
             position={point.pos}
             ref={markerRef}>

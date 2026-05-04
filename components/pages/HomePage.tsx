@@ -54,7 +54,7 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap data={data} populated={populated} currentTimeStamp={currentTimeStamp}/>
+                <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated} currentTimeStamp={currentTimeStamp}/>
             </div>
             <div style={{
                 display: 'flex',
