@@ -286,11 +286,16 @@ export function WeatherMap({
                             url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
                         />
                         <Pane name="aboveStreet" style={{zIndex: 390}}>
-                            {westAusBbox && <BoundaryCanvas
+                            {westAusBbox && resolvedTheme === 'dark' ? <BoundaryCanvas
                                 attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                                url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
                                 boundary={westAusBbox}
-                                zIndex={10}/>}
+                                zIndex={10}/> : <BoundaryCanvas
+                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                boundary={westAusBbox}
+                                zIndex={10}/>
+                            }
                         </Pane>
                     </LayerGroup>
                 </LayersControl.BaseLayer>
