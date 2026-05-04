@@ -75,7 +75,6 @@ export function ChartLineLinear({data, points, viewportBounds, setPoints}: Chart
     const [dataKey, setDataKey] = useState<DataKey | 'all'>('temperature')
     const valueRanges = useMemo(() => getValueRangeForData(data).map(getDataFromWeatherDataPoint), [data])
     const nextFreeColor = COLORS.find(it => !points.map(p => p.color).includes(it))!
-    console.log(valueRanges)
     const chartData =
         Object.values(data.times)
             .map(it =>
