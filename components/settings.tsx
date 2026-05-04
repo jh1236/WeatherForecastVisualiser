@@ -7,6 +7,7 @@ import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 export interface Settings {
     baseLayer: 'Satellite' | 'Street Map';
     showDataOnMouseOver: boolean;
+    displayDataPickerPoints: boolean;
     interpolateDataMouseOver: boolean;
     displayDataArea: boolean;
     displayTempScale: boolean;
@@ -51,6 +52,7 @@ const DEFAULT_GRID_RESOLUTION = 60
 
 const defaultSettings: Settings = {
     baseLayer: 'Satellite',
+    displayDataPickerPoints: false,
     showDataOnMouseOver: true,
     interpolateDataMouseOver: true,
     displayDataArea: false,

@@ -18,7 +18,7 @@ export const COLORS = ['blue', 'red', 'green', 'orange', 'pink'] as const
 export type MapGraphPointer = { pos: LatLng, color: typeof COLORS[number] };
 
 export function PointsGrapher({data, viewportBounds}: PointsGrapherProps) {
-    const [points, setPoints] = useState<MapGraphPointer[]>([]);
+    const [points, setPoints] = useState<MapGraphPointer[]>([{pos: viewportBounds.getCenter(), color: 'blue'}]);
     const parentRef = useRef<HTMLDivElement>(null);
     const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
     const map = useMap()

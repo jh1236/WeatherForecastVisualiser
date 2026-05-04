@@ -17,7 +17,6 @@ import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
 import {knotsToMps} from "@/components/unitsUtils";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
 import {GeoJSON as GeoJSONType} from "geojson";
-import {MaskedTileLayer} from "@/components/ReactLeafletWrappers/LeafletMaskTile/MaskedTileLayer";
 import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryCanvas/BoundaryCanvas";
 
 import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
@@ -245,7 +244,8 @@ export function WeatherMap({
                         </VelocityLayer>
                 }
 
-                <PointsGrapher viewportBounds={viewportBounds!} data={allData} currentTimeStamp={currentTimeStamp}></PointsGrapher>
+                {settings.displayDataPickerPoints && <PointsGrapher viewportBounds={viewportBounds!} data={allData}
+                                currentTimeStamp={currentTimeStamp}></PointsGrapher>}
 
 
                 {settings.showDataOnMouseOver &&

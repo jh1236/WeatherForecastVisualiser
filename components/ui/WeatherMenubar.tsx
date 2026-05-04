@@ -290,7 +290,8 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
                         </MenubarLabel>
                         <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider style={{width: '120px'}} min={0} value={[settings["oceanTemperatureColors.opacity"]]}
+                            <Slider style={{width: '120px'}} min={0}
+                                    value={[settings["oceanTemperatureColors.opacity"]]}
                                     max={1}
                                     step={0.05}
                                     onValueChange={([v]) => setSetting("oceanTemperatureColors.opacity", v)}></Slider>
@@ -356,6 +357,8 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         <MenubarCheckboxItem checked={settings.interpolateDataMouseOver}
                                              onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
                             Mouseover Data</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
+                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Show Point Graph</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarGroup className="w-80">
                         <MenubarSub>
