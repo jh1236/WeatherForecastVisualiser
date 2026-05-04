@@ -16,7 +16,7 @@ import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
 import {knotsToMps} from "@/components/unitsUtils";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
-import {PointGrapher} from "@/components/weatherRenderers/PointGrapher/PointGrapher";
+import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds,
@@ -105,7 +105,6 @@ export function WeatherMap({
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
-
     const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
 
 
@@ -122,7 +121,6 @@ export function WeatherMap({
                 {'}'}
             </style>
         )}
-
         <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
                       style={{height: '100%', width: `100%`}}>
             {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
@@ -222,7 +220,7 @@ export function WeatherMap({
                     </VelocityLayer>
                 }
 
-                <PointGrapher viewportBounds={viewportBounds} data={allData} currentTimeStamp={currentTimeStamp}></PointGrapher>
+                <PointsGrapher viewportBounds={viewportBounds!} data={allData} currentTimeStamp={currentTimeStamp}></PointsGrapher>
 
 
                 {settings.showDataOnMouseOver &&

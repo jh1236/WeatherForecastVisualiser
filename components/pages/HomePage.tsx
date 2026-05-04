@@ -54,14 +54,24 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap data={data} populated={populated} currentTimeStamp={currentTimeStamp} />
+                <WeatherMap data={data} populated={populated} currentTimeStamp={currentTimeStamp}/>
             </div>
-            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-evenly', flexDirection: 'row', padding: '12px', width: '100%'}}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-evenly',
+                flexDirection: 'row',
+                padding: '12px',
+                width: '100%'
+            }}>
                 {settings.dataSource === 'netCDF' && <DatePicker date={date} setDate={(date) => {
                     reset()
                     setDate(date)
                 }}/>}
-                <p style={{paddingLeft: 20, paddingRight: 20}}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(settings.dataSource === 'netCDF' ? 16 : 0, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
+                <p style={{
+                    paddingLeft: 20,
+                    paddingRight: 20
+                }}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(settings.dataSource === 'netCDF' ? 16 : 0, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
 
                 <Slider
                     min={timestamps.reduce((a, b) => Math.min(a, b), Number.MAX_VALUE)}

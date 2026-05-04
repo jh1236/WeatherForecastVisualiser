@@ -1,5 +1,5 @@
 import {LatLng, LatLngBounds} from "leaflet";
-import {GribFrame, GribHeader, WeatherDataPoint} from "@/components/types";
+import {GribFrame, GribHeader, WeatherData, WeatherDataPoint} from "@/components/types";
 import {floorCeil, lerp} from "@/components/utilities";
 import {
     boundsFromGribFrame,
@@ -109,8 +109,7 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 }
 
 
-
-function addToWeatherDataPoint(dataPoint: WeatherDataPoint, header: GribHeader, value: number) {
+function addToWeatherDataPoint(dataPoint: WeatherDataPointValues, header: GribHeader, value: number) {
     const code = codeFromGribFrame({header})
 
     switch (code) {
@@ -146,6 +145,8 @@ export function getWeatherDataPointForArea(weatherIn: GribFrame[], area: LatLngB
     return out
 }
 
+
+export function getWeatherDataPointForPoint(weatherIn: GribFrame[], point: LatLng, interpolate?: boolean): WeatherDataPoint
 export function getWeatherDataPointForPoint(weatherIn: GribFrame[] | undefined, point: LatLng, interpolate: boolean = true): WeatherDataPoint | undefined {
     if (weatherIn === undefined) return undefined
     const out: WeatherDataPoint = {bounds: point.toBounds(0)}
@@ -156,4 +157,23 @@ export function getWeatherDataPointForPoint(weatherIn: GribFrame[] | undefined, 
     }
 
     return out
+}
+
+export type WeatherDataPointValues = Omit<WeatherDataPoint, 'bounds' | 'nanPercentage' | 'debugData'>;
+
+
+export function getValueRangeForData(weatherIn: WeatherData): [WeatherDataPointValues, WeatherDataPointValues]
+export function getValueRangeForData(weatherIn: WeatherData | undefined): [WeatherDataPointValues, WeatherDataPointValues] | undefined {
+    if (weatherIn === undefined) return undefined
+    const min: WeatherDataPointValues = {}
+    const max: WeatherDataPointValues = {}
+    for (const i of Object.values(weatherIn.times)) {
+        for (const frame of i.gribFrames) {
+            const [frameMin, frameMax] = frame.data.reduce((a, b) => Number.isNaN(b) || !b ? a : [Math.min(a[0], Math.abs(b)), Math.max(a[1], Math.abs(b))], [Number.MAX_VALUE, 0]);
+            addToWeatherDataPoint(min, frame.header, frameMin)
+            addToWeatherDataPoint(max, frame.header, frameMax)
+        }
+    }
+
+    return [min, max]
 }

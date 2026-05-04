@@ -2,7 +2,7 @@ import {useMemo, useState} from "react";
 import {bearing, magnitude} from "@/components/vectorUtils";
 import {Rectangle, Tooltip, useMapEvents} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
-import {convertToDMS, roundTo} from "@/components/utilities";
+import {latLngToDMS, roundTo} from "@/components/utilities";
 import {GribFrame} from "@/components/types";
 import {getWeatherDataPointForPoint,} from "@/components/dataManagement/DataProcessing";
 import {useSettings} from "@/components/settings";
@@ -39,7 +39,7 @@ export function DataMouseOver({data, viewportBounds,}: WindDataMouseOverProps) {
         <Tooltip sticky>{dataPoint ?
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <div>
-                    <b>{convertToDMS(Math.abs(latLng.lat))} {latLng.lat > 0 ? 'N' : 'S'}, {convertToDMS(latLng.lng)} E</b>
+                    <b>{latLngToDMS(latLng)}</b>
                 </div>
                 {'\n'}
                 {wind && <div><i

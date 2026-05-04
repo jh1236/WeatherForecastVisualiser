@@ -12,6 +12,8 @@ export interface WeatherDataPoint {
     nanPercentage?: number;
 }
 
+export type WeatherDataPointKey = 'oceanTemperature' | 'windU' | 'windV' | 'currentU' | 'temperature';
+
 export interface WeatherData {
     times: { [time: string]: WeatherDataTimeSnapshot }
 }

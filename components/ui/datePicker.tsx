@@ -23,7 +23,7 @@ export function DatePicker({date, setDate}: DatePickerProps) {
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50 leaflet-control">
+            <PopoverContent className="w-auto p-0 z-1000">
                 <Calendar required mode="single" selected={date} onSelect={setDate}/>
             </PopoverContent>
         </Popover>
