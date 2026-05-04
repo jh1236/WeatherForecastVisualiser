@@ -5,7 +5,7 @@ import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
 import {LatLngBounds} from "leaflet";
 import {useEffect, useState} from "react";
-import {WeatherDataTimeSnapshot} from "@/components/types";
+import {WeatherData, WeatherDataTimeSnapshot} from "@/components/types";
 import {useSettings} from "@/components/settings";
 import {useTheme} from "next-themes";
 import {TemperatureColors} from "@/components/weatherRenderers/TemperatureColor";
@@ -20,10 +20,12 @@ import {GeoJSON as GeoJSONType} from "geojson";
 import {MaskedTileLayer} from "@/components/ReactLeafletWrappers/LeafletMaskTile/MaskedTileLayer";
 import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryCanvas/BoundaryCanvas";
 
+import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
 
 interface WindMapParams {
     defaultBounds?: LatLngBounds,
-    data: WeatherDataTimeSnapshot,
+    data: WeatherData,
+    currentTimeStamp: number
     populated: boolean
 }
 
@@ -105,9 +107,11 @@ function MapEventHandler({
 
 export function WeatherMap({
                                defaultBounds = new LatLngBounds([[-31.957818684731258, 115.62852859497072], [-32.0988392350303, 115.95811843872072]]),
-                               data,
-                               populated
+                               data: allData,
+                               populated,
+                               currentTimeStamp
                            }: WindMapParams) {
+    const data = allData.times?.[currentTimeStamp]
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
     const {settings, setSetting} = useSettings()
     const {resolvedTheme} = useTheme()
@@ -133,7 +137,6 @@ export function WeatherMap({
                 {'}'}
             </style>
         )}
-
         <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
                       style={{height: '100%', width: `100%`}}>
             {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
@@ -241,6 +244,8 @@ export function WeatherMap({
                         >
                         </VelocityLayer>
                 }
+
+                <PointsGrapher viewportBounds={viewportBounds!} data={allData} currentTimeStamp={currentTimeStamp}></PointsGrapher>
 
 
                 {settings.showDataOnMouseOver &&

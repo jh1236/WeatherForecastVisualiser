@@ -161,7 +161,6 @@ export async function GET() {
 
 export async function POST(request: NextRequest):Promise<Response> {
     const req = await request.json()
-    console.log(req)
 
     const region = req.region
     const year = req.year.toString();

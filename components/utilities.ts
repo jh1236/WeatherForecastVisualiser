@@ -1,3 +1,5 @@
+import {LatLng} from "leaflet";
+
 export function zip<T extends unknown[][]>(
     ...args: T
 ): { [K in keyof T]: T[K] extends (infer V)[] ? V : never }[] {
@@ -21,6 +23,9 @@ export function convertToDMS(deg: number) {
     return [0 | deg, '° ', 0 | (deg = (deg < 0 ? -deg : deg) + 1e-4) % 1 * 60, "' ", 0 | deg * 60 % 1 * 60, '"'].join('');
 }
 
+export function latLngToDMS(latLng: LatLng) {
+    return `${convertToDMS(Math.abs(latLng.lat))} ${latLng.lat > 0 ? 'N' : 'S'}, ${convertToDMS(latLng.lng)} E`
+}
 
 export function roundTo(n: number, digits: number) {
     return Math.round(n * Math.pow(10, digits)) / Math.pow(10, digits);
@@ -108,4 +113,10 @@ export function generateHash(string: string) {
         hash |= 0; // Constrain to 32bit integer
     }
     return hash;
+}
+
+export function camelCaseToTitleCase(s: string) {
+    // snippet from https://stackoverflow.com/a/7225450
+    const result = s.replace(/([A-Z])/g, ' $1');
+    return result.charAt(0).toUpperCase() + result.slice(1);
 }
