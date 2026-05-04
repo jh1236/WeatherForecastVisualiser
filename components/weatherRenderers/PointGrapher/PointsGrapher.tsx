@@ -29,7 +29,7 @@ export function PointsGrapher({data, viewportBounds}: PointsGrapherProps) {
                 // child.style = {aspectRatio: '4 / 3', height: '30svh', margin: 20, marginRight: 70}
                 child.style.aspectRatio = '4 / 3'
                 child.style.height = '30svh'
-                child.style.marginRight = '70px'
+                child.style.marginTop = '70px'
                 L.DomEvent.disableScrollPropagation(child)
                 L.DomEvent.disableClickPropagation(child)
                 setPortalTarget(child)

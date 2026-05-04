@@ -1,4 +1,13 @@
-import {LayersControl, MapContainer, Pane, SVGOverlay, TileLayer, useMap, useMapEvents} from "react-leaflet";
+import {
+    LayerGroup,
+    LayersControl,
+    MapContainer,
+    Pane,
+    SVGOverlay,
+    TileLayer,
+    useMap,
+    useMapEvents
+} from "react-leaflet";
 import {VelocityLayer} from "@/components/ReactLeafletWrappers/LeafletVelocity/ParticleLayers";
 import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
@@ -233,19 +242,19 @@ export function WeatherMap({
                 }
 
                 {settings["currentParticles.enabled"] &&
-                        <VelocityLayer
-                            data={data?.gribFrames.filter(it => it.header.discipline === 10)}
-                            maxVelocity={2}
-                            velocityScale={darkModeRender ? 0.075 : 0.125}
-                            opacity={settings["currentParticles.opacity"]}
-                            displayValues={false}
-                            paneName="ocean"
-                        >
-                        </VelocityLayer>
+                    <VelocityLayer
+                        data={data?.gribFrames.filter(it => it.header.discipline === 10)}
+                        maxVelocity={2}
+                        velocityScale={darkModeRender ? 0.075 : 0.125}
+                        opacity={settings["currentParticles.opacity"]}
+                        displayValues={false}
+                        paneName="ocean"
+                    >
+                    </VelocityLayer>
                 }
 
                 {settings.displayDataPickerPoints && <PointsGrapher viewportBounds={viewportBounds!} data={allData}
-                                currentTimeStamp={currentTimeStamp}></PointsGrapher>}
+                                                                    currentTimeStamp={currentTimeStamp}></PointsGrapher>}
 
 
                 {settings.showDataOnMouseOver &&
@@ -256,29 +265,37 @@ export function WeatherMap({
             </>}
             <LayersControl position="topright" autoZIndex>
                 <LayersControl.BaseLayer checked={settings.baseLayer === 'Satellite'} name="Satellite">
-                    <TileLayer
-                        attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                    />
+                    <LayerGroup>
+                        <TileLayer
+                            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        />
+                        <Pane name="aboveSatellite" style={{zIndex: 390}}>
+                            {westAusBbox && <BoundaryCanvas
+                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                boundary={westAusBbox}
+                                zIndex={10}/>}
+                        </Pane>
+                    </LayerGroup>
                 </LayersControl.BaseLayer>
                 <LayersControl.BaseLayer checked={settings.baseLayer === 'Street Map'} name="Street Map">
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-                    />
+                    <LayerGroup>
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                        />
+                        <Pane name="aboveStreet" style={{zIndex: 390}}>
+                            {westAusBbox && <BoundaryCanvas
+                                attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url={resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
+                                boundary={westAusBbox}
+                                zIndex={10}/>}
+                        </Pane>
+                    </LayerGroup>
                 </LayersControl.BaseLayer>
             </LayersControl>
-            <Pane name="above" style={{zIndex: 390}}>
-                {westAusBbox && <BoundaryCanvas
-                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url={settings.baseLayer === 'Satellite' ?
-                        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" :
-                        resolvedTheme === 'dark' ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png' :
-                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-                    // url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                    boundary={westAusBbox}
-                    zIndex={10}/>}
-            </Pane>
+
 
         </MapContainer>
         {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>

@@ -358,7 +358,7 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                              onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
                             Mouseover Data</MenubarCheckboxItem>
                         <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
-                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Show Point Graph</MenubarCheckboxItem>
+                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph Data at Point</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarGroup className="w-80">
                         <MenubarSub>
