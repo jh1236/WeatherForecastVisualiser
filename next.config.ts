@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
             },
         ];
     },
-    allowedDevOrigins: ["192.168.0.50"]
+    allowedDevOrigins: ["192.168.0.50"],
+    output: 'standalone'
 };
 
 export default nextConfig;
