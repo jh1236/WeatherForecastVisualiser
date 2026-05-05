@@ -85,35 +85,23 @@ export function useDataFromSettingsSource(date: Date): DataFunctionReturn {
     const [populated, setPopulated] = useState<boolean>(false)
     useEffect(() => {
         if (!isLoaded) return;
-        if (settings.dataSource === 'netCDF') {
-            fetch(`/api/dataFromThredds`, {
-                method: "POST",
-                body: JSON.stringify({
-                    year: date.getFullYear(),
-                    month: date.getMonth() + 1,
-                    day: date.getDate(),
-                    region: settings.region
-                }),
-            }).then(res =>
-                res.json().then(({data}: { data: WeatherData }) => {
-                        setData(data)
-                        setPopulated(true)
-                    }
-                )
+        fetch(`/api/dataFromThredds`, {
+            method: "POST",
+            body: JSON.stringify({
+                year: date.getFullYear(),
+                month: date.getMonth() + 1,
+                day: date.getDate(),
+                region: settings.region
+            }),
+        }).then(res =>
+            res.json().then(({data}: { data: WeatherData }) => {
+                    setData(data)
+                    setPopulated(true)
+                }
             )
-        } else {
-            fetch(`/api/dataFromGrib`, {
-                method: "POST",
-                body: JSON.stringify({file: settings.gribFile}),
-            }).then(res =>
-                res.json().then(({data}: { data: WeatherData }) => {
-                        setData(data)
-                        setPopulated(true)
-                    }
-                )
-            )
-        }
-    }, [date, isLoaded, settings.dataSource, settings.gribFile, settings.region])
+        )
+
+    }, [date, isLoaded, settings.region])
     return {
         data: data,
         reset: () => {

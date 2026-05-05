@@ -43,9 +43,7 @@ export interface Settings {
     "currentParticles.particleMultiplier": number;
     "currentParticles.opacity": number;
 
-    dataSource: 'netCDF' | 'grib'
     region: 'perth' | 'greaterPerth'
-    gribFile: null | string;
 }
 
 const DEFAULT_GRID_RESOLUTION = 60
@@ -57,9 +55,7 @@ const defaultSettings: Settings = {
     interpolateDataMouseOver: true,
     displayDataArea: false,
 
-    dataSource: 'netCDF',
     region: 'perth',
-    gribFile: 'cwa_atmosphere',
 
     windSpeedUnit: 'kt',
     currentSpeedUnit: 'km/h',

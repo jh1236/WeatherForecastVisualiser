@@ -58,48 +58,25 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
             <MenubarMenu>
                 <MenubarTrigger>File</MenubarTrigger>
                 <MenubarContent>
-                    <MenubarLabel>Select Data Source</MenubarLabel>
+                    <MenubarLabel>Select Data Region</MenubarLabel>
                     <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.dataSource === 'netCDF'}
-                                             onSelect={() => {
-                                                 resetData()
-                                                 setSetting("dataSource", "netCDF")
-                                             }}>
-                            From THREDDS Server
-                        </MenubarCheckboxItem>
-                        <MenubarCheckboxItem checked={settings.dataSource === 'grib'}
-                                             onSelect={() => {
-                                                 resetData()
-                                                 setSetting("dataSource", "grib")
-                                             }}>
-                            GRIB File Upload
-                        </MenubarCheckboxItem>
-                    </MenubarGroup>
-                    <MenubarGroup>
-                        <MenubarLabel>Thredds Settings</MenubarLabel>
-                        <MenubarSub>
-                            <MenubarSubTrigger inset className="w-50">Region</MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarRadioGroup value={settings.region}
-                                                   onValueChange={value => {
-                                                       resetData()
-                                                       setSetting('region', (value as Settings['region']))
-                                                   }}>
-                                    <MenubarRadioItem
-                                        disabled={settings.dataSource === 'grib'}
-                                        value="perth"
-                                    >Perth</MenubarRadioItem>
-                                    <MenubarRadioItem
-                                        disabled={settings.dataSource === 'grib'}
-                                        value="greaterPerth"
-                                    >Greater Perth Region</MenubarRadioItem>
-                                    {/*<MenubarRadioItem*/}
-                                    {/*    disabled={settings.dataSource === 'grib'}*/}
-                                    {/*    value="greatBarrierReef"*/}
-                                    {/*>Great Barrier Reef</MenubarRadioItem>*/}
-                                </MenubarRadioGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
+                        <MenubarRadioGroup value={settings.region}
+                                           onValueChange={value => {
+                                               resetData()
+                                               setSetting('region', (value as Settings['region']))
+                                           }}>
+                            <MenubarRadioItem
+                                value="perth"
+                            >Perth</MenubarRadioItem>
+                            <MenubarRadioItem
+                                value="greaterPerth"
+                            >Greater Perth Region</MenubarRadioItem>
+                            {/*<MenubarRadioItem*/}
+                            {/*    disabled={settings.dataSource === 'grib'}*/}
+                            {/*    value="greatBarrierReef"*/}
+                            {/*>Great Barrier Reef</MenubarRadioItem>*/}
+                        </MenubarRadioGroup>
+
                     </MenubarGroup>
                 </MenubarContent>
             </MenubarMenu>
@@ -358,7 +335,8 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                              onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
                             Mouseover Data</MenubarCheckboxItem>
                         <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
-                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph Data at Point</MenubarCheckboxItem>
+                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph
+                            Data at Point</MenubarCheckboxItem>
                     </MenubarGroup>
                     <MenubarGroup className="w-80">
                         <MenubarSub>

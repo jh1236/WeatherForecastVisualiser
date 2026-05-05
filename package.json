@@ -11,7 +11,6 @@
   "dependencies": {
     "@jeremybarbet/jsdap": "^10.1.0",
     "@react-leaflet/core": "^3.0.0",
-    "@weacast/grib2json": "^2.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

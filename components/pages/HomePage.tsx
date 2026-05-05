@@ -5,7 +5,6 @@ import {Button} from "@/components/ui/button";
 import {ArrowLeftIcon, ArrowRightIcon, FastForwardIcon, PauseIcon, PlayIcon, RewindIcon} from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
 import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollection";
-import {useSettings} from "@/components/settings";
 
 import "@/components/pages/homepage.module.css"
 import dynamic from "next/dynamic";
@@ -25,7 +24,6 @@ export function HomePage() {
     const [currentTimeStampIndex, setCurrentTimeStampIndex] = useState(0);
     const currentTimeStamp = useMemo(() => timestamps[currentTimeStampIndex], [currentTimeStampIndex, timestamps]);
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(0);
-    const {settings} = useSettings();
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -54,7 +52,8 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated} currentTimeStamp={currentTimeStamp}/>
+                <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated}
+                            currentTimeStamp={currentTimeStamp}/>
             </div>
             <div style={{
                 display: 'flex',
@@ -64,14 +63,14 @@ export function HomePage() {
                 padding: '12px',
                 width: '100%'
             }}>
-                {settings.dataSource === 'netCDF' && <DatePicker date={date} setDate={(date) => {
+                <DatePicker date={date} setDate={(date) => {
                     reset()
                     setDate(date)
-                }}/>}
+                }}/>
                 <p style={{
                     paddingLeft: 20,
                     paddingRight: 20
-                }}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(settings.dataSource === 'netCDF' ? 16 : 0, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
+                }}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(16, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
 
                 <Slider
                     min={timestamps.reduce((a, b) => Math.min(a, b), Number.MAX_VALUE)}
