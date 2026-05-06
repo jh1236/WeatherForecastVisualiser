@@ -10,15 +10,15 @@ interface PointsGrapherProps {
     viewportBounds: LatLngBounds,
     currentTimeStamp: number,
     data: WeatherData,
-    portalTarget?: HTMLDivElement
     draggable: boolean
+    populated: boolean
 }
 
 export const COLORS = ['blue', 'red', 'green', 'orange', 'pink'] as const
 
 export type MapGraphPointer = { pos: LatLng, color: typeof COLORS[number] };
 
-export function PointsGrapher({data, viewportBounds, draggable}: PointsGrapherProps) {
+export function PointsGrapher({data, viewportBounds, draggable, populated}: PointsGrapherProps) {
     const [points, setPoints] = useState<MapGraphPointer[]>([{pos: viewportBounds.getCenter(), color: 'blue'}]);
     const parentRef = useRef<HTMLDivElement>(null);
     const [portalTarget, setPortalTarget] = useState<HTMLDivElement | null>(null);
@@ -28,8 +28,8 @@ export function PointsGrapher({data, viewportBounds, draggable}: PointsGrapherPr
             onAdd: () => {
                 const child = L.DomUtil.create('div', 'leaflet-top leaflet-right', parentRef.current!);
                 // child.style = {aspectRatio: '4 / 3', height: '30svh', margin: 20, marginRight: 70}
-                child.style.aspectRatio = '4 / 3'
-                child.style.height = '30svh'
+                child.style.aspectRatio = '1 / 1'
+                child.style.height = '40svh'
                 child.style.marginTop = '70px'
                 L.DomEvent.disableScrollPropagation(child)
                 L.DomEvent.disableClickPropagation(child)
@@ -49,7 +49,7 @@ export function PointsGrapher({data, viewportBounds, draggable}: PointsGrapherPr
                                                                setPoints={setPoints}
                                                                viewportBounds={viewportBounds!}></ChartLineLinear>, portalTarget) : null
     return <>
-        {graph}
+        {populated && graph}
         <div ref={parentRef}>
         </div>
         {points.map((point, index) =>

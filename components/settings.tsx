@@ -7,14 +7,18 @@ import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 export interface Settings {
     baseLayer: 'Satellite' | 'Street Map';
     showDataOnMouseOver: boolean;
-    displayDataPickerPoints: boolean;
     interpolateDataMouseOver: boolean;
     displayDataArea: boolean;
     displayTempScale: boolean;
     displayWindScale: boolean;
+    showObscureUnits: boolean;
 
-    windSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph',
-    currentSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph',
+    displayDataPickerPoints: boolean;
+    forceGraphsToZero: boolean;
+
+    "24HourTime": boolean;
+    windSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph' | 'c',
+    currentSpeedUnit: 'm/s' | 'km/h' | 'kt' | 'mph' | 'c',
     temperatureUnit: 'C' | 'K' | 'F',
 
     "windParticles.enabled": boolean;
@@ -46,11 +50,14 @@ export interface Settings {
     region: 'perth' | 'greaterPerth'
 }
 
-const DEFAULT_GRID_RESOLUTION = 60
+const DEFAULT_GRID_RESOLUTION = 90
 
 const defaultSettings: Settings = {
     baseLayer: 'Satellite',
+    showObscureUnits: false,
     displayDataPickerPoints: false,
+    forceGraphsToZero: false,
+    "24HourTime": false,
     showDataOnMouseOver: true,
     interpolateDataMouseOver: true,
     displayDataArea: false,
@@ -112,6 +119,18 @@ export function SettingsProvider({children}: { children: ReactNode }) {
     const setSetting = <K extends keyof Settings>(setting: K, value: Settings[K]) => {
         const current = settings ?? defaultSettings;
         const newSettings = {...current, [setting]: value};
+
+        if (setting === 'showObscureUnits' && value === false) {
+            if (['c', 'mph'].includes(newSettings.currentSpeedUnit)) {
+                newSettings.currentSpeedUnit = 'kt';
+            }
+            if (['c', 'mph'].includes(newSettings.windSpeedUnit)) {
+                newSettings.windSpeedUnit = 'kt';
+            }
+            if (['K'].includes(newSettings.temperatureUnit)) {
+                newSettings.temperatureUnit = 'C';
+            }
+        }
         setSettings(newSettings);
         setSettingStorage(newSettings);
     }

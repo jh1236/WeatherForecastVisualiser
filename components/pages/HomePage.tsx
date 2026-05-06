@@ -8,6 +8,7 @@ import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollect
 
 import "@/components/pages/homepage.module.css"
 import dynamic from "next/dynamic";
+import {useTimeInUserUnits} from "@/components/unitsUtils";
 
 const WeatherMap = dynamic(
     () => import('@/components/weatherRenderers/WeatherMap').then(mod => mod.WeatherMap),
@@ -18,6 +19,7 @@ export function HomePage() {
     const [date, setDate] = useState(new Date());
     const [mounted, setMounted] = useState(false);
     const {data, reset, populated} = useDataFromSettingsSource(date);
+    const timeFormatter = useTimeInUserUnits()
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
     const timestamps = useMemo(() => data.times ? Object.keys(data.times).map(it => Number(it)).toSorted((a, b) => a - b) : [], [data]);
@@ -70,7 +72,7 @@ export function HomePage() {
                 <p style={{
                     paddingLeft: 20,
                     paddingRight: 20
-                }}>{currentTimeStamp ? new Date(currentTimeStamp).toUTCString().slice(16, 22) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
+                }}>{currentTimeStamp ? timeFormatter(new Date(currentTimeStamp).toUTCString().slice(16, 22)) : ''} {playbackSpeed > 0 && `(${playbackSpeed}x)`}</p>
 
                 <Slider
                     min={timestamps.reduce((a, b) => Math.min(a, b), Number.MAX_VALUE)}

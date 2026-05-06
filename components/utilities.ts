@@ -18,13 +18,17 @@ export function lerp(a: number, b: number, t: number) {
     return a + (b - a) * t;
 }
 
-export function convertToDMS(deg: number) {
+export function convertToDMS(deg: number, brief: boolean = false): string {
     //excerpt from https://stackoverflow.com/a/5786281
-    return [0 | deg, '° ', 0 | (deg = (deg < 0 ? -deg : deg) + 1e-4) % 1 * 60, "' ", 0 | deg * 60 % 1 * 60, '"'].join('');
+    const out = [0 | deg, '° ', 0 | (deg = (deg < 0 ? -deg : deg) + 1e-4) % 1 * 60, "' "];
+    if (!brief) {
+        out.push(...[0 | deg * 60 % 1 * 60, '"'])
+    }
+    return out.join('');
 }
 
-export function latLngToDMS(latLng: LatLng) {
-    return `${convertToDMS(Math.abs(latLng.lat))} ${latLng.lat > 0 ? 'N' : 'S'}, ${convertToDMS(latLng.lng)} E`
+export function latLngToDMS(latLng: LatLng, brief: boolean = false) {
+    return `${convertToDMS(Math.abs(latLng.lat), brief)} ${latLng.lat > 0 ? 'N' : 'S'}, ${convertToDMS(latLng.lng, brief)} E`
 }
 
 export function roundTo(n: number, digits: number) {
@@ -119,4 +123,12 @@ export function camelCaseToTitleCase(s: string) {
     // snippet from https://stackoverflow.com/a/7225450
     const result = s.replace(/([A-Z])/g, ' $1');
     return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
+export function convertScientificNotationNumber(value: number, sigFigs?: number) {
+// snippet from https://stackoverflow.com/a/73709990
+    const decimalsPart = value?.toString()?.split('.')?.[1] || '';
+    const eDecimals = Number(decimalsPart?.split('e-')?.[1]) || 0;
+    const countOfDecimals = (sigFigs ?? decimalsPart.length) + eDecimals;
+    return Number(value).toFixed(countOfDecimals);
 }

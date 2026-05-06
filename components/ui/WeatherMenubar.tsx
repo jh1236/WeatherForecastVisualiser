@@ -76,8 +76,11 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             {/*    value="greatBarrierReef"*/}
                             {/*>Great Barrier Reef</MenubarRadioItem>*/}
                         </MenubarRadioGroup>
-
                     </MenubarGroup>
+                    <MenubarLabel>Other Settings</MenubarLabel>
+                    <MenubarCheckboxItem checked={settings.showObscureUnits}
+                                         onCheckedChange={() => setSetting('showObscureUnits', !settings.showObscureUnits)}>Show
+                        Obscure Units</MenubarCheckboxItem>
                 </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
@@ -102,9 +105,12 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="km/h"
                             >Kilometres per Hour</MenubarRadioItem>
-                            <MenubarRadioItem
+                            {settings.showObscureUnits && <MenubarRadioItem
                                 value="mph"
-                            >Miles per Hour</MenubarRadioItem>
+                            >Miles per Hour</MenubarRadioItem>}
+                            {settings.showObscureUnits && <MenubarRadioItem
+                                value="c"
+                            >Fractional Speed of Light</MenubarRadioItem>}
                         </MenubarRadioGroup>
                         <MenubarLabel>
                             Current speed
@@ -123,9 +129,12 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="km/h"
                             >Kilometres per Hour</MenubarRadioItem>
-                            <MenubarRadioItem
+                            {settings.showObscureUnits && <MenubarRadioItem
                                 value="mph"
-                            >Miles per Hour</MenubarRadioItem>
+                            >Miles per Hour</MenubarRadioItem>}
+                            {settings.showObscureUnits && <MenubarRadioItem
+                                value="c"
+                            >Fractional Speed of Light</MenubarRadioItem>}
                         </MenubarRadioGroup>
                         <MenubarLabel>
                             Temperature
@@ -138,14 +147,22 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="C"
                             >Celsius</MenubarRadioItem>
-                            <MenubarRadioItem
+                            {settings.showObscureUnits && <MenubarRadioItem
                                 value="K"
-                            >Kelvin</MenubarRadioItem>
+                            >Kelvin</MenubarRadioItem>}
                             <MenubarRadioItem
                                 value="F"
                             >Fahrenheit</MenubarRadioItem>
                         </MenubarRadioGroup>
                     </MenubarGroup>
+                    <MenubarLabel>
+                        Time
+                    </MenubarLabel>
+
+                    <MenubarCheckboxItem checked={settings["24HourTime"]}
+                                         onCheckedChange={() => setSetting('24HourTime', !settings['24HourTime'])}>Use
+                        24 Hour Time</MenubarCheckboxItem>
+
                 </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
@@ -320,6 +337,17 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                 </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
+                <MenubarTrigger>Graphs</MenubarTrigger>
+                <MenubarContent className="w-44">
+                    <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
+                                         onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph
+                        Data at Point</MenubarCheckboxItem>
+                    <MenubarCheckboxItem checked={!settings.forceGraphsToZero}
+                                         onSelect={() => setSetting('forceGraphsToZero', !settings.forceGraphsToZero)}>Allow
+                        Non-Zero Y Axis</MenubarCheckboxItem>
+                </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
                 <MenubarTrigger>View</MenubarTrigger>
                 <MenubarContent className="w-44">
                     <MenubarGroup>
@@ -334,9 +362,7 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         <MenubarCheckboxItem checked={settings.interpolateDataMouseOver}
                                              onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
                             Mouseover Data</MenubarCheckboxItem>
-                        <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
-                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph
-                            Data at Point</MenubarCheckboxItem>
+
                     </MenubarGroup>
                     <MenubarGroup className="w-80">
                         <MenubarSub>

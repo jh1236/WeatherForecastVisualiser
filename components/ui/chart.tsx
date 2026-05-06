@@ -125,6 +125,7 @@ function ChartTooltipContent({
   hideIndicator = false,
   label,
   labelFormatter,
+  valueFormatter,
   labelClassName,
   formatter,
   color,
@@ -137,6 +138,7 @@ function ChartTooltipContent({
     indicator?: "line" | "dot" | "dashed"
     nameKey?: string
     labelKey?: string
+    valueFormatter?: (value: number | string) => string
   } & Omit<
     RechartsPrimitive.DefaultTooltipContentProps<
       TooltipValueType,
@@ -191,7 +193,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-[10rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
         className
       )}
     >
@@ -246,7 +248,7 @@ function ChartTooltipContent({
                         nestLabel ? "items-end" : "items-center"
                       )}
                     >
-                      <div className="grid gap-1.5">
+                      <div className="grid gap-1.5 mr-2">
                         {nestLabel ? tooltipLabel : null}
                         <span className="text-muted-foreground">
                           {itemConfig?.label ?? item.name}
@@ -254,9 +256,14 @@ function ChartTooltipContent({
                       </div>
                       {item.value != null && (
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {typeof item.value === "number"
-                            ? item.value.toLocaleString()
-                            : String(item.value)}
+
+                          {valueFormatter !== undefined ?
+                              valueFormatter(typeof item.value === "number"
+                                ? item.value
+                                : String(item.value))
+                              : typeof item.value === "number"
+                                ? item.value.toLocaleString()
+                                : String(item.value)}
                         </span>
                       )}
                     </div>
