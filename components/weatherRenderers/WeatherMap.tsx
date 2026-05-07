@@ -29,6 +29,7 @@ import {GeoJSON as GeoJSONType} from "geojson";
 import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryCanvas/BoundaryCanvas";
 
 import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
+import {useMountedState} from "react-use";
 
 interface WindMapProps {
     defaultBounds?: LatLngBounds,

@@ -1,8 +1,6 @@
 'use server';
 
 import jsdap, {DDSResponse, DODSResponse} from "@jeremybarbet/jsdap"
-import fs from 'fs';
-import {generateHash} from "@/components/utilities";
 
 function fixData<T extends object>(data: T): T {
     switch (data.constructor.name) {
@@ -47,15 +45,7 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
         newUrl += entries.map(([key, value]) => `${key}${argToString(value)}`).join(",")
     }
     newUrl = encodeURI(newUrl)
-    const hash = generateHash(newUrl)
-    const path = `./cachedResponses/${hash}.json`;
-    if (fs.existsSync(path)) {
-        const text = (await fs.promises.readFile(path)).toString();
-        return JSON.parse(text)
-    }
-
-    console.log("\n" + newUrl + "\n")
-
+    
     const json = await new Promise<DODSResponse>((resolve, reject) =>
         jsdap.loadDataAndDDS(
             newUrl,
@@ -68,33 +58,6 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
         )
     )
     json.data = (fixData(json.data) as Record<T, NumberOrNDArray>)
-    let files = await fs.promises.readdir("./cachedResponses/");
-    while (files.length >= 50) { // We only want to keep the 50 most recent files; delete the rest
-        let oldestFileTime = Number.MAX_VALUE
-        let oldestFile: string | undefined = undefined
-
-        for (const i of files) {
-            // Stat the file to see if we have a file or dir
-            const stat = await fs.promises.stat(`./cachedResponses/${i}`);
-
-            if (stat.isDirectory()) {
-                continue
-            }
-
-            if (stat.mtimeMs < oldestFileTime) {
-                oldestFileTime = stat.mtimeMs
-                oldestFile = `./cachedResponses/${i}`
-            }
-
-        }
-        if (oldestFile) {
-            await fs.promises.unlink(oldestFile)
-        }
-        files = await fs.promises.readdir("./cachedResponses/");
-    }
-
-    fs.promises.writeFile(path, JSON.stringify(json))
-
 
     return json as {
         dds: DDSResponse,
