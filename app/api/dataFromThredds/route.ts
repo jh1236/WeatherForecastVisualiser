@@ -3,8 +3,6 @@
 import {NextRequest} from "next/server";
 import {getWeatherDataFromThredds} from "@/components/dataManagement/ThreddsDataToWeatherData";
 
-
-
 export async function POST(request: NextRequest): Promise<Response> {
     const req = await request.json()
 
