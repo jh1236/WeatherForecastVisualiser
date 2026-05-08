@@ -12,3 +12,7 @@ services:
     ports:
       - "8080:3000"
     restart: unless-stopped
+    volumes:
+      - cached-responses:/app/cachedResponses
+volumes:
+  cached-responses:
