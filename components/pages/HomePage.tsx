@@ -9,6 +9,7 @@ import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollect
 import "@/components/pages/homepage.module.css"
 import dynamic from "next/dynamic";
 import {useTimeInUserUnits} from "@/components/unitsUtils";
+import {useInterval} from "react-use";
 
 const WeatherMap = dynamic(
     () => import('@/components/weatherRenderers/WeatherMap').then(mod => mod.WeatherMap),
@@ -32,14 +33,11 @@ export function HomePage() {
         setMounted(true);
     }, []);
 
-    useEffect(() => {
-        if (playbackSpeed > 0) {
-            const timer = setInterval(() => {
-                setCurrentTimeStampIndex((currentTimeStampIndex + 1) % timestamps.length);
-            }, 1200 / playbackSpeed);
-            return () => clearInterval(timer);
-        }
-    }, [currentTimeStamp, currentTimeStampIndex, playbackSpeed, timestamps])
+    useInterval(() => {
+        setCurrentTimeStampIndex((currentTimeStampIndex + 1) % timestamps.length)
+    }, playbackSpeed !== 0 ? 1200 / playbackSpeed : null)
+
+
 
 
     return <div style={{
@@ -101,12 +99,12 @@ export function HomePage() {
                     paddingRight: '5%'
                 }}>
                     {playbackSpeed === 0 ?
-                        <Button disabled={currentTimeStampIndex <= 0} style={{margin: 'auto'}} variant="outline"
+                        <Button disabled={mounted && currentTimeStampIndex <= 0} style={{margin: 'auto'}} variant="outline"
                                 size="icon"
                                 onClick={() => setCurrentTimeStampIndex(Math.max(0, currentTimeStampIndex - 1))}>
                             <ArrowLeftIcon/>
                         </Button> :
-                        <Button disabled={playbackSpeed <= 1} style={{margin: 'auto'}}
+                        <Button disabled={mounted && playbackSpeed <= 1} style={{margin: 'auto'}}
                                 variant="outline" size="icon"
                                 onClick={() => setPlaybackSpeed(playbackSpeed / 2)}>
                             <RewindIcon/>
@@ -119,13 +117,13 @@ export function HomePage() {
                         {playbackSpeed === 0 ? <PlayIcon/> : <PauseIcon/>}
                     </Button>
                     {playbackSpeed === 0 ?
-                        <Button disabled={currentTimeStampIndex + 1 >= timestamps.length - 1}
+                        <Button disabled={mounted && currentTimeStampIndex + 1 >= timestamps.length - 1}
                                 style={{margin: 'auto'}}
                                 variant="outline" size="icon"
                                 onClick={() => setCurrentTimeStampIndex(Math.min(currentTimeStampIndex + 1, timestamps.length - 1))}>
                             <ArrowRightIcon/>
                         </Button> :
-                        <Button disabled={playbackSpeed >= 16} style={{margin: 'auto'}}
+                        <Button disabled={mounted && playbackSpeed >= 16} style={{margin: 'auto'}}
                                 variant="outline" size="icon"
                                 onClick={() => setPlaybackSpeed(playbackSpeed * 2)}>
                             <FastForwardIcon/>

@@ -11,8 +11,11 @@
   "dependencies": {
     "@jeremybarbet/jsdap": "^10.1.0",
     "@react-leaflet/core": "^3.0.0",
+    "@types/cron": "^2.4.3",
+    "@types/sanitize-filename": "^1.6.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cron": "^4.4.0",
     "date-fns": "^4.1.0",
     "esri-leaflet": "^3.0.19",
     "leaflet": "^1.9.4",
@@ -27,6 +30,7 @@
     "react-leaflet": "^5.0.0",
     "react-use": "^17.6.0",
     "recharts": "^3.8.0",
+    "sanitize-filename": "^1.6.4",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

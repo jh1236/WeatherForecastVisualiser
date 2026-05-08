@@ -262,3 +262,4 @@ export function mergeWeatherDatas(...weatherDatas: WeatherData[]): WeatherData {
     }
     return out
 }
+
