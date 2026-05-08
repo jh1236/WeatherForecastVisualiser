@@ -1,0 +1,14 @@
+services:
+  # Node.js service (use with: docker compose up nextjs-standalone --build)
+  weather-forecast-visualiser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: weather-forecast-visualiser
+    container_name: weather-forecast-visualiser-container
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "8080:3000"
+    restart: unless-stopped
