@@ -58,6 +58,7 @@ export function mapToBigBox(coord: number | string, delta: number | string, t: n
     return `${lerp(trueCoord, trueCoord + trueDelta, trueT)}%`
 }
 
+
 function SingleWindBarb({
                             viewportBounds,
                             dataPoint,
@@ -69,70 +70,73 @@ function SingleWindBarb({
                         }: SingleWindBarbProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
-    const magnitudeKnots = Math.round(5 * mpsToKnots(magnitude([windU!, windV!]))) / 5;
-    const strokeWidth = `${Number(w.replace(/%$/, '')) / 30}%`
+    const magnitudeKnots = Math.round(mpsToKnots(magnitude([windU!, windV!])) / 5) * 5 + 120;
+    const strokeWidth = 3
     const out = []
     const opacity = darkModeRender ? 1 : 0.5;
     const color = darkModeRender ? "white" : "black";
     if (magnitudeKnots === 0) {
-        const radius = `${Number(w.replace(/%$/, '')) / 10}%`
-        out.push(<circle cx={mapToBigBox(x, w, "50%")} cy={mapToBigBox(y, h, "50%")} r={radius} fillOpacity={0.0}
+        out.push(<circle cx="50%" cy="50%" r="15%" fillOpacity={0}
                          stroke={color} opacity={opacity}
                          strokeWidth={strokeWidth}/>)
     } else {
-        let magnitudeLeftToRepresent = Math.round(magnitudeKnots / 5) * 5
+        let magnitudeLeftToRepresent = magnitudeKnots
         const tailDir = rotatedBy(windDir, 290);
-        const tailLen = 15
-        const bodyLen = 30
+        const perpendicular = rotatedBy(windDir, 270);
+        const tailLen = 25
+        const notchSpacing = 13;
+        const bodyLen = 40
+        let key = 1
+        let notchesFromEnd = 0
         out.push(<line
+            ref={ref}
             key={0}
             opacity={opacity}
-            x1={mapToBigBox(x, w, `${Math.round(50 - windDir[0] * bodyLen)}%`)}
-            y1={mapToBigBox(y, h, `${Math.round(50 - windDir[1] * bodyLen)}%`)}
-            x2={mapToBigBox(x, w, `${Math.round(50 + windDir[0] * bodyLen)}%`)}
-            y2={mapToBigBox(y, h, `${Math.round(50 + windDir[1] * bodyLen)}%`)}
+            fil={color}
+            x1={`${Math.round(50 - windDir[0] * bodyLen)}%`}
+            y1={`${Math.round(50 - windDir[1] * bodyLen)}%`}
+            x2={`${Math.round(50 + windDir[0] * bodyLen)}%`}
+            y2={`${Math.round(50 + windDir[1] * bodyLen)}%`}
             stroke={color}
             strokeWidth={strokeWidth}/>)
-        let key = 1
-        if (magnitudeLeftToRepresent % 10 >= 5 || magnitudeLeftToRepresent <= 5) {
-            const isOnlyTail = magnitudeLeftToRepresent <= 5
-            if (isOnlyTail) {
-                magnitudeLeftToRepresent = 20
-            } else {
-                magnitudeLeftToRepresent += 5;
-            }
-            const stemStartX = Math.round(50 + windDir[0] * (30 - magnitudeLeftToRepresent));
-            const stemStartY = Math.round(50 + windDir[1] * (30 - magnitudeLeftToRepresent));
+        while (magnitudeLeftToRepresent >= 50) {
+            const triangleStartX = Math.round(50 + windDir[0] * (bodyLen - 1 - notchSpacing * notchesFromEnd));
+            const triangleStartY = Math.round(50 + windDir[1] * (bodyLen - 1 - notchSpacing * notchesFromEnd));
+            const triangleEndX = Math.round(50 + windDir[0] * (bodyLen - 1 - notchSpacing * (notchesFromEnd + 1)));
+            const triangleEndY = Math.round(50 + windDir[1] * (bodyLen - 1 - notchSpacing * (notchesFromEnd + 1)));
+            const points = [
+                [triangleStartX, triangleStartY],
+                [triangleStartX + perpendicular[0] * tailLen, triangleStartY + perpendicular[1] * tailLen],
+                [triangleEndX, triangleEndY],
+            ].map(([xin, yin]) => `${xin},${yin}`).join(' ')
+            console.log(points)
             out.push(
-                <line
+                <polygon
                     opacity={opacity}
-                    x1={mapToBigBox(x, w, `${stemStartX}%`)}
-                    y1={mapToBigBox(y, h, `${stemStartY}%`)}
-                    x2={mapToBigBox(x, w, `${stemStartX + tailDir[0] * tailLen / 2}%`)}
-                    y2={mapToBigBox(y, h, `${stemStartY + tailDir[1] * tailLen / 2}%`)}
+                    points={points}
                     stroke={color}
+                    fill={color}
                     strokeWidth={strokeWidth}
                     key={key}
                 />
             )
-            if (isOnlyTail) {
-                magnitudeLeftToRepresent = 0;
-            } else {
-                magnitudeLeftToRepresent -= 10;
-            }
             key++
+            magnitudeLeftToRepresent -= 50
+            notchesFromEnd += 1.2
+            if (magnitudeLeftToRepresent < 50) {
+                notchesFromEnd += 0.75
+            }
         }
         while (magnitudeLeftToRepresent >= 10) {
-            const stemStartX = Math.round(50 + windDir[0] * (30 - magnitudeLeftToRepresent));
-            const stemStartY = Math.round(50 + windDir[1] * (30 - magnitudeLeftToRepresent));
+            const stemStartX = Math.round(50 + windDir[0] * (bodyLen - 1 - notchSpacing * notchesFromEnd));
+            const stemStartY = Math.round(50 + windDir[1] * (bodyLen - 1 - notchSpacing * notchesFromEnd));
             out.push(
                 <line
-
                     opacity={opacity}
-                    x1={mapToBigBox(x, w, `${stemStartX}%`)}
-                    y1={mapToBigBox(y, h, `${stemStartY}%`)}
-                    x2={mapToBigBox(x, w, `${stemStartX + tailDir[0] * tailLen}%`)}
-                    y2={mapToBigBox(y, h, `${stemStartY + tailDir[1] * tailLen}%`)}
+                    x1={`${stemStartX}%`}
+                    y1={`${stemStartY}%`}
+                    x2={`${stemStartX + tailDir[0] * tailLen}%`}
+                    y2={`${stemStartY + tailDir[1] * tailLen}%`}
                     stroke={color}
                     strokeWidth={strokeWidth}
                     key={key}
@@ -140,14 +144,44 @@ function SingleWindBarb({
             )
             key++
             magnitudeLeftToRepresent -= 10
+            notchesFromEnd++
         }
+        if (magnitudeLeftToRepresent >= 5) {
+            if (notchesFromEnd === 0) {
+                //we don't ever want to be on the very end
+                notchesFromEnd++;
+            }
+            const stemStartX = Math.round(50 + windDir[0] * (bodyLen - notchSpacing * notchesFromEnd));
+            const stemStartY = Math.round(50 + windDir[1] * (bodyLen - notchSpacing * notchesFromEnd));
+            out.push(
+                <line
+                    opacity={opacity}
+                    x1={`${stemStartX}%`}
+                    y1={`${stemStartY}%`}
+                    x2={`${stemStartX + tailDir[0] * tailLen / 2}%`}
+                    y2={`${stemStartY + tailDir[1] * tailLen / 2}%`}
+                    stroke={color}
+                    strokeWidth={strokeWidth}
+                    key={key}
+                />
+            )
+            key++
+        }
+
 
     }
 
     if (!viewportBounds || !viewportBounds.intersects(tileBounds!)) {
         return null
     }
-
-    return out
+    return <svg
+        viewBox="0 0 100 100"
+        x={x}
+        width={w}
+        y={y}
+        height={h}
+    >
+        {out}
+    </svg>
 
 }
