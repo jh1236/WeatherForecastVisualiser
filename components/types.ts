@@ -20,7 +20,6 @@ export interface WeatherData {
 
 export interface WeatherDataTimeSnapshot {
     time: number;
-    isKeyFrame: boolean;
     gribFrames: GribFrame[]
 }
 

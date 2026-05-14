@@ -106,6 +106,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
         const text = (await fs.promises.readFile(path)).toString();
         return JSON.parse(text) as WeatherData;
     }
+    console.log(`Data for ${file} not in cache, fetching from THREDDS`)
 
     const regionData = threddsConfigData[region];
     const oceanBindings = regionData.ocean;

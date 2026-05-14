@@ -17,19 +17,21 @@ async function loadThreddsDataForDate(now: Date) {
 async function getDataForComingTimeframe() {
     for (let i = 0; i < AMOUNT_OF_DAYS_IN_FUTURE; i++) {
         const date = new Date(Date.now() + i * DAY_IN_MS);
-        console.log(`Getting Data for ${date.toDateString()}`)
         await loadThreddsDataForDate(date);
     }
 }
 
-export function register() {
-    getDataForComingTimeframe();
+export async function register() {
+    await getDataForComingTimeframe();
 
     CronJob.from({
-            cronTime: '13 16 * * * *', // cronTime
-            onTick: getDataForComingTimeframe,
+            cronTime: '0 12 * * * *', // cronTime
+            onTick: () => {
+                console.log('Downloading data!');
+                getDataForComingTimeframe().then(() => console.log('Finished Downloading!'))
+            },
             start: true,
-            utcOffset: 8 * 60
+            timeZone: 'Australia/Perth'
         }
     );
 }

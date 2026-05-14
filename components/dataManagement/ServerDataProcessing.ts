@@ -190,7 +190,6 @@ function addDataToWeatherTimeSnapshot(data: Bound,
             } else {
                 timesOut[convertedTime] = {
                     gribFrames: [gribFrame],
-                    isKeyFrame: false,
                     time: convertedTime
                 }
             }
