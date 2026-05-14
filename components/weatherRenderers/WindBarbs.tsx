@@ -70,7 +70,7 @@ function SingleWindBarb({
                         }: SingleWindBarbProps) {
     const {windU, windV, bounds: tileBounds} = dataPoint;
     const windDir = useMemo(() => normalised([-windU!, windV!]), [windU, windV])
-    const magnitudeKnots = Math.round(mpsToKnots(magnitude([windU!, windV!])) / 5) * 5 + 120;
+    const magnitudeKnots = Math.round(mpsToKnots(magnitude([windU!, windV!])) / 5) * 5;
     const strokeWidth = 3
     const out = []
     const opacity = darkModeRender ? 1 : 0.5;
@@ -89,7 +89,6 @@ function SingleWindBarb({
         let key = 1
         let notchesFromEnd = 0
         out.push(<line
-            ref={ref}
             key={0}
             opacity={opacity}
             fil={color}
