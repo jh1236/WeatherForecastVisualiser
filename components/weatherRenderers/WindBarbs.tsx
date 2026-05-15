@@ -78,7 +78,7 @@ function SingleWindBarb({
     if (magnitudeKnots === 0) {
         out.push(<circle cx="50%" cy="50%" r="15%" fillOpacity={0}
                          stroke={color} opacity={opacity}
-                         strokeWidth={strokeWidth}/>)
+                         strokeWidth={strokeWidth} key={0}/>)
     } else {
         let magnitudeLeftToRepresent = magnitudeKnots
         const tailDir = rotatedBy(windDir, 290);
