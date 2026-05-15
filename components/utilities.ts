@@ -9,10 +9,10 @@ export function zip<T extends unknown[][]>(
     return [...Array(minLength).keys()].map((i) => args.map((arr) => arr[i]));
 }
 
-export function lerp(a: number, b: number, t: number) {
-    if (t > 1 || a === undefined) {
+export function lerp(a: number, b: number, t: number, clamp = true) {
+    if (clamp && t > 1 || a === undefined) {
         return b;
-    } else if (t < 0 || b === undefined) {
+    } else if (clamp && t < 0 || b === undefined) {
         return a;
     }
     return a + (b - a) * t;
@@ -70,33 +70,38 @@ export function getColorFromWindSpeedKts(windspeed: number, saturation: number =
     return `rgb(${r} ${g} ${b})`
 }
 
-export function getColorFromCurrentKts(current: number) {
-
-    const {
-        r,
-        g,
-        b
-    } = hsvToRgb(240, 1.0, 0.5 * lerp(1, 0, current / 3) + 0.25)
-    // const {r, g, b} = hsvToRgb(count! * 360, 0.7, 0.7)
-    return `rgb(${r} ${g} ${b})`
-}
 
 export function getColorFromTemperature(temp: number) {
 
-    const temperature = 1.1 * temp + 5
-    const valueAdjustFactor = 0.0
-    const satAdjustFactor = 0.7
-    const hueAdjustFactor = 0.6
-    // const t = (1 - (1 - temperature / 50) * (1 - temperature / 50)) * hueAdjustFactor + (temperature / 50) * (1 - hueAdjustFactor);
-    const t = (1 - (Math.cos(Math.PI * temperature / 50) + 1) / 2) * hueAdjustFactor + (temperature / 50) * (1 - hueAdjustFactor);
-    const whiteningCutoff = 12
+    const adjustedTemp = (temp - 5) / 32;
+    // const t = clamp(.7 * (adjustedTemp), 0, 1);
+    //y=0.0004375x^{2}+0x+0
+    const factor = 0.75
+    let t = clamp(-factor * (adjustedTemp - 2) * (adjustedTemp), 0, 1);
+    if (adjustedTemp <= 0) {
+        t = 0
+    } else if (adjustedTemp > 1) {
+        t = factor + (adjustedTemp - 1) * 0.9;
+    }
+    const hue = lerp(240, -100, t)
+    let value = 0.8
+    if (temp > 30) {
+        // turn black at approximately 90 deg C
+        value = lerp(0.8, 0, (temp - 30) / 30)
+    }
+    let saturation = 1
+    if (temp < 5) {
+        saturation = lerp(0.2, 1, 1 - (1 - (temp + 5) / 10) * (1 - (temp + 5) / 10))
+    }
     const {
         r,
         g,
         b
-    } = hsvToRgb(-t * 360 - 40, temperature > whiteningCutoff ? 1 : (1 - satAdjustFactor) * (temperature / whiteningCutoff) + satAdjustFactor * (1 - (1 - temperature / whiteningCutoff) * (1 - temperature / whiteningCutoff)), temperature < whiteningCutoff ?
-        lerp(0.8, 0.4, temperature / whiteningCutoff) :
-        lerp(0.4, 0.9, valueAdjustFactor * ((temperature - whiteningCutoff) / 45) * ((temperature - whiteningCutoff) / 45) + ((temperature - whiteningCutoff) / 45) * (1 - valueAdjustFactor)))
+    } = hsvToRgb(
+        hue,
+        saturation,
+        value
+    )
 
     return `rgb(${r} ${g} ${b})`
 }
@@ -132,3 +137,10 @@ export function convertScientificNotationNumber(value: number, sigFigs?: number)
     const countOfDecimals = (sigFigs ?? decimalsPart.length) + eDecimals;
     return Number(value).toFixed(countOfDecimals);
 }
+
+export function clamp(value: number, min: number, max: number) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
