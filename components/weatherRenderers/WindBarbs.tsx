@@ -91,7 +91,6 @@ function SingleWindBarb({
         out.push(<line
             key={0}
             opacity={opacity}
-            fil={color}
             x1={`${Math.round(50 - windDir[0] * bodyLen)}%`}
             y1={`${Math.round(50 - windDir[1] * bodyLen)}%`}
             x2={`${Math.round(50 + windDir[0] * bodyLen)}%`}
