@@ -12,70 +12,9 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def main():
-    method_name_bbox('west_aus_coast_mp.json')
+    trim_australian_coast('west_aus_coast_mp.json')
 
-
-def method_name(file_out):
-    with open('aus_coast.json', 'rb') as fp_in, open(file_out, 'w') as fp_out:
-        fp_out.write('{"type": "FeatureCollection", "features": [')
-
-        first = True
-        for feature in ijson.items(fp_in, 'features.item'):
-
-            geometry_in = feature['geometry']
-            geometry_out: dict[str, object] = dict(geometry_in.items())
-            geometry_out['coordinates'] = []
-
-            if geometry_in['type'] == 'MultiPolygon':
-
-                ret = []
-                for polygon in geometry_in['coordinates']:
-                    polygon_ret = []
-                    for i, layer in enumerate(polygon):
-                        inner_ret = []
-                        for lng, lat in layer[::10]:
-                            if lng > 118:
-                                continue
-                            else:
-                                inner_ret.append((lng, lat))
-                        if not inner_ret: continue
-                        polygon_ret.append(inner_ret)
-                    if not polygon_ret: continue
-                    ret.append(polygon_ret)
-                geometry_out['coordinates'] = ret[0]
-            elif geometry_in['type'] == 'Polygon':
-                ret = []
-                max_lat = -1e10
-                max_lng = -1e10
-                min_lat = 1e10
-                min_lng = 1e10
-                for i in geometry_in['coordinates']:
-                    inner_ret = []
-                    for lng, lat in i[::4]:
-                        if lng > 117.299616 or lng < 112.872389:
-                            continue
-                        else:
-                            max_lat = max(max_lat, lat)
-                            min_lat = min(min_lat, lat)
-                            max_lng = max(max_lng, lng)
-                            min_lng = min(min_lng, lng)
-                            inner_ret.append((lng, lat))
-                    if not inner_ret: continue
-                    ret.append(inner_ret)
-                if not ret or (max_lat - max_lat < 0.025 and max_lng - min_lng < 0.025):
-                    continue
-                geometry_out['coordinates'] = ret
-            if geometry_out['coordinates']:
-                if not first:
-                    fp_out.write(',')
-                feature['geometry'] = geometry_out
-                json.dump(feature, fp_out, cls=DecimalEncoder, separators=(',', ':'))
-                first = False
-
-        fp_out.write(']}')
-
-
-def method_name_bbox(file_out):
+def trim_australian_coast(file_out):
     with open('aus_coast.json', 'rb') as fp_in, open(file_out, 'w') as fp_out:
         fp_out.write('{"type": "MultiPolygon", "coordinates": [')
         first = True
