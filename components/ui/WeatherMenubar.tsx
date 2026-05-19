@@ -280,6 +280,10 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             }}>
                                 Values over {WARN_GRID_RESOLUTION} may impact performance!
                             </MenubarLabel>}
+                        <MenubarCheckboxItem checked={settings['oceanTemperatureColors.quantized']}
+                                             onCheckedChange={() => setSetting('oceanTemperatureColors.quantized', !settings['oceanTemperatureColors.quantized'])}>
+                            Quantise color values
+                        </MenubarCheckboxItem>
                         <MenubarLabel inset>
                             Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
                         </MenubarLabel>
@@ -319,6 +323,10 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             }}>
                                 Values over {WARN_GRID_RESOLUTION} may impact performance!
                             </MenubarLabel>}
+                        <MenubarCheckboxItem checked={settings['temperatureColors.quantized']}
+                                             onCheckedChange={() => setSetting('temperatureColors.quantized', !settings['temperatureColors.quantized'])}>
+                            Quantise color values
+                        </MenubarCheckboxItem>
                         <MenubarLabel inset>
                             Opacity: {round(100 * settings["temperatureColors.opacity"])}%
                         </MenubarLabel>

@@ -9,7 +9,7 @@ import {
     useMapEvents
 } from "react-leaflet";
 import {VelocityLayer} from "@/components/ReactLeafletWrappers/LeafletVelocity/ParticleLayers";
-import {getColorFromTemperature, getColorFromWindSpeedKts} from "@/components/utilities";
+import {getColorFromWindSpeedKts, useTemperatureMapper} from "@/components/utilities";
 import {WindBarbs} from "@/components/weatherRenderers/WindBarbs";
 import {WindColors} from "@/components/weatherRenderers/WindColor";
 import {LatLngBounds} from "leaflet";
@@ -23,19 +23,12 @@ import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/data
 import {cn} from "@/lib/utils";
 import {Spinner} from "@/components/ui/spinner";
 import {CurrentArrows} from "@/components/weatherRenderers/CurrentArrows";
-import {
-    knotsToMps,
-    useUserUnits,
-    useTemperatureInUserUnits,
-    useWindSpeedInUserUnits,
-    useConvertToUserUnitsAndFormat
-} from "@/components/unitsUtils";
+import {knotsToMps, useConvertToUserUnitsAndFormat} from "@/components/unitsUtils";
 import {DataMouseOver} from "@/components/weatherRenderers/DataMouseOver";
 import {GeoJSON as GeoJSONType} from "geojson";
 import {BoundaryCanvas} from "@/components/ReactLeafletWrappers/LeafletBoundaryCanvas/BoundaryCanvas";
 
 import {PointsGrapher} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
-import {useMountedState} from "react-use";
 
 interface WindMapProps {
     defaultBounds?: LatLngBounds,
@@ -135,6 +128,8 @@ export function WeatherMap({
     const [westAusBbox, setWestAusBbox] = useState<GeoJSONType>()
     const darkModeRender = resolvedTheme === 'dark' || settings.baseLayer === 'Satellite'
     const dataFormatter = useConvertToUserUnitsAndFormat()
+    const temperatureColor = useTemperatureMapper()
+
     useEffect(() => {
         fetch('/west_aus_coast_mp.json').then(it => it.json()).then(it => {
             setWestAusBbox(it)
@@ -315,7 +310,8 @@ export function WeatherMap({
         </MapContainer>
         {settings.displayWindScale && <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
             <ColorRange
-                colorFunc={getColorFromWindSpeedKts} textFunc={n => dataFormatter('windSpeed', Math.round(n - 2.5), 'kt', 0)}
+                colorFunc={getColorFromWindSpeedKts}
+                textFunc={n => dataFormatter('windSpeed', Math.round(n - 2.5), 'kt', 0)}
                 top={52.5}
                 bottom={-2.5}
                 resolution={100}
@@ -327,7 +323,7 @@ export function WeatherMap({
         {settings.displayTempScale &&
             <div style={{width: '3%', textAlign: 'center', height: '100%'}}>
                 <ColorRange
-                    colorFunc={getColorFromTemperature}
+                    colorFunc={(t) => temperatureColor(t)}
                     textFunc={n => dataFormatter('temperature', Math.round(n - 2.5), 'C', 0)}
                     top={52.5}
                     bottom={-2.5}
