@@ -1,4 +1,4 @@
-import {zip} from "@/components/utilities";
+import {roundTo, zip} from "@/components/utilities";
 import {NumberOrNDArray} from "@/components/dataManagement/jsdapWrapper";
 import {WeatherData, WeatherDataTimeSnapshot} from "@/components/types";
 
@@ -184,7 +184,7 @@ function addDataToWeatherTimeSnapshot(data: Bound,
         }
 
         for (const [key, data] of zip(scalarKeys, outputDatas)) {
-            const gribFrame = {header: getBaseHeader(lats, longs, bindingToCode[key]!), data}
+            const gribFrame = {header: getBaseHeader(lats, longs, bindingToCode[key]!), data: data.map(it => roundTo(it, 4))}
             if (convertedTime in timesOut) {
                 timesOut[convertedTime].gribFrames.push(gribFrame)
             } else {

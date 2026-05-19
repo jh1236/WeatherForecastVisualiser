@@ -103,7 +103,7 @@ export function useTemperatureMapper(quanta: number | undefined = undefined) {
             {temp: 15, value: 140},
             {temp: 20, value: 100},
             {temp: 27, value: 92},
-            {temp: 30, value: 73},
+            {temp: 35, value: 73},
             {temp: 42, value: 331 - 360},
             {temp: 50, value: 300 - 360},
         ]
