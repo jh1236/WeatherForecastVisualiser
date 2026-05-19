@@ -26,7 +26,7 @@ function fixData<T extends object>(data: T): T {
 function argToString(value: string | string[]): string {
     if (typeof value === "string") {
         return `[${value}]`
-    } else if (value.length !== undefined) { //list check
+    } else if (Array.isArray(value)) { //list check
         return value.map(argToString).join("")
     }
     throw new Error(`Expected ${value} to be string or list`)
@@ -45,13 +45,20 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
         newUrl += entries.map(([key, value]) => `${key}${argToString(value)}`).join(",")
     }
     newUrl = encodeURI(newUrl)
-    
+
     const json = await new Promise<DODSResponse>((resolve, reject) =>
         jsdap.loadDataAndDDS(
             newUrl,
             data => {
                 resolve(data)
             },
+            error => {
+                reject(error)
+            },
+            error => {
+                reject(error)
+            },
+            undefined,
             error => {
                 reject(error)
             }
