@@ -4,7 +4,11 @@ import {WeatherData} from "@/components/types";
 import sanitize from "sanitize-filename";
 import fs from "fs";
 import {getJsDapData} from "@/components/dataManagement/jsdapWrapper";
-import {convertThreddsToGrib, mergeWeatherDatas} from "@/components/dataManagement/ServerDataProcessing";
+import {
+    convertThreddsToGrib,
+    mergeWeatherDatas,
+    roundWeatherData
+} from "@/components/dataManagement/ServerDataProcessing";
 
 type ThreddsConfigData = {
     [region: string]: {
@@ -245,7 +249,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
                 files = await fs.promises.readdir(cacheFolder);
             }
         }
-        await fs.promises.writeFile(path, JSON.stringify(out))
+        await fs.promises.writeFile(path, JSON.stringify(roundWeatherData(out)))
     })().catch(console.error);
 
     return out;

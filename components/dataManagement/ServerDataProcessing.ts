@@ -184,7 +184,7 @@ function addDataToWeatherTimeSnapshot(data: Bound,
         }
 
         for (const [key, data] of zip(scalarKeys, outputDatas)) {
-            const gribFrame = {header: getBaseHeader(lats, longs, bindingToCode[key]!), data: data.map(it => roundTo(it, 4))}
+            const gribFrame = {header: getBaseHeader(lats, longs, bindingToCode[key]!), data}
             if (convertedTime in timesOut) {
                 timesOut[convertedTime].gribFrames.push(gribFrame)
             } else {
@@ -263,3 +263,14 @@ export function mergeWeatherDatas(...weatherDatas: (WeatherData | null)[]): Weat
     return out
 }
 
+export function roundWeatherData(weatherData: WeatherData): WeatherData {
+    const out: WeatherData = {times: {}};
+    for (const [time, wds] of Object.entries(weatherData.times)) {
+        out.times[time] = {time: +time, gribFrames: wds.gribFrames}
+        for (let i = 0; i < out.times[time].gribFrames.length; i++) {
+            const frame = out.times[time].gribFrames[i];
+            out.times[time].gribFrames[i].data = frame.data.map(i => roundTo(i, 4));
+        }
+    }
+    return out
+}
