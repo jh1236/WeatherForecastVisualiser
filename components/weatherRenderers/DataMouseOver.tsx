@@ -2,17 +2,11 @@ import {useMemo, useState} from "react";
 import {bearing, magnitude} from "@/components/vectorUtils";
 import {Rectangle, Tooltip, useMapEvents} from "react-leaflet";
 import {LatLng, LatLngBounds} from "leaflet";
-import {latLngToDMS, roundTo} from "@/components/utilities";
+import {latLngToDMS} from "@/components/utilities";
 import {GribFrame} from "@/components/types";
 import {getWeatherDataPointForPoint,} from "@/components/dataManagement/DataProcessing";
-import {useSettings} from "@/components/settings";
-import {boundsFromGribFrame, latLngBndsIntersection} from "@/components/dataManagement/gribUtils";
-import {
-    useConvertToUserUnitsAndFormat,
-    useCurrentSpeedInUserUnits,
-    useTemperatureInUserUnits,
-    useWindSpeedInUserUnits
-} from "@/components/unitsUtils";
+import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {useConvertToUserUnitsAndFormat} from "@/components/unitsUtils";
 
 interface WindDataMouseOverProps {
     data: GribFrame[]
@@ -33,10 +27,9 @@ export function DataMouseOver({data, viewportBounds}: WindDataMouseOverProps) {
     useMapEvents({
         mousemove: e => setLatLng(e.latlng),
     })
-    const bounds = useMemo(() => ((data?.length && viewportBounds) ? latLngBndsIntersection(viewportBounds, boundsFromGribFrame(data[0]))! : new LatLngBounds([[0, 0], [0, 0]])), [data, viewportBounds]);
+    const bounds = useMemo(() => ((data?.length && viewportBounds) ? latLngBndsIntersection(viewportBounds, maxBoundsFromGribFrames(data))! : new LatLngBounds([[0, 0], [0, 0]])), [data, viewportBounds]);
     const wind = !!(dataPoint?.windU && dataPoint.windV);
     const current = !!(dataPoint?.currentU && dataPoint.currentV);
-    const {settings} = useSettings();
     const temperature = dataPoint?.temperature ? converter('temperature', dataPoint?.temperature, 'C') : undefined;
     const oceanTemperature = dataPoint?.oceanTemperature ? converter('oceanTemperature', dataPoint?.oceanTemperature, 'C') : undefined;
 
