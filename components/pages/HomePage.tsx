@@ -9,7 +9,7 @@ import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollect
 import "@/components/pages/homepage.module.css"
 import dynamic from "next/dynamic";
 import {useTimeInUserUnits} from "@/components/unitsUtils";
-import {useInterval} from "react-use";
+import {useInterval, useSessionStorage} from "react-use";
 
 const WeatherMap = dynamic(
     () => import('@/components/weatherRenderers/WeatherMap').then(mod => mod.WeatherMap),
@@ -17,8 +17,10 @@ const WeatherMap = dynamic(
 );
 
 export function HomePage() {
-    const [date, setDate] = useState(new Date());
+    const [dateInUTC, setDateInUTC] = useSessionStorage<number | undefined>('date', undefined);
     const [mounted, setMounted] = useState(false);
+    //we check mounted here to save a hydration error
+    const date = useMemo(() => mounted ? new Date(dateInUTC ?? 0) : new Date(0), [dateInUTC, mounted]);
     const {data, reset, populated} = useDataFromSettingsSource(date);
     const timeFormatter = useTimeInUserUnits()
     const [isDragging, setIsDragging] = useState(false);
@@ -33,11 +35,15 @@ export function HomePage() {
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        if (!dateInUTC) {
+            setDateInUTC(Date.now());
+        }
+    }, [dateInUTC, setDateInUTC]);
+
     useInterval(() => {
         setCurrentTimeStampIndex((currentTimeStampIndex + 1) % timestamps.length)
     }, playbackSpeed !== 0 ? 1200 / playbackSpeed : null)
-
-
 
 
     return <div style={{
@@ -65,7 +71,7 @@ export function HomePage() {
             }}>
                 <DatePicker date={date} setDate={(date) => {
                     reset()
-                    setDate(date)
+                    setDateInUTC(date.getTime())
                 }}/>
                 <p style={{
                     paddingLeft: 20,
@@ -99,7 +105,8 @@ export function HomePage() {
                     paddingRight: '5%'
                 }}>
                     {playbackSpeed === 0 ?
-                        <Button disabled={mounted && currentTimeStampIndex <= 0} style={{margin: 'auto'}} variant="outline"
+                        <Button disabled={mounted && currentTimeStampIndex <= 0} style={{margin: 'auto'}}
+                                variant="outline"
                                 size="icon"
                                 onClick={() => setCurrentTimeStampIndex(Math.max(0, currentTimeStampIndex - 1))}>
                             <ArrowLeftIcon/>
