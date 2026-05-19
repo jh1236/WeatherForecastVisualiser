@@ -248,9 +248,10 @@ export function convertThreddsToGrib(
     return {times: timesOut}
 }
 
-export function mergeWeatherDatas(...weatherDatas: WeatherData[]): WeatherData {
+export function mergeWeatherDatas(...weatherDatas: (WeatherData | null)[]): WeatherData {
     const out: WeatherData = {times: {}};
     for (const data of weatherDatas) {
+        if (!data) continue;
         for (const [time, wds] of Object.entries(data.times)) {
             if (time in out.times) {
                 out.times[time].gribFrames.push(...wds.gribFrames);
