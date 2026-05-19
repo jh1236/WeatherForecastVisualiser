@@ -20,14 +20,7 @@ type ThreddsConfigData = {
                 waterTemperature: string;
                 waterTemperatureTime: string
             };
-            args: {
-                lat_rho: string[];
-                lon_rho: string[];
-                ocean_time: string[];
-                u_sur_eastward: string[];
-                v_sur_northward: string[];
-                temp_sur: string[]
-            }
+            args: {[key: string]: string | string[]};
         }[];
         wind: {
             startDate: number;
@@ -42,15 +35,7 @@ type ThreddsConfigData = {
                 lat: string;
                 lng: string
             };
-            args: {
-                wind_time: string;
-                tair_time: string;
-                Uwind: string[];
-                Vwind: string[];
-                LON: string[];
-                LAT: string[];
-                Tair: string[]
-            }
+            args: { [key: string]: string | string[] }
         }[]
     };
 
@@ -189,7 +174,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     const date = Date.UTC(yearIn, monthIn, dayIn)
     const file = sanitize(`${year}-${month}-${day}-${region}`)
     //we want to make use of docker volumes if this is in prod
-    const cacheFolder = (process.env.NODE_ENV === 'production') ? '/cachedResponses' : './cachedResponses';
+    const cacheFolder = (process.env.NODE_ENV === 'production' && false) ? '/cachedResponses' : './cachedResponses';
     const path = `${cacheFolder}/${file}.json`;
     if (fs.existsSync(path)) {
         const text = (await fs.promises.readFile(path)).toString();

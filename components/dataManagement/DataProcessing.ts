@@ -32,7 +32,7 @@ function getLatAndLngIndex(point: LatLng, weatherIn: GribFrame) {
     const dx = weatherIn.header.dx
     const dy = weatherIn.header.dy
 
-    return [offsetLat / dy, offsetLong / dx]
+    return [Math.max(0, Math.min(offsetLat / dy, weatherIn.header.ny)), Math.max(0, Math.min(offsetLong / dx, weatherIn.header.nx))]
 }
 
 function getInterpolatedDatumForLatLong(weatherIn: GribFrame, point: LatLng): number {
