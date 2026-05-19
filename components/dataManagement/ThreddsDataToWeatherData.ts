@@ -189,7 +189,8 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     const date = Date.UTC(yearIn, monthIn, dayIn)
     const file = sanitize(`${year}-${month}-${day}-${region}`)
     //we want to make use of docker volumes if this is in prod
-    const path = process.env.NODE_ENV === 'production' ? `/cachedResponses/${file}.json` : `./cachedResponses/${file}.json`;
+    const cacheFolder = (process.env.NODE_ENV === 'production') ? '/cachedResponses' : './cachedResponses';
+    const path = `${cacheFolder}/${file}.json`;
     if (fs.existsSync(path)) {
         const text = (await fs.promises.readFile(path)).toString();
         return JSON.parse(text) as WeatherData;
@@ -230,13 +231,13 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     const [meteoData, oceanData] = await Promise.all(tasks)
 
     const out = mergeWeatherDatas(meteoData, oceanData);
-    
+
     if (!meteoData && !oceanData) {
         return out;
     }
 
     (async () => {
-        let files = await fs.promises.readdir("./cachedResponses/");
+        let files = await fs.promises.readdir(cacheFolder);
         while (files.length >= 39) { // We only want to keep the 39 most recent files; delete the rest
             let oldestFileTime = Number.MAX_VALUE
 
@@ -244,7 +245,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
             for (const i of files) {
                 // Stat the file to see if we have a file or dir
 
-                const stat = await fs.promises.stat(`./cachedResponses/${i}`);
+                const stat = await fs.promises.stat(`${cacheFolder}/${i}`);
                 if (stat.isDirectory()) {
                     continue
                 }
@@ -256,7 +257,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
             }
             if (oldestFile) {
                 await fs.promises.unlink(oldestFile)
-                files = await fs.promises.readdir("./cachedResponses/");
+                files = await fs.promises.readdir(cacheFolder);
             }
         }
         await fs.promises.writeFile(path, JSON.stringify(out))

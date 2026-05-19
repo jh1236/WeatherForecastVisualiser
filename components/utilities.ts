@@ -116,7 +116,8 @@ export function useTemperatureMapper(quanta: number | undefined = undefined) {
             {temp: 25, value: 1.0},
             {temp: 30, value: 0.9},
             {temp: 40, value: 0.9},
-            {temp: 50, value: 0.9},
+            {temp: 60, value: 0.9},
+            {temp: 70, value: 0.0},
         ]
         const lightnessStops = [
             {temp: -5, value: 0.9},
@@ -129,6 +130,7 @@ export function useTemperatureMapper(quanta: number | undefined = undefined) {
             {temp: 35, value: 0.2},
             {temp: 43, value: 0.2},
             {temp: 50, value: 0.6},
+            {temp: 70, value: 0.0},
         ]
         const hue = stopsToValue(hueStops, temp)
         let saturation = stopsToValue(saturationStops, temp)
