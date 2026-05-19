@@ -21,6 +21,8 @@ import Image from "next/image";
 import {Slider} from "@/components/ui/slider";
 import {useTheme} from "next-themes";
 import {round} from "@floating-ui/utils";
+import {DialogTrigger} from "@radix-ui/react-dialog";
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogOverlay} from "@/components/ui/dialog";
 
 interface WeatherMenubarProps {
     resetData: () => void
@@ -389,6 +391,24 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         </MenubarSub>
                     </MenubarGroup>
                 </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+                <MenubarTrigger asChild>
+                    <Dialog>
+                        <DialogTrigger>About</DialogTrigger>
+                        <DialogOverlay style={{zIndex: 99998}}></DialogOverlay>
+                        <DialogContent style={{zIndex: 99999}}>
+                            <DialogHeader style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                <Image width={100} height={100} src={'/icon.png'}
+                                       alt={'The Weather Forecast Visualiser Logo'}></Image>
+                                <h1>Weather Forecast Visualiser</h1>
+                            </DialogHeader>
+                            <DialogDescription>
+                                This project was built by Jared Healy, and is released under the MIT Licence
+                            </DialogDescription>
+                        </DialogContent>
+                    </Dialog>
+                </MenubarTrigger>
             </MenubarMenu>
         </Menubar>
     )
