@@ -1,4 +1,6 @@
 import {LatLng} from "leaflet";
+import {useSettings} from "@/components/settings";
+import {useTheme} from "next-themes";
 
 export function zip<T extends unknown[][]>(
     ...args: T
@@ -70,41 +72,79 @@ export function getColorFromWindSpeedKts(windspeed: number, saturation: number =
     return `rgb(${r} ${g} ${b})`
 }
 
-
-export function getColorFromTemperature(temp: number) {
-
-    const adjustedTemp = (temp - 5) / 32;
-    // const t = clamp(.7 * (adjustedTemp), 0, 1);
-    //y=0.0004375x^{2}+0x+0
-    const factor = 0.75
-    let t = clamp(-factor * (adjustedTemp - 2) * (adjustedTemp), 0, 1);
-    if (adjustedTemp <= 0) {
-        t = 0
-    } else if (adjustedTemp > 1) {
-        t = factor + (adjustedTemp - 1) * 0.9;
-    }
-    const hue = lerp(240, -100, t)
-    let value = 0.8
-    if (temp > 30) {
-        // turn black at approximately 90 deg C
-        value = lerp(0.8, 0, (temp - 30) / 30)
-    }
-    let saturation = 1
-    if (temp < 5) {
-        saturation = lerp(0.2, 1, 1 - (1 - (temp + 5) / 10) * (1 - (temp + 5) / 10))
-    }
-    const {
-        r,
-        g,
-        b
-    } = hsvToRgb(
-        hue,
-        saturation,
-        value
-    )
-
-    return `rgb(${r} ${g} ${b})`
+function easeInOutSine(x: number): number {
+    //from easings.net
+    return -(Math.cos(Math.PI * x) - 1) / 2;
 }
+
+
+function stopsToValue(stops: { temp: number, value: number }[], temp: number) {
+    for (let i = 1; i < stops.length; i++) {
+        const top = stops[i];
+        if (top.temp < temp) continue;
+        const bottom = stops[i - 1];
+        return lerp(bottom.value, top.value, easeInOutSine((temp - bottom.temp) / (top.temp - bottom.temp)));
+    }
+    return stops[stops.length - 1].value;
+}
+
+export function useTemperatureMapper(quanta: number | undefined = undefined) {
+
+    const {settings} = useSettings();
+    const {resolvedTheme} = useTheme();
+    return (temp: number) => {
+        if (quanta && quanta > 0) {
+            //spread out the values if we are using quantisation
+            temp = (Math.floor(temp / quanta) * quanta - 25) * 1.1 + 25;
+        }
+        const hueStops = [
+            {temp: -5, value: 260},
+            {temp: 10, value: 220},
+            {temp: 15, value: 140},
+            {temp: 20, value: 100},
+            {temp: 27, value: 92},
+            {temp: 30, value: 73},
+            {temp: 42, value: 331 - 360},
+            {temp: 50, value: 300 - 360},
+        ]
+        const saturationStops = [
+            {temp: -5, value: 0.1},
+            {temp: 0, value: 0.2},
+            {temp: 5, value: 0.6},
+            {temp: 15, value: 0.6},
+            {temp: 20, value: 0.9},
+            {temp: 25, value: 1.0},
+            {temp: 30, value: 0.9},
+            {temp: 40, value: 0.9},
+            {temp: 50, value: 0.9},
+        ]
+        const lightnessStops = [
+            {temp: -5, value: 0.9},
+            {temp: 0, value: 0.9},
+            {temp: 5, value: 0.3},
+            {temp: 10, value: 0.6},
+            {temp: 15, value: 0.8},
+            {temp: 20, value: 0.7},
+            {temp: 30, value: 0.4},
+            {temp: 35, value: 0.2},
+            {temp: 43, value: 0.2},
+            {temp: 50, value: 0.6},
+        ]
+        const hue = stopsToValue(hueStops, temp)
+        let saturation = stopsToValue(saturationStops, temp)
+        let lightness = stopsToValue(lightnessStops, temp)
+        if (quanta) {
+            lightness = 1 - (1 - lightness) * (1 - lightness)
+            saturation = 1 - (1 - saturation) * (1 - saturation)
+        } else if (settings.baseLayer === 'Satellite' || resolvedTheme === 'light') {
+            lightness = 1 - (1 - lightness) * .9;
+        }
+
+
+        return `oklch(${lightness * 100}% ${saturation * 100}%  ${hue}deg)`
+    }
+}
+
 
 export function divMod(numerator: number, denominator: number) {
     return [numerator / denominator, numerator % denominator];

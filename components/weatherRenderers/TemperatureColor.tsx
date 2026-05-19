@@ -1,16 +1,17 @@
 import {useMemo} from "react";
 import {LatLng, LatLngBounds} from "leaflet";
-import {getColorFromTemperature} from "@/components/utilities";
+import {useTemperatureMapper} from "@/components/utilities";
 import {GribFrame, WeatherDataPoint} from "@/components/types";
 import {mapToBounds} from "@/components/dataManagement/DataProcessing";
 import {latLngBndsIntersection, maxBoundsFromGribFrames} from "@/components/dataManagement/gribUtils";
+import {useSettings} from "@/components/settings";
 
 interface TemperatureColorsProps {
     viewportBounds: LatLngBounds | undefined;
     data: GribFrame[];
     darkModeRender: boolean;
     resolution?: number;
-    tempKey?: keyof WeatherDataPoint;
+    tempKey?: 'temperature' | 'oceanTemperature';
     opacity: number;
     shouldRender?: (pos: LatLng) => boolean;
 }
@@ -53,7 +54,7 @@ interface SingleTempColorProps {
     viewportBounds: LatLngBounds | undefined,
     trueLatLng?: LatLng,
     darkModeRender: boolean,
-    tempKey: keyof WeatherDataPoint,
+    tempKey: 'temperature' | 'oceanTemperature',
     opacity: number,
     x: number | string, //allow strings for percentage
     y: number | string,
@@ -64,6 +65,10 @@ interface SingleTempColorProps {
 function SingleTempColor({viewportBounds, dataPoint, tempKey, opacity, x, y, w, h}: SingleTempColorProps) {
     const {bounds: tileBounds} = dataPoint;
     const temperature = (dataPoint[tempKey] as number | undefined)
+    const {settings} = useSettings()
+    const needsDiscrete = settings[(tempKey + 'Colors.quantized') as 'temperatureColors.quantized' | 'oceanTemperatureColors.quantized']
+    const round = tempKey === 'temperature' ? 1 : 0.2
+    const temperatureColor = useTemperatureMapper(needsDiscrete ? round : undefined)
 
     if (!viewportBounds || !viewportBounds.intersects(tileBounds!) || !temperature || isNaN(temperature)) {
         return null
@@ -77,7 +82,7 @@ function SingleTempColor({viewportBounds, dataPoint, tempKey, opacity, x, y, w, 
             width={w}
             height={h}
             fillOpacity={opacity}
-            fill={getColorFromTemperature(temperature!)}>
+            fill={temperatureColor(temperature!)}>
         </rect>
     </>
 

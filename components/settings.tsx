@@ -31,13 +31,15 @@ export interface Settings {
 
     "windColors.count": number;
     "windColors.opacity": number;
+    
     "temperatureColors.enabled": boolean;
-
+    "temperatureColors.quantized": boolean;
     "temperatureColors.count": number;
     "temperatureColors.opacity": number;
-
     "oceanTemperatureColors.enabled": boolean;
+
     "oceanTemperatureColors.count": number;
+    "oceanTemperatureColors.quantized": boolean;
     "oceanTemperatureColors.opacity": number;
 
     "currentArrows.enabled": boolean;
@@ -74,6 +76,7 @@ const defaultSettings: Settings = {
     "oceanTemperatureColors.enabled": false,
     "oceanTemperatureColors.count": DEFAULT_GRID_RESOLUTION,
     "oceanTemperatureColors.opacity": 0.6,
+    "oceanTemperatureColors.quantized": false,
 
     "currentParticles.enabled": false,
     "currentParticles.opacity": 0.97,
@@ -93,6 +96,7 @@ const defaultSettings: Settings = {
     "temperatureColors.enabled": false,
     "temperatureColors.count": DEFAULT_GRID_RESOLUTION,
     "temperatureColors.opacity": 0.6,
+    "temperatureColors.quantized": false,
 
     displayTempScale: true,
     displayWindScale: true
