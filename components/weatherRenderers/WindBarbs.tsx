@@ -107,7 +107,6 @@ function SingleWindBarb({
                 [triangleStartX + perpendicular[0] * tailLen, triangleStartY + perpendicular[1] * tailLen],
                 [triangleEndX, triangleEndY],
             ].map(([xin, yin]) => `${xin},${yin}`).join(' ')
-            console.log(points)
             out.push(
                 <polygon
                     opacity={opacity}

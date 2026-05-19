@@ -22,7 +22,6 @@ function updateMaskedTileLayer(instance: TileLayer.Mask, props: MaskedTileLayerP
         instance.setUrl(props.url);
     }
     if (props.center && prevProps.center !== props.center) {
-        console.log('update!')
         instance.setCenter(props.center);
     }
 }
