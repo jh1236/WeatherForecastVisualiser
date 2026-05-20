@@ -17,7 +17,7 @@ async function loadThreddsDataForDate(now: Date) {
 
 async function getDataForComingTimeframe() {
     const tasks = []
-    for (let i = 0; i < AMOUNT_OF_DAYS_IN_FUTURE; i++) {
+    for (let i = 0; i <= AMOUNT_OF_DAYS_IN_FUTURE; i++) {
         const date = new Date(Date.now() + i * DAY_IN_MS);
         tasks.push(loadThreddsDataForDate(date));
     }
