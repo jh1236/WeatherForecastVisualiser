@@ -9,10 +9,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
+      CACHE_DIRECTORY: '/cachedResponses'
     ports:
       - "8080:3000"
     restart: unless-stopped
     volumes:
-      - cached-responses:/app/cachedResponses
+      - cached-responses:/cachedResponses
 volumes:
   cached-responses:
