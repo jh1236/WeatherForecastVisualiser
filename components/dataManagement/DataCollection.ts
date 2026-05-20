@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import {WeatherData} from "@/components/types";
 import {useSettings} from "@/components/settings";
 
@@ -14,8 +14,6 @@ interface DataFunctionReturn {
 
 export function useDataFromSettingsSource(date: Date | undefined): DataFunctionReturn {
     const {settings, isLoaded} = useSettings()
-    const [hasWind, setHasWind] = useState<boolean>(false)
-    const [hasOcean, setHasOcean] = useState<boolean>(false)
     const [data, setData] = useState<WeatherData>({times: {}})
     const [populated, setPopulated] = useState<boolean>(false)
     useEffect(() => {
@@ -26,7 +24,8 @@ export function useDataFromSettingsSource(date: Date | undefined): DataFunctionR
                 year: date.getFullYear(),
                 month: date.getMonth() + 1,
                 day: date.getDate(),
-                region: settings.region
+                region: settings.region,
+                quick: settings.quickLoad
             }),
         }).then(res =>
             res.json().then(({data}: { data: WeatherData}) => {
@@ -36,7 +35,7 @@ export function useDataFromSettingsSource(date: Date | undefined): DataFunctionR
             )
         )
 
-    }, [date, isLoaded, settings.region])
+    }, [date, isLoaded, settings.quickLoad, settings.region])
     return {
         data,
         reset: () => {

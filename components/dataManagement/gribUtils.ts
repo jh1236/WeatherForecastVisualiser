@@ -1,8 +1,31 @@
 import {GribFrame, GribHeader} from "@/components/types";
 import {LatLngBounds} from "leaflet";
+import {WeatherDataPointValues} from "@/components/dataManagement/DataProcessing";
 
-export function codeFromGribFrame({header}: {header: GribHeader}) {
+export function codeFromGribFrame({header}: { header: GribHeader }) {
     return `${header['discipline']}.${header['parameterCategory']}.${header['parameterNumber']}`;
+}
+
+export function getFieldnameFromHeader(header: GribHeader): keyof WeatherDataPointValues {
+    const code = codeFromGribFrame({header})
+
+    switch (code) {
+        case "0.0.0":
+            return 'temperature';
+        case "0.2.2":
+            return 'windU';
+        case "0.2.3":
+            return 'windV';
+        case "10.1.2":
+            return 'currentU';
+        case "10.1.3":
+            return 'currentV';
+        case "10.3.0":
+            return 'oceanTemperature';
+        default:
+            throw new Error(`Unknown header: ${header}`);
+    }
+    
 }
 
 export function latLngBndsCompletelyContains(outside: LatLngBounds, inside: LatLngBounds): boolean {

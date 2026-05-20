@@ -13,9 +13,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     const year = +req.year;
     const month = +req.month;
     const day = +req.day;
+    const quick = (req?.quick ?? false) as boolean;
 
 
     return Response.json({
-        data: await getWeatherDataFromThredds(year, month, day, region),
+        data: await getWeatherDataFromThredds(year, month, day, region, quick),
     });
 }

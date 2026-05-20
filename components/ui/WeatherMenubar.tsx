@@ -1,3 +1,5 @@
+'use client'
+
 import {
     Menubar,
     MenubarCheckboxItem,
@@ -32,6 +34,7 @@ interface MenubarEnablerParams {
     settings: Settings;
     setSetting: <K extends keyof Settings>(setting: K, value: Settings[K]) => void;
     settingName: keyof Settings;
+    onChange?: (newSetting: boolean) => void;
 }
 
 function MenubarEnabler({settings, setSetting, settingName}: MenubarEnablerParams) {
@@ -71,12 +74,10 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             <MenubarRadioItem
                                 value="greaterPerth"
                             >Greater Perth Region</MenubarRadioItem>
-                            {/*<MenubarRadioItem*/}
-                            {/*    disabled={settings.dataSource === 'grib'}*/}
-                            {/*    value="greatBarrierReef"*/}
-                            {/*>Great Barrier Reef</MenubarRadioItem>*/}
                         </MenubarRadioGroup>
                     </MenubarGroup>
+                    <MenubarLabel>Use Quick Load (produces less accurate data)</MenubarLabel>
+                    <MenubarEnabler settings={settings} setSetting={setSetting} settingName={'quickLoad'} onChange={resetData}/>
                     <MenubarLabel>Other Settings</MenubarLabel>
                     <MenubarCheckboxItem checked={settings.showObscureUnits}
                                          onCheckedChange={() => setSetting('showObscureUnits', !settings.showObscureUnits)}>Show

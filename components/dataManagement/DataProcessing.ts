@@ -3,7 +3,7 @@ import {GribFrame, GribHeader, WeatherData, WeatherDataPoint} from "@/components
 import {floorCeil, lerp} from "@/components/utilities";
 import {
     boundsFromGribFrame,
-    codeFromGribFrame,
+    codeFromGribFrame, getFieldnameFromHeader,
     iterateOverBounds,
     latLngBndsIntersection,
     maxBoundsFromGribFrames
@@ -110,28 +110,7 @@ function getDatumForArea(weatherIn: GribFrame, area: LatLngBounds): number {
 
 
 function addToWeatherDataPoint(dataPoint: WeatherDataPointValues, header: GribHeader, value: number) {
-    const code = codeFromGribFrame({header})
-
-    switch (code) {
-        case "0.0.0":
-            dataPoint.temperature = value
-            break;
-        case "0.2.2":
-            dataPoint.windU = value
-            break;
-        case "0.2.3":
-            dataPoint.windV = value
-            break;
-        case "10.1.2":
-            dataPoint.currentU = value
-            break;
-        case "10.1.3":
-            dataPoint.currentV = value
-            break;
-        case "10.3.0":
-            dataPoint.oceanTemperature = value
-            break;
-    }
+    dataPoint[getFieldnameFromHeader(header)] = value
 }
 
 export function getWeatherDataPointForArea(weatherIn: GribFrame[], area: LatLngBounds): WeatherDataPoint {

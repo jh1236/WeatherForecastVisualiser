@@ -5,6 +5,7 @@ import {useLocalStorage} from "react-use";
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 
 export interface Settings {
+    quickLoad: boolean;
     baseLayer: 'Satellite' | 'Street Map';
     showDataOnMouseOver: boolean;
     interpolateDataMouseOver: boolean;
@@ -55,6 +56,7 @@ export interface Settings {
 const DEFAULT_GRID_RESOLUTION = 90
 
 const defaultSettings: Settings = {
+    quickLoad: false,
     baseLayer: 'Satellite',
     showObscureUnits: false,
     displayDataPickerPoints: false,

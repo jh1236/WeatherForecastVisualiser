@@ -5,42 +5,24 @@ import sanitize from "sanitize-filename";
 import fs from "fs";
 import {getJsDapData} from "@/components/dataManagement/jsdapWrapper";
 import {
+    Bound,
     convertThreddsToGrib,
     mergeWeatherDatas,
     roundWeatherData
 } from "@/components/dataManagement/ServerDataProcessing";
 
+type ThreddsData = {
+    startDate: number;
+    link: string;
+    bindings: { [binding in keyof Bound]: string };
+    args: { [key: string]: string | string[] };
+    quickArgs: { [key: string]: string | string[] };
+};
+
 type ThreddsConfigData = {
     [region: string]: {
-        ocean: {
-            startDate: number;
-            link: string;
-            bindings: {
-                currentU: string;
-                currentV: string;
-                currentTime: string;
-                latRho: string;
-                lngRho: string;
-                waterTemperature: string;
-                waterTemperatureTime: string
-            };
-            args: {[key: string]: string | string[]};
-        }[];
-        wind: {
-            startDate: number;
-
-            link: string;
-            bindings: {
-                windU: string;
-                windV: string;
-                windTime: string;
-                temperature: string;
-                temperatureTime: string;
-                lat: string;
-                lng: string
-            };
-            args: { [key: string]: string | string[] }
-        }[]
+        ocean: ThreddsData[];
+        wind: ThreddsData[]
     };
 
 };
@@ -60,12 +42,20 @@ const threddsConfigData: ThreddsConfigData = {
                     waterTemperatureTime: 'ocean_time',
                 },
                 args: {
-                    "lat_rho": ["0:1:258", "0:1:128"],
-                    "lon_rho": ["0:1:258", "0:1:128"],
+                    "lat_rho": ["0:2:258", "0:2:128"],
+                    "lon_rho": ["0:2:258", "0:2:128"],
                     "ocean_time": ["0:1:23"],
-                    "u_sur_eastward": ["0:1:23", "0:1:258", "0:1:128"],
-                    "v_sur_northward": ["0:1:23", "0:1:258", "0:1:128"],
-                    "temp_sur": ["0:1:23", "0:1:258", "0:1:128"],
+                    "u_sur_eastward": ["0:1:23", "0:2:258", "0:2:128"],
+                    "v_sur_northward": ["0:1:23", "0:2:258", "0:2:128"],
+                    "temp_sur": ["0:1:23", "0:2:258", "0:2:128"],
+                },
+                quickArgs: {
+                    "lat_rho": ["0:4:258", "0:4:128"],
+                    "lon_rho": ["0:4:258", "0:4:128"],
+                    "ocean_time": ["0:1:23"],
+                    "u_sur_eastward": ["0:1:23", "0:4:258", "0:4:128"],
+                    "v_sur_northward": ["0:1:23", "0:4:258", "0:4:128"],
+                    "temp_sur": ["0:1:23", "0:4:258", "0:4:128"],
                 }
             }],
             wind: [{
@@ -87,11 +77,19 @@ const threddsConfigData: ThreddsConfigData = {
                     Vwind: ["0:1:23", "0:1:164", '0:1:89'],
                     LON: ["0:1:0", '0:1:89'],
                     LAT: ["0:1:164", "0:1:0"],
-                    Tair: ["0:1:23", "0:1:164", '0:1:89'],
+                    Tair: ["0:1:23", "0:1:164", '0:1:89']
+                },
+                quickArgs: {
+                    wind_time: "0:1:23",
+                    tair_time: "0:1:23",
+                    Uwind: ["0:1:23", "0:2:164", '0:2:89'],
+                    Vwind: ["0:1:23", "0:2:164", '0:2:89'],
+                    LON: ["0:1:0", '0:2:89'],
+                    LAT: ["0:2:164", "0:1:0"],
+                    Tair: ["0:1:23", "0:2:164", '0:2:89'],
                 }
             }]
         },
-
 
     greaterPerth: {
         wind: [
@@ -115,28 +113,15 @@ const threddsConfigData: ThreddsConfigData = {
                     LON: ["0:1:0", '0:1:98'],
                     LAT: ["0:1:164", "0:1:0"],
                     Tair: ["0:1:23", "0:1:164", '0:1:98'],
-                }
-            },
-            {
-                startDate: Date.UTC(2026, 0, 1),
-                link: 'WRF2026/wrf_roms_d01_{year}{month}{day}.nc',
-                bindings: {
-                    windU: 'Uwind',
-                    windV: 'Vwind',
-                    windTime: 'wind_time',
-                    temperature: 'Tair',
-                    temperatureTime: 'tair_time',
-                    lat: 'LAT',
-                    lng: 'LON'
                 },
-                args: {
+                quickArgs: {
                     wind_time: "0:1:23",
                     tair_time: "0:1:23",
-                    Uwind: ["0:1:23", "0:1:164", '0:1:98'],
-                    Vwind: ["0:1:23", "0:1:164", '0:1:98'],
-                    LON: ["0:1:0", '0:1:98'],
-                    LAT: ["0:1:164", "0:1:0"],
-                    Tair: ["0:1:23", "0:1:164", '0:1:98'],
+                    Uwind: ["0:1:23", "0:2:164", '0:2:98'],
+                    Vwind: ["0:1:23", "0:2:164", '0:2:98'],
+                    LON: ["0:1:0", '0:2:98'],
+                    LAT: ["0:2:164", "0:1:0"],
+                    Tair: ["0:1:23", "0:2:164", '0:2:98'],
                 }
             }
         ],
@@ -159,24 +144,26 @@ const threddsConfigData: ThreddsConfigData = {
                 "u_sur_eastward": ["0:1:23", "0:3:639", "0:4:479"],
                 "v_sur_northward": ["0:1:23", "0:3:639", "0:4:479"],
                 "temp_sur": ["0:1:23", "0:3:639", "0:4:479"],
+            },
+            quickArgs: {
+                "lat_rho": ["0:6:639", "0:8:479"],
+                "lon_rho": ["0:6:639", "0:8:479"],
+                "ocean_time": ["0:1:23"],
+                "u_sur_eastward": ["0:1:23", "0:6:639", "0:8:479"],
+                "v_sur_northward": ["0:1:23", "0:6:639", "0:8:479"],
+                "temp_sur": ["0:1:23", "0:6:639", "0:4:479"],
             }
         }]
-    },
-
-    greatBarrierReef: {
-        wind: [],
-        ocean: []
     }
-
 };
 
 
-export async function getWeatherDataFromThredds(yearIn: number, monthIn: number, dayIn: number, region: keyof typeof threddsConfigData): Promise<WeatherData> {
+export async function getWeatherDataFromThredds(yearIn: number, monthIn: number, dayIn: number, region: keyof typeof threddsConfigData, quickLoad: boolean = false): Promise<WeatherData> {
     const year = yearIn.toString();
     const month = monthIn.toString().padStart(2, '0');
     const day = dayIn.toString().padStart(2, '0');
     const date = Date.UTC(yearIn, monthIn, dayIn)
-    const file = sanitize(`${year}-${month}-${day}-${region}`)
+    const file = sanitize(`${year}-${month}-${day}-${region}${quickLoad ? '-quick' : ''}`)
     const cacheFolder = (process.env.CACHE_DIRECTORY) ?? './cachedResponses';
     const path = `${cacheFolder}/${file}.json`;
     if (fs.existsSync(path)) {
@@ -193,7 +180,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
 
     if (oceanBindings) {
         const oceanLink = oceanBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
-        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${oceanLink}`, oceanBindings.args)
+        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${oceanLink}`, quickLoad ? oceanBindings.quickArgs : oceanBindings.args)
             .then(({data}) => convertThreddsToGrib(data, oceanBindings.bindings)
             ).catch(e => {
                 console.error(`Error Getting Oceanographic Data: ${e}`)
@@ -206,7 +193,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     if (meteoBindings) {
         const windLink = meteoBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
 
-        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${windLink}`, meteoBindings.args)
+        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${windLink}`, quickLoad ? meteoBindings.quickArgs : meteoBindings.args)
             .then(({data}) => convertThreddsToGrib(data, meteoBindings.bindings)
             ).catch(e => {
                 console.error(`Error Getting Meteorological Data: ${e}`)
