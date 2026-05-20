@@ -23,7 +23,7 @@ async function getDataForComingTimeframe() {
 }
 
 export async function register() {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || true) {
         // don't run prefetching on dev
         return
     }

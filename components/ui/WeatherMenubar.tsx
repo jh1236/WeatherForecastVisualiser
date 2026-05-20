@@ -1,5 +1,3 @@
-'use client'
-
 import {
     Menubar,
     MenubarCheckboxItem,
@@ -21,8 +19,15 @@ import Image from "next/image";
 import {Slider} from "@/components/ui/slider";
 import {useTheme} from "next-themes";
 import {round} from "@floating-ui/utils";
-import {DialogTrigger} from "@radix-ui/react-dialog";
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogOverlay} from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogOverlay,
+    DialogTitle
+} from "@/components/ui/dialog";
+import {useBoolean} from "react-use";
 
 interface WeatherMenubarProps {
     resetData: () => void
@@ -55,361 +60,390 @@ const MAX_GRID_RESOLUTION = 130
 
 export function WeatherMenubar({resetData}: WeatherMenubarProps) {
     const {settings, setSetting} = useSettings()
+    const [aboutBoxOpen, setAboutBoxOpen] = useBoolean(false)
     const {theme, resolvedTheme, setTheme} = useTheme()
     return (
-        <Menubar style={{width: '100%'}}>
-            <MenubarLabel style={{width: '50px'}}><Image src="/icon.png" alt="Website logo" width={30}
-                                                         height={30}/></MenubarLabel>
-            <MenubarMenu>
-                <MenubarTrigger>File</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarLabel>Select Data Region</MenubarLabel>
-                    <MenubarGroup>
-                        <MenubarRadioGroup value={settings.region}
-                                           onValueChange={value => {
-                                               resetData()
-                                               setSetting('region', (value as Settings['region']))
-                                           }}>
-                            <MenubarRadioItem
-                                value="perth"
-                            >Perth</MenubarRadioItem>
-                            <MenubarRadioItem
-                                value="greaterPerth"
-                            >Greater Perth Region</MenubarRadioItem>
-                        </MenubarRadioGroup>
-                    </MenubarGroup>
-                    <MenubarLabel>Use Quick Load (produces less accurate data)</MenubarLabel>
-                    <MenubarEnabler settings={settings} setSetting={setSetting} settingName={'quickLoad'} onChange={resetData}/>
-                    <MenubarLabel>Other Settings</MenubarLabel>
-                    <MenubarCheckboxItem checked={settings.showObscureUnits}
-                                         onCheckedChange={() => setSetting('showObscureUnits', !settings.showObscureUnits)}>Show
-                        Obscure Units</MenubarCheckboxItem>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Units</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarGroup>
-
-                        <MenubarLabel>
-                            Wind speed
-                        </MenubarLabel>
-
-                        <MenubarRadioGroup value={settings.windSpeedUnit}
-                                           onValueChange={value => {
-                                               setSetting('windSpeedUnit', (value as Settings['windSpeedUnit']))
-                                           }}>
-                            <MenubarRadioItem
-                                value="m/s"
-                            >Metres per Second</MenubarRadioItem>
-                            <MenubarRadioItem
-                                value="kt"
-                            >Knots</MenubarRadioItem>
-                            <MenubarRadioItem
-                                value="km/h"
-                            >Kilometres per Hour</MenubarRadioItem>
-                            {settings.showObscureUnits && <MenubarRadioItem
-                                value="mph"
-                            >Miles per Hour</MenubarRadioItem>}
-                            {settings.showObscureUnits && <MenubarRadioItem
-                                value="c"
-                            >Fractional Speed of Light</MenubarRadioItem>}
-                        </MenubarRadioGroup>
-                        <MenubarLabel>
-                            Current speed
-                        </MenubarLabel>
-
-                        <MenubarRadioGroup value={settings.currentSpeedUnit}
-                                           onValueChange={value => {
-                                               setSetting('currentSpeedUnit', (value as Settings['currentSpeedUnit']))
-                                           }}>
-                            <MenubarRadioItem
-                                value="m/s"
-                            >Metres per Second</MenubarRadioItem>
-                            <MenubarRadioItem
-                                value="kt"
-                            >Knots</MenubarRadioItem>
-                            <MenubarRadioItem
-                                value="km/h"
-                            >Kilometres per Hour</MenubarRadioItem>
-                            {settings.showObscureUnits && <MenubarRadioItem
-                                value="mph"
-                            >Miles per Hour</MenubarRadioItem>}
-                            {settings.showObscureUnits && <MenubarRadioItem
-                                value="c"
-                            >Fractional Speed of Light</MenubarRadioItem>}
-                        </MenubarRadioGroup>
-                        <MenubarLabel>
-                            Temperature
-                        </MenubarLabel>
-
-                        <MenubarRadioGroup value={settings.temperatureUnit}
-                                           onValueChange={value => {
-                                               setSetting('temperatureUnit', (value as Settings['temperatureUnit']))
-                                           }}>
-                            <MenubarRadioItem
-                                value="C"
-                            >Celsius</MenubarRadioItem>
-                            {settings.showObscureUnits && <MenubarRadioItem
-                                value="K"
-                            >Kelvin</MenubarRadioItem>}
-                            <MenubarRadioItem
-                                value="F"
-                            >Fahrenheit</MenubarRadioItem>
-                        </MenubarRadioGroup>
-                    </MenubarGroup>
-                    <MenubarLabel>
-                        Time
-                    </MenubarLabel>
-
-                    <MenubarCheckboxItem checked={settings["24HourTime"]}
-                                         onCheckedChange={() => setSetting('24HourTime', !settings['24HourTime'])}>Use
-                        24 Hour Time</MenubarCheckboxItem>
-
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Renderers</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarGroup>
-                        <MenubarLabel>Wind Renderers</MenubarLabel>
-                        <MenubarEnabler settings={settings} setSetting={setSetting}
-                                        settingName="windParticles.enabled"/>
-                        <MenubarEnabler settings={settings} setSetting={setSetting} settingName="windBarbs.enabled"/>
-                        <MenubarEnabler settings={settings} setSetting={setSetting} settingName="windColors.enabled"/>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarLabel>Temperature Renderers</MenubarLabel>
-                        <MenubarEnabler settings={settings} setSetting={setSetting}
-                                        settingName="temperatureColors.enabled"/>
-                    </MenubarGroup>
-                    <MenubarSeparator/>
-                    <MenubarGroup>
-                        <MenubarLabel>Ocean Renderers</MenubarLabel>
-                        <MenubarEnabler settings={settings} setSetting={setSetting}
-                                        settingName="currentArrows.enabled"/>
-                        <MenubarEnabler settings={settings} setSetting={setSetting}
-                                        settingName="currentParticles.enabled"/>
-                        <MenubarEnabler settings={settings} setSetting={setSetting}
-                                        settingName="oceanTemperatureColors.enabled"/>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Wind</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarGroup>
-                        <MenubarLabel>Wind Barbs</MenubarLabel>
-                        <MenubarLabel inset>
-                            Resolution: {settings["windBarbs.count"]}
-                        </MenubarLabel>
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-
-                            <Slider style={{width: '120px'}} min={10} value={[settings["windBarbs.count"]]} max={40}
-                                    step={5} onValueChange={([v]) => setSetting("windBarbs.count", v)}></Slider>
-                        </MenubarItem>
-                    </MenubarGroup>
-                    <MenubarGroup>
-                        <MenubarLabel>Wind Colors</MenubarLabel>
-                        <MenubarLabel inset>
-                            Resolution: {settings["windColors.count"]}
-                        </MenubarLabel>
-
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider
-                                style={{width: '120px',}}
-                                min={MIN_GRID_RESOLUTION}
-                                value={[settings["windColors.count"]]}
-                                max={MAX_GRID_RESOLUTION}
-                                step={5}
-                                onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
-                        </MenubarItem>
-                        {settings["windColors.count"] >= WARN_GRID_RESOLUTION &&
-                            <MenubarLabel style={{
-                                fontWeight: 600,
-                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
-                                fontSize: 8
-                            }}>
-                                Values over {WARN_GRID_RESOLUTION} may impact performance!
-                            </MenubarLabel>}
-                        <MenubarLabel inset>
-                            Opacity: {round(100 * settings["windColors.opacity"])}%
-                        </MenubarLabel>
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider style={{width: '120px'}} min={0} value={[settings["windColors.opacity"]]} max={1}
-                                    step={0.05} onValueChange={([v]) => setSetting("windColors.opacity", v)}></Slider>
-                        </MenubarItem>
-                        <MenubarCheckboxItem checked={settings.displayWindScale}
-                                             onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Show
-                            Color Scale</MenubarCheckboxItem>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Ocean</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarGroup>
-                        <MenubarLabel>Current Arrows</MenubarLabel>
-                        <MenubarLabel inset>
-                            Resolution: {settings["currentArrows.count"]}
-                        </MenubarLabel>
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-
-                            <Slider style={{width: '120px'}} min={10} value={[settings["currentArrows.count"]]} max={70}
-                                    step={5} onValueChange={([v]) => setSetting("currentArrows.count", v)}></Slider>
-                        </MenubarItem>
-                    </MenubarGroup>
-                    <MenubarGroup>
-                        <MenubarLabel>Ocean Temperature Colors</MenubarLabel>
-                        <MenubarLabel inset>
-                            Resolution: {settings["oceanTemperatureColors.count"]}
-                        </MenubarLabel>
-
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider
-                                style={{width: '120px',}}
-                                min={MIN_GRID_RESOLUTION}
-                                value={[settings["oceanTemperatureColors.count"]]}
-                                max={MAX_GRID_RESOLUTION}
-                                step={5}
-                                onValueChange={([v]) => setSetting("oceanTemperatureColors.count", v)}></Slider>
-                        </MenubarItem>
-                        {settings["oceanTemperatureColors.count"] >= WARN_GRID_RESOLUTION &&
-                            <MenubarLabel style={{
-                                fontWeight: 600,
-                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
-                                fontSize: 8
-                            }}>
-                                Values over {WARN_GRID_RESOLUTION} may impact performance!
-                            </MenubarLabel>}
-                        <MenubarCheckboxItem checked={settings['oceanTemperatureColors.quantized']}
-                                             onCheckedChange={() => setSetting('oceanTemperatureColors.quantized', !settings['oceanTemperatureColors.quantized'])}>
-                            Quantise color values
-                        </MenubarCheckboxItem>
-                        <MenubarLabel inset>
-                            Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
-                        </MenubarLabel>
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider style={{width: '120px'}} min={0}
-                                    value={[settings["oceanTemperatureColors.opacity"]]}
-                                    max={1}
-                                    step={0.05}
-                                    onValueChange={([v]) => setSetting("oceanTemperatureColors.opacity", v)}></Slider>
-                        </MenubarItem>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Temperature</MenubarTrigger>
-                <MenubarContent>
-                    <MenubarGroup>
-                        <MenubarLabel>Temperature Colors</MenubarLabel>
-                        <MenubarLabel inset>
-                            Resolution: {settings["temperatureColors.count"]}
-                        </MenubarLabel>
-
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider
-                                style={{width: '120px',}}
-                                min={MIN_GRID_RESOLUTION}
-                                value={[settings["temperatureColors.count"]]}
-                                max={MAX_GRID_RESOLUTION}
-                                step={5}
-                                onValueChange={([v]) => setSetting("temperatureColors.count", v)}></Slider>
-                        </MenubarItem>
-                        {settings["temperatureColors.count"] >= WARN_GRID_RESOLUTION &&
-                            <MenubarLabel style={{
-                                fontWeight: 600,
-                                color: resolvedTheme === 'dark' ? 'red' : 'darkred',
-                                fontSize: 8
-                            }}>
-                                Values over {WARN_GRID_RESOLUTION} may impact performance!
-                            </MenubarLabel>}
-                        <MenubarCheckboxItem checked={settings['temperatureColors.quantized']}
-                                             onCheckedChange={() => setSetting('temperatureColors.quantized', !settings['temperatureColors.quantized'])}>
-                            Quantise color values
-                        </MenubarCheckboxItem>
-                        <MenubarLabel inset>
-                            Opacity: {round(100 * settings["temperatureColors.opacity"])}%
-                        </MenubarLabel>
-                        <MenubarItem inset onSelect={e => e.preventDefault()}>
-                            <Slider style={{width: '120px'}} min={0} value={[settings["temperatureColors.opacity"]]}
-                                    max={1}
-                                    step={0.05}
-                                    onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
-                        </MenubarItem>
+        <>
+            <Menubar style={{width: '100%'}}>
+                <MenubarLabel style={{width: '50px'}}><Image src="/icon.png" alt="Website logo" width={30}
+                                                             height={30}/></MenubarLabel>
+                <MenubarMenu>
+                    <MenubarTrigger>File</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarLabel>Select Data Region</MenubarLabel>
                         <MenubarGroup>
-                            <MenubarCheckboxItem checked={settings.displayTempScale}
-                                                 onSelect={() => setSetting('displayTempScale', !settings.displayTempScale)}>Show
+                            <MenubarRadioGroup value={settings.region}
+                                               onValueChange={value => {
+                                                   resetData()
+                                                   setSetting('region', (value as Settings['region']))
+                                               }}>
+                                <MenubarRadioItem
+                                    value="perth"
+                                >Perth</MenubarRadioItem>
+                                <MenubarRadioItem
+                                    value="greaterPerth"
+                                >Greater Perth Region</MenubarRadioItem>
+                            </MenubarRadioGroup>
+                        </MenubarGroup>
+                        <MenubarLabel>Use Quick Load (produces less accurate data)</MenubarLabel>
+                        <MenubarEnabler settings={settings} setSetting={setSetting} settingName={'quickLoad'}
+                                        onChange={resetData}/>
+                        <MenubarLabel>Other Settings</MenubarLabel>
+                        <MenubarCheckboxItem checked={settings.showObscureUnits}
+                                             onCheckedChange={() => setSetting('showObscureUnits', !settings.showObscureUnits)}>Show
+                            Obscure Units</MenubarCheckboxItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Units</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarGroup>
+
+                            <MenubarLabel>
+                                Wind speed
+                            </MenubarLabel>
+
+                            <MenubarRadioGroup value={settings.windSpeedUnit}
+                                               onValueChange={value => {
+                                                   setSetting('windSpeedUnit', (value as Settings['windSpeedUnit']))
+                                               }}>
+                                <MenubarRadioItem
+                                    value="m/s"
+                                >Metres per Second</MenubarRadioItem>
+                                <MenubarRadioItem
+                                    value="kt"
+                                >Knots</MenubarRadioItem>
+                                <MenubarRadioItem
+                                    value="km/h"
+                                >Kilometres per Hour</MenubarRadioItem>
+                                {settings.showObscureUnits && <MenubarRadioItem
+                                    value="mph"
+                                >Miles per Hour</MenubarRadioItem>}
+                                {settings.showObscureUnits && <MenubarRadioItem
+                                    value="c"
+                                >Fractional Speed of Light</MenubarRadioItem>}
+                            </MenubarRadioGroup>
+                            <MenubarLabel>
+                                Current speed
+                            </MenubarLabel>
+
+                            <MenubarRadioGroup value={settings.currentSpeedUnit}
+                                               onValueChange={value => {
+                                                   setSetting('currentSpeedUnit', (value as Settings['currentSpeedUnit']))
+                                               }}>
+                                <MenubarRadioItem
+                                    value="m/s"
+                                >Metres per Second</MenubarRadioItem>
+                                <MenubarRadioItem
+                                    value="kt"
+                                >Knots</MenubarRadioItem>
+                                <MenubarRadioItem
+                                    value="km/h"
+                                >Kilometres per Hour</MenubarRadioItem>
+                                {settings.showObscureUnits && <MenubarRadioItem
+                                    value="mph"
+                                >Miles per Hour</MenubarRadioItem>}
+                                {settings.showObscureUnits && <MenubarRadioItem
+                                    value="c"
+                                >Fractional Speed of Light</MenubarRadioItem>}
+                            </MenubarRadioGroup>
+                            <MenubarLabel>
+                                Temperature
+                            </MenubarLabel>
+
+                            <MenubarRadioGroup value={settings.temperatureUnit}
+                                               onValueChange={value => {
+                                                   setSetting('temperatureUnit', (value as Settings['temperatureUnit']))
+                                               }}>
+                                <MenubarRadioItem
+                                    value="C"
+                                >Celsius</MenubarRadioItem>
+                                {settings.showObscureUnits && <MenubarRadioItem
+                                    value="K"
+                                >Kelvin</MenubarRadioItem>}
+                                <MenubarRadioItem
+                                    value="F"
+                                >Fahrenheit</MenubarRadioItem>
+                            </MenubarRadioGroup>
+                        </MenubarGroup>
+                        <MenubarLabel>
+                            Time
+                        </MenubarLabel>
+
+                        <MenubarCheckboxItem checked={settings["24HourTime"]}
+                                             onCheckedChange={() => setSetting('24HourTime', !settings['24HourTime'])}>Use
+                            24 Hour Time</MenubarCheckboxItem>
+
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Renderers</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarGroup>
+                            <MenubarLabel>Wind Renderers</MenubarLabel>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="windParticles.enabled"/>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="windBarbs.enabled"/>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="windColors.enabled"/>
+                        </MenubarGroup>
+                        <MenubarSeparator/>
+                        <MenubarGroup>
+                            <MenubarLabel>Temperature Renderers</MenubarLabel>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="temperatureColors.enabled"/>
+                        </MenubarGroup>
+                        <MenubarSeparator/>
+                        <MenubarGroup>
+                            <MenubarLabel>Ocean Renderers</MenubarLabel>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="currentArrows.enabled"/>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="currentParticles.enabled"/>
+                            <MenubarEnabler settings={settings} setSetting={setSetting}
+                                            settingName="oceanTemperatureColors.enabled"/>
+                        </MenubarGroup>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Wind</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarGroup>
+                            <MenubarLabel>Wind Barbs</MenubarLabel>
+                            <MenubarLabel inset>
+                                Resolution: {settings["windBarbs.count"]}
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+
+                                <Slider style={{width: '120px'}} min={10} value={[settings["windBarbs.count"]]} max={40}
+                                        step={5} onValueChange={([v]) => setSetting("windBarbs.count", v)}></Slider>
+                            </MenubarItem>
+                        </MenubarGroup>
+                        <MenubarGroup>
+                            <MenubarLabel>Wind Colors</MenubarLabel>
+                            <MenubarLabel inset>
+                                Resolution: {settings["windColors.count"]}
+                            </MenubarLabel>
+
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider
+                                    style={{width: '120px',}}
+                                    min={MIN_GRID_RESOLUTION}
+                                    value={[settings["windColors.count"]]}
+                                    max={MAX_GRID_RESOLUTION}
+                                    step={5}
+                                    onValueChange={([v]) => setSetting("windColors.count", v)}></Slider>
+                            </MenubarItem>
+                            {settings["windColors.count"] >= WARN_GRID_RESOLUTION &&
+                                <MenubarLabel style={{
+                                    fontWeight: 600,
+                                    color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                    fontSize: 8
+                                }}>
+                                    Values over {WARN_GRID_RESOLUTION} may impact performance!
+                                </MenubarLabel>}
+                            <MenubarLabel inset>
+                                Opacity: {round(100 * settings["windColors.opacity"])}%
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} min={0} value={[settings["windColors.opacity"]]}
+                                        max={1}
+                                        step={0.05}
+                                        onValueChange={([v]) => setSetting("windColors.opacity", v)}></Slider>
+                            </MenubarItem>
+                            <MenubarCheckboxItem checked={settings.displayWindScale}
+                                                 onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Show
                                 Color Scale</MenubarCheckboxItem>
                         </MenubarGroup>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>Graphs</MenubarTrigger>
-                <MenubarContent className="w-44">
-                    <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
-                                         onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph
-                        Data at Point</MenubarCheckboxItem>
-                    <MenubarCheckboxItem checked={!settings.forceGraphsToZero}
-                                         onSelect={() => setSetting('forceGraphsToZero', !settings.forceGraphsToZero)}>Allow
-                        Non-Zero Y Axis</MenubarCheckboxItem>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger>View</MenubarTrigger>
-                <MenubarContent className="w-44">
-                    <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.displayDataArea}
-                                             onSelect={() => setSetting('displayDataArea', !settings.displayDataArea)}>Demarcate
-                            Data Bounds</MenubarCheckboxItem>
-                    </MenubarGroup>
-                    <MenubarGroup>
-                        <MenubarCheckboxItem checked={settings.showDataOnMouseOver}
-                                             onSelect={() => setSetting('showDataOnMouseOver', !settings.showDataOnMouseOver)}>Show
-                            Data on Mouseover</MenubarCheckboxItem>
-                        <MenubarCheckboxItem checked={settings.interpolateDataMouseOver}
-                                             onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
-                            Mouseover Data</MenubarCheckboxItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Ocean</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarGroup>
+                            <MenubarLabel>Current Arrows</MenubarLabel>
+                            <MenubarLabel inset>
+                                Resolution: {settings["currentArrows.count"]}
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
 
-                    </MenubarGroup>
-                    <MenubarGroup className="w-80">
-                        <MenubarSub>
-                            <MenubarSubTrigger inset className="w-40">Dark Mode</MenubarSubTrigger>
-                            <MenubarSubContent>
-                                <MenubarGroup>
-                                    <MenubarCheckboxItem checked={theme === 'system'}
-                                                         onSelect={() => setTheme('system')}>System</MenubarCheckboxItem>
-                                    <MenubarCheckboxItem checked={theme === 'light'}
-                                                         onSelect={() => setTheme('light')}>Light</MenubarCheckboxItem>
-                                    <MenubarCheckboxItem checked={theme === 'dark'}
-                                                         onSelect={() => setTheme('dark')}>Dark</MenubarCheckboxItem>
-                                </MenubarGroup>
-                            </MenubarSubContent>
-                        </MenubarSub>
-                    </MenubarGroup>
-                </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger asChild>
-                    <Dialog>
-                        <DialogTrigger>About</DialogTrigger>
-                        <DialogOverlay style={{zIndex: 99998}}></DialogOverlay>
-                        <DialogContent style={{zIndex: 99999}}>
-                            <DialogHeader style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                                <Image width={100} height={100} src={'/icon.png'}
-                                       alt={'The Weather Forecast Visualiser Logo'}></Image>
-                                <h1>Weather Forecast Visualiser</h1>
-                            </DialogHeader>
-                            <DialogDescription>
-                                This project was built by Jared Healy, and is released under the MIT Licence
-                            </DialogDescription>
-                        </DialogContent>
-                    </Dialog>
-                </MenubarTrigger>
-            </MenubarMenu>
-        </Menubar>
+                                <Slider style={{width: '120px'}} min={10} value={[settings["currentArrows.count"]]}
+                                        max={70}
+                                        step={5} onValueChange={([v]) => setSetting("currentArrows.count", v)}></Slider>
+                            </MenubarItem>
+                        </MenubarGroup>
+                        <MenubarGroup>
+                            <MenubarLabel>Ocean Temperature Colors</MenubarLabel>
+                            <MenubarLabel inset>
+                                Resolution: {settings["oceanTemperatureColors.count"]}
+                            </MenubarLabel>
+
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider
+                                    style={{width: '120px',}}
+                                    min={MIN_GRID_RESOLUTION}
+                                    value={[settings["oceanTemperatureColors.count"]]}
+                                    max={MAX_GRID_RESOLUTION}
+                                    step={5}
+                                    onValueChange={([v]) => setSetting("oceanTemperatureColors.count", v)}></Slider>
+                            </MenubarItem>
+                            {settings["oceanTemperatureColors.count"] >= WARN_GRID_RESOLUTION &&
+                                <MenubarLabel style={{
+                                    fontWeight: 600,
+                                    color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                    fontSize: 8
+                                }}>
+                                    Values over {WARN_GRID_RESOLUTION} may impact performance!
+                                </MenubarLabel>}
+                            <MenubarCheckboxItem checked={settings['oceanTemperatureColors.quantized']}
+                                                 onCheckedChange={() => setSetting('oceanTemperatureColors.quantized', !settings['oceanTemperatureColors.quantized'])}>
+                                Quantise color values
+                            </MenubarCheckboxItem>
+                            <MenubarLabel inset>
+                                Opacity: {round(100 * settings["oceanTemperatureColors.opacity"])}%
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} min={0}
+                                        value={[settings["oceanTemperatureColors.opacity"]]}
+                                        max={1}
+                                        step={0.05}
+                                        onValueChange={([v]) => setSetting("oceanTemperatureColors.opacity", v)}></Slider>
+                            </MenubarItem>
+                        </MenubarGroup>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Temperature</MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarGroup>
+                            <MenubarLabel>Temperature Colors</MenubarLabel>
+                            <MenubarLabel inset>
+                                Resolution: {settings["temperatureColors.count"]}
+                            </MenubarLabel>
+
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider
+                                    style={{width: '120px',}}
+                                    min={MIN_GRID_RESOLUTION}
+                                    value={[settings["temperatureColors.count"]]}
+                                    max={MAX_GRID_RESOLUTION}
+                                    step={5}
+                                    onValueChange={([v]) => setSetting("temperatureColors.count", v)}></Slider>
+                            </MenubarItem>
+                            {settings["temperatureColors.count"] >= WARN_GRID_RESOLUTION &&
+                                <MenubarLabel style={{
+                                    fontWeight: 600,
+                                    color: resolvedTheme === 'dark' ? 'red' : 'darkred',
+                                    fontSize: 8
+                                }}>
+                                    Values over {WARN_GRID_RESOLUTION} may impact performance!
+                                </MenubarLabel>}
+                            <MenubarCheckboxItem checked={settings['temperatureColors.quantized']}
+                                                 onCheckedChange={() => setSetting('temperatureColors.quantized', !settings['temperatureColors.quantized'])}>
+                                Quantise color values
+                            </MenubarCheckboxItem>
+                            <MenubarLabel inset>
+                                Opacity: {round(100 * settings["temperatureColors.opacity"])}%
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} min={0} value={[settings["temperatureColors.opacity"]]}
+                                        max={1}
+                                        step={0.05}
+                                        onValueChange={([v]) => setSetting("temperatureColors.opacity", v)}></Slider>
+                            </MenubarItem>
+                            <MenubarGroup>
+                                <MenubarCheckboxItem checked={settings.displayTempScale}
+                                                     onSelect={() => setSetting('displayTempScale', !settings.displayTempScale)}>Show
+                                    Color Scale</MenubarCheckboxItem>
+                            </MenubarGroup>
+                        </MenubarGroup>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>Graphs</MenubarTrigger>
+                    <MenubarContent className="w-44">
+                        <MenubarCheckboxItem checked={settings.displayDataPickerPoints}
+                                             onSelect={() => setSetting('displayDataPickerPoints', !settings.displayDataPickerPoints)}>Graph
+                            Data at Point</MenubarCheckboxItem>
+                        <MenubarCheckboxItem checked={!settings.forceGraphsToZero}
+                                             onSelect={() => setSetting('forceGraphsToZero', !settings.forceGraphsToZero)}>Allow
+                            Non-Zero Y Axis</MenubarCheckboxItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger>View</MenubarTrigger>
+                    <MenubarContent className="w-44">
+                        <MenubarGroup>
+                            <MenubarCheckboxItem checked={settings.displayDataArea}
+                                                 onSelect={() => setSetting('displayDataArea', !settings.displayDataArea)}>Demarcate
+                                Data Bounds</MenubarCheckboxItem>
+                        </MenubarGroup>
+                        <MenubarGroup>
+                            <MenubarCheckboxItem checked={settings.showDataOnMouseOver}
+                                                 onSelect={() => setSetting('showDataOnMouseOver', !settings.showDataOnMouseOver)}>Show
+                                Data on Mouseover</MenubarCheckboxItem>
+                            <MenubarCheckboxItem checked={settings.interpolateDataMouseOver}
+                                                 onSelect={() => setSetting('interpolateDataMouseOver', !settings.interpolateDataMouseOver)}>Interpolate
+                                Mouseover Data</MenubarCheckboxItem>
+
+                        </MenubarGroup>
+                        <MenubarGroup className="w-80">
+                            <MenubarSub>
+                                <MenubarSubTrigger inset className="w-40">Dark Mode</MenubarSubTrigger>
+                                <MenubarSubContent>
+                                    <MenubarGroup>
+                                        <MenubarCheckboxItem checked={theme === 'system'}
+                                                             onSelect={() => setTheme('system')}>System</MenubarCheckboxItem>
+                                        <MenubarCheckboxItem checked={theme === 'light'}
+                                                             onSelect={() => setTheme('light')}>Light</MenubarCheckboxItem>
+                                        <MenubarCheckboxItem checked={theme === 'dark'}
+                                                             onSelect={() => setTheme('dark')}>Dark</MenubarCheckboxItem>
+                                    </MenubarGroup>
+                                </MenubarSubContent>
+                            </MenubarSub>
+                        </MenubarGroup>
+                    </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                    <MenubarTrigger onClick={() => setAboutBoxOpen(true)}>
+                        About
+                    </MenubarTrigger>
+                </MenubarMenu>
+            </Menubar>
+            <Dialog open={aboutBoxOpen} onOpenChange={setAboutBoxOpen}>
+                <DialogOverlay style={{zIndex: 99998}}></DialogOverlay>
+                <DialogContent style={{zIndex: 99999}}>
+                    <DialogHeader style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                        <Image width={150} height={150} src={'/icon.png'}
+                               alt={'The Weather Forecast Visualiser Logo'}></Image>
+                        {/*<h1 style={{fontSize: '2em'}}>Weather Forecast Visualiser</h1>*/}
+                    </DialogHeader>
+                    <DialogTitle style={{textAlign: 'center', fontSize: '2em'}}>Weather Forecast
+                        Visualiser</DialogTitle>
+                    <DialogDescription>
+                        <style>
+                            .visiblelink {'{'}
+                            color: lightblue;
+                            text-decoration: underline;
+                            {'}'}
+                        </style>
+                        This project was built by Jared Healy, under the supervision of Ivica Janekovic, and is released
+                        under the MIT Licence. It is built on the
+                        back of {' '}
+                        <a className="visiblelink" target="_blank" href="https://react-leaflet.js.org/">
+                            React Leaflet
+                        </a> and {' '}
+                        <a className="visiblelink" target="_blank" href="https://leafletjs.com/">
+                            Leaflet.JS
+                        </a> The source code can be found on {' '}
+                        <a className="visiblelink" target="_blank"
+                           href="https://github.com/jh1236/WeatherForecastVisualiser">
+                            Github
+                        </a>.
+                    </DialogDescription>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
