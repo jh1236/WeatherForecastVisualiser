@@ -226,7 +226,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
                 }
                 if (stat.mtimeMs < oldestFileTime) {
                     oldestFileTime = stat.mtimeMs
-                    oldestFile = `./cachedResponses/${i}`
+                    oldestFile = `${cacheFolder}/${i}`
 
                 }
             }
