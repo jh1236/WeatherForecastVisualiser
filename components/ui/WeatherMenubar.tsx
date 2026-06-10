@@ -428,6 +428,8 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             text-decoration: underline;
                             {'}'}
                         </style>
+                        <p style={{textAlign: 'center'}}><b>All Weather Data seen is based on forecasting, and may not accurately reflect weather
+                            patterns seen in real life.</b></p>
                         This project was built by Jared Healy, under the supervision of Ivica Janekovic, and is released
                         under the MIT Licence. It is built on the
                         back of {' '}
