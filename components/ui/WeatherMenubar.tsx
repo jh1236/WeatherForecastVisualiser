@@ -438,7 +438,7 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                         </a> and {' '}
                         <a className="visiblelink" target="_blank" href="https://leafletjs.com/">
                             Leaflet.JS
-                        </a> The source code can be found on {' '}
+                        </a>. The source code can be found on {' '}
                         <a className="visiblelink" target="_blank"
                            href="https://github.com/jh1236/WeatherForecastVisualiser">
                             Github
