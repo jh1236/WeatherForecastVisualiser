@@ -9,12 +9,14 @@ interface DataFunctionReturn {
     data: WeatherData;
     reset: () => void;
     populated: boolean;
+    error: string | null;
 }
 
 
 export function useDataFromSettingsSource(date: Date | undefined): DataFunctionReturn {
     const {settings, isLoaded} = useSettings()
     const [data, setData] = useState<WeatherData>({times: {}})
+    const [error, setError] = useState<string | null>(null)
     const [populated, setPopulated] = useState<boolean>(false)
     useEffect(() => {
         if (!isLoaded || !date) return;
@@ -28,11 +30,15 @@ export function useDataFromSettingsSource(date: Date | undefined): DataFunctionR
                 quick: settings.quickLoad
             }),
         }).then(res =>
-            res.json().then(({data}: { data: WeatherData}) => {
+            ({...res.json(), status: res.status})
+        ).then(({data, status, error}: {error: never, data: WeatherData, status: number }) => {
+                if (Math.floor(status / 100) !== 2) {
+                    setError(JSON.stringify(error))
+                } else {
                     setData(data)
                     setPopulated(true)
                 }
-            )
+            }
         )
 
     }, [date, isLoaded, settings.quickLoad, settings.region])
@@ -42,6 +48,7 @@ export function useDataFromSettingsSource(date: Date | undefined): DataFunctionR
             setPopulated(false)
             setData({times: {}})
         },
+        error,
         populated
     }
 }

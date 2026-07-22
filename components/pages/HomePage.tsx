@@ -21,7 +21,7 @@ export function HomePage() {
     const [mounted, setMounted] = useState(false);
     //we check mounted here to save a hydration error
     const date = useMemo(() => mounted ? new Date(dateInUTC ?? 0) : new Date(0), [dateInUTC, mounted]);
-    const {data, reset, populated} = useDataFromSettingsSource(date);
+    const {data, reset, populated, error} = useDataFromSettingsSource(date);
     const timeFormatter = useTimeInUserUnits()
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
@@ -58,7 +58,7 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
-                <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated}
+                <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated} error={error}
                             currentTimeStamp={currentTimeStamp}/>
             </div>
             <div style={{

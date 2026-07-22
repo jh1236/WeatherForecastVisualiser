@@ -176,39 +176,34 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     const oceanBindings = ocean.filter(it => it.startDate < date).toSorted((a, b) => b.startDate - a.startDate)[0]
     const meteoBindings = wind.filter(it => it.startDate < date).toSorted((a, b) => b.startDate - a.startDate)[0]
 
-    const tasks = []
+    let meteoData = null;
+    let oceanData = null;
 
     if (oceanBindings) {
         const oceanLink = oceanBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
-        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${oceanLink}`, quickLoad ? oceanBindings.quickArgs : oceanBindings.args)
+        oceanData = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${oceanLink}`, quickLoad ? oceanBindings.quickArgs : oceanBindings.args)
             .then(({data}) => convertThreddsToGrib(data, oceanBindings.bindings)
             ).catch(e => {
-                console.error(`Error Getting Oceanographic Data: ${e}`)
-                return null
-            }));
-    } else {
-        tasks.push(Promise.resolve(null))
+                console.error(`Error Getting Oceanographic Data: ${JSON.stringify(e)}`)
+                throw e;
+            });
     }
 
     if (meteoBindings) {
         const windLink = meteoBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
 
-        tasks.push(getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${windLink}`, quickLoad ? meteoBindings.quickArgs : meteoBindings.args)
+        meteoData = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${windLink}`, quickLoad ? meteoBindings.quickArgs : meteoBindings.args)
             .then(({data}) => convertThreddsToGrib(data, meteoBindings.bindings)
             ).catch(e => {
-                console.error(`Error Getting Meteorological Data: ${e}`)
-                return null
-            }))
-    } else {
-        tasks.push(Promise.resolve(null))
+                console.error(`Error Getting Meteorological Data: ${JSON.stringify(e)}`)
+                throw e;
+            })
     }
-
-    const [meteoData, oceanData] = await Promise.all(tasks)
 
     const out = mergeWeatherDatas(meteoData, oceanData);
 
     if (!meteoData && !oceanData) {
-        return out;
+        throw new Error('Server Error')
     }
 
     (async () => {

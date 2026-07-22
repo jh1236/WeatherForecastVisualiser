@@ -36,6 +36,7 @@ interface WindMapProps {
     currentTimeStamp: number,
     populated: boolean,
     playbackSpeed: number
+    error: string | null,
 }
 
 interface MapEventHandlerParams {
@@ -119,7 +120,8 @@ export function WeatherMap({
                                data: allData,
                                populated,
                                currentTimeStamp,
-                               playbackSpeed
+                               playbackSpeed,
+                               error
                            }: WindMapProps) {
     const data = allData.times?.[currentTimeStamp]
     const [viewportBounds, setViewportBounds] = useState<LatLngBounds>()
@@ -162,6 +164,18 @@ export function WeatherMap({
                                      justifyContent: 'space-between'
                                  }}>
                 <Spinner className="size-16"/> <i style={{paddingLeft: 20}}>Loading</i>
+            </div>)}
+            {error && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
+                            style={{
+                                color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
+                                fontSize: '3em',
+                                fontWeight: 400,
+                                padding: 20,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between'
+                            }}>
+                <i style={{paddingLeft: 20}}>Error: {error}</i>
             </div>)}
             <MapEventHandler
                 viewportBounds={viewportBounds}

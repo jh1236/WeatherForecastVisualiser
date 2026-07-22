@@ -3,7 +3,8 @@ import {getWeatherDataFromThredds} from "@/components/dataManagement/ThreddsData
 
 const AMOUNT_OF_DAYS_IN_FUTURE = 5;
 
-const DAY_IN_MS = 1000 * 60 * 60 * 24;
+const HOUR_IN_MS = 1000 * 60 * 60;
+const DAY_IN_MS = HOUR_IN_MS * 24;
 
 async function loadThreddsDataForDate(now: Date) {
     const year = now.getFullYear();
@@ -19,6 +20,7 @@ async function getDataForComingTimeframe() {
     for (let i = 0; i <= AMOUNT_OF_DAYS_IN_FUTURE; i++) {
         const date = new Date(Date.now() + i * DAY_IN_MS);
         await loadThreddsDataForDate(date);
+        await new Promise((r) => setTimeout(r, HOUR_IN_MS));
     }
 }
 
