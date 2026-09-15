@@ -81,7 +81,7 @@ const defaultSettings: Settings = {
     "oceanTemperatureColors.quantized": false,
 
     "currentParticles.enabled": false,
-    "currentParticles.opacity": 0.97,
+    "currentParticles.opacity": 0.95,
     "currentParticles.particleMultiplier": 1,
 
     "windBarbs.enabled": false,
@@ -93,7 +93,7 @@ const defaultSettings: Settings = {
 
     "windParticles.enabled": true,
     "windParticles.particleMultiplier": 1,
-    "windParticles.opacity": 0.97,
+    "windParticles.opacity": 0.95,
 
     "temperatureColors.enabled": false,
     "temperatureColors.count": DEFAULT_GRID_RESOLUTION,

@@ -7,9 +7,9 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 import {
-  DayPicker,
-  getDefaultClassNames,
-  type DayButton,
+    DayPicker,
+    getDefaultClassNames,
+    type DayButton, CalendarDay,
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -23,10 +23,11 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  shouldDisable,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
-}) {
+} & {shouldDisable?: (day : CalendarDay) => boolean}) {
   const defaultClassNames = getDefaultClassNames()
 
   return (
@@ -162,7 +163,7 @@ function Calendar({
             <ChevronDownIcon className={cn("size-4", className)} {...props} />
           )
         },
-        DayButton: CalendarDayButton,
+        DayButton: (props) => CalendarDayButton({...props, shouldDisable}),
         WeekNumber: ({ children, ...props }) => {
           return (
             <td {...props}>
@@ -183,15 +184,19 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
+  shouldDisable,
   ...props
-}: React.ComponentProps<typeof DayButton>) {
+}: React.ComponentProps<typeof DayButton>& {shouldDisable?: (day : CalendarDay) => boolean}) {
   const defaultClassNames = getDefaultClassNames()
 
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
-
+  if (shouldDisable && shouldDisable(day)) {
+      props["disabled"] = true
+      props["aria-disabled"] = true
+  }
   return (
     <Button
       ref={ref}

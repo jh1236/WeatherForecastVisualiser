@@ -156,21 +156,32 @@ const threddsConfigData: ThreddsConfigData = {
         }]
     }
 };
+const THREDDS_SERVER = `http://boreas.mywire.org:8080/thredds`;
 
+function getCachePath(year: number, monthIn: number, dayIn: number, region: string, quickLoad: boolean) {
+    const month = monthIn.toString().padStart(2, '0');
+    const day = dayIn.toString().padStart(2, '0');
+    const file = sanitize(`${year}-${month}-${day}-${region}${quickLoad ? '-quick' : ''}`)
+    const cacheFolder = (process.env.CACHE_DIRECTORY) ?? './cachedResponses';
+    return `${cacheFolder}/${file}.json`;
+}
 
-export async function getWeatherDataFromThredds(yearIn: number, monthIn: number, dayIn: number, region: keyof typeof threddsConfigData, quickLoad: boolean = false): Promise<WeatherData> {
+export async function inCache(date: Date, region: string, quickLoad: boolean) {
+    const path = getCachePath(date.getFullYear(), date.getMonth() + 1, date.getDate(), region, quickLoad);
+    return fs.existsSync(path)
+}
+
+export async function getWeatherDataFromThredds(yearIn: number, monthIn: number, dayIn: number, region: string, quickLoad: boolean = false): Promise<WeatherData> {
     const year = yearIn.toString();
     const month = monthIn.toString().padStart(2, '0');
     const day = dayIn.toString().padStart(2, '0');
     const date = Date.UTC(yearIn, monthIn, dayIn)
-    const file = sanitize(`${year}-${month}-${day}-${region}${quickLoad ? '-quick' : ''}`)
     const cacheFolder = (process.env.CACHE_DIRECTORY) ?? './cachedResponses';
-    const path = `${cacheFolder}/${file}.json`;
+    const path = getCachePath(yearIn, monthIn, dayIn, region, quickLoad);
     if (fs.existsSync(path)) {
         const text = (await fs.promises.readFile(path)).toString();
         return JSON.parse(text) as WeatherData;
     }
-    console.log(`Data for ${file} not in cache, fetching from THREDDS`)
 
     const {ocean, wind} = threddsConfigData[region]!;
     const oceanBindings = ocean.filter(it => it.startDate < date).toSorted((a, b) => b.startDate - a.startDate)[0]
@@ -181,7 +192,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
 
     if (oceanBindings) {
         const oceanLink = oceanBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
-        oceanData = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${oceanLink}`, quickLoad ? oceanBindings.quickArgs : oceanBindings.args)
+        oceanData = await getJsDapData(`${THREDDS_SERVER}/dodsC/${oceanLink}`, quickLoad ? oceanBindings.quickArgs : oceanBindings.args)
             .then(({data}) => convertThreddsToGrib(data, oceanBindings.bindings)
             ).catch(e => {
                 console.error(`Error Getting Oceanographic Data: ${JSON.stringify(e)}`)
@@ -192,7 +203,7 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     if (meteoBindings) {
         const windLink = meteoBindings.link.replace('\{year\}', year).replace('\{month\}', month).replace('\{day\}', day)
 
-        meteoData = await getJsDapData(`http://boreas.mywire.org:8080/thredds/dodsC/${windLink}`, quickLoad ? meteoBindings.quickArgs : meteoBindings.args)
+        meteoData = await getJsDapData(`${THREDDS_SERVER}/dodsC/${windLink}`, quickLoad ? meteoBindings.quickArgs : meteoBindings.args)
             .then(({data}) => convertThreddsToGrib(data, meteoBindings.bindings)
             ).catch(e => {
                 console.error(`Error Getting Meteorological Data: ${JSON.stringify(e)}`)

@@ -89,6 +89,11 @@ ENV HOSTNAME="0.0.0.0"
 # Copy production assets
 COPY --from=builder --chown=node:node /app/public ./public
 
+# Copy the Demo data over
+COPY --chown=node:node ./demo ./demo
+
+RUN mkdir /cachedResponses
+RUN chown node:node /cachedResponses
 # Set the correct permission for prerender cache
 
 RUN mkdir .next

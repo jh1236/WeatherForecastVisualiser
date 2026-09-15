@@ -10,6 +10,7 @@ services:
       NODE_ENV: production
       PORT: "3000"
       CACHE_DIRECTORY: '/cachedResponses'
+      DEMO_DIRECTORY: '/app/demo'
     ports:
       - "8080:3000"
     restart: unless-stopped

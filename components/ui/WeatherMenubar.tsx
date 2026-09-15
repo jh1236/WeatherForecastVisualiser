@@ -28,6 +28,8 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import {useBoolean} from "react-use";
+import {TriangleAlert} from "lucide-react";
+import {decimalToFraction} from "@/components/utilities";
 
 interface WeatherMenubarProps {
     resetData: () => void
@@ -221,6 +223,31 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                             </MenubarItem>
                         </MenubarGroup>
                         <MenubarGroup>
+                            <MenubarLabel>Wind Particles</MenubarLabel>
+                            <MenubarLabel inset>
+                                Opacity: {round(100 * settings["windParticles.opacity"])}%
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} min={0} value={[settings["windParticles.opacity"]]}
+                                        max={1}
+                                        step={0.05}
+                                        onValueChange={([v]) => setSetting("windParticles.opacity", v)}></Slider>
+                            </MenubarItem>
+                            <MenubarLabel inset>
+                                Velocity Multiplier: {decimalToFraction(settings["windParticles.particleMultiplier"] / 0.7 * 2)}
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} value={[Math.log(settings["windParticles.particleMultiplier"] / 0.7) / Math.log(2) + 1]}
+                                        min={-2}
+                                        max={2}
+                                        step={1}
+                                        onValueChange={([v]) => setSetting("windParticles.particleMultiplier", Math.pow(2, v - 1) * 0.7)}></Slider>
+                            </MenubarItem>
+                            <MenubarCheckboxItem checked={settings.displayWindScale}
+                                                 onSelect={() => setSetting('displayWindScale', !settings.displayWindScale)}>Show
+                                Color Scale</MenubarCheckboxItem>
+                        </MenubarGroup>
+                        <MenubarGroup>
                             <MenubarLabel>Wind Colors</MenubarLabel>
                             <MenubarLabel inset>
                                 Resolution: {settings["windColors.count"]}
@@ -271,6 +298,28 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                                 <Slider style={{width: '120px'}} min={10} value={[settings["currentArrows.count"]]}
                                         max={70}
                                         step={5} onValueChange={([v]) => setSetting("currentArrows.count", v)}></Slider>
+                            </MenubarItem>
+                        </MenubarGroup>
+                        <MenubarGroup>
+                            <MenubarLabel>Ocean Particles</MenubarLabel>
+                            <MenubarLabel inset>
+                                Opacity: {round(100 * settings["currentParticles.opacity"])}%
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} min={0} value={[settings["currentParticles.opacity"]]}
+                                        max={1}
+                                        step={0.05}
+                                        onValueChange={([v]) => setSetting("currentParticles.opacity", v)}></Slider>
+                            </MenubarItem>
+                            <MenubarLabel inset>
+                                Velocity Multiplier: {decimalToFraction(settings["currentParticles.particleMultiplier"] / 0.7 )}
+                            </MenubarLabel>
+                            <MenubarItem inset onSelect={e => e.preventDefault()}>
+                                <Slider style={{width: '120px'}} value={[Math.log(settings["currentParticles.particleMultiplier"] / 0.7) / Math.log(2)]}
+                                        min={-2}
+                                        max={2}
+                                        step={1}
+                                        onValueChange={([v]) => setSetting("currentParticles.particleMultiplier", Math.pow(2, v) * 0.7)}></Slider>
                             </MenubarItem>
                         </MenubarGroup>
                         <MenubarGroup>
@@ -424,25 +473,30 @@ export function WeatherMenubar({resetData}: WeatherMenubarProps) {
                     <DialogDescription>
                         <style>
                             .visiblelink {'{'}
-                            color: lightblue;
+                            color: {resolvedTheme === 'dark' ? 'lightblue' : '#0000AA'};
                             text-decoration: underline;
                             {'}'}
                         </style>
-                        <p style={{textAlign: 'center'}}><b>All Weather Data seen is based on forecasting, and may not accurately reflect weather
+                        <p style={{textAlign: 'center', fontSize: '1.1em', marginBottom: 5}}><TriangleAlert size={18} style={{display: 'inline', marginRight: 5, verticalAlign: 'middle'}} /><b>All Weather Data seen is based on forecasting, and may not accurately reflect weather
                             patterns seen in real life.</b></p>
-                        This project was built by Jared Healy, under the supervision of Ivica Janekovic, and is released
-                        under the MIT Licence. It is built on the
-                        back of {' '}
-                        <a className="visiblelink" target="_blank" href="https://react-leaflet.js.org/">
-                            React Leaflet
-                        </a> and {' '}
-                        <a className="visiblelink" target="_blank" href="https://leafletjs.com/">
-                            Leaflet.JS
-                        </a>. The source code can be found on {' '}
-                        <a className="visiblelink" target="_blank"
-                           href="https://github.com/jh1236/WeatherForecastVisualiser">
-                            Github
-                        </a>.
+                        <p style={{textAlign: 'center'}}>
+                            This project was built by Jared Healy, under the supervision of Ivica Janekovic, and is released
+                            under the <a className="visiblelink" target="_blank" href="https://github.com/jh1236/WeatherForecastVisualiser/blob/main/LICENSE.md">
+                            MIT License
+                        </a>. It is built on the
+                            back of {' '}
+                            <a className="visiblelink" target="_blank" href="https://react-leaflet.js.org/">
+                                React Leaflet
+                            </a> and {' '}
+                            <a className="visiblelink" target="_blank" href="https://leafletjs.com/">
+                                Leaflet.JS
+                            </a>. The source code can be found on {' '}
+                            <a className="visiblelink" target="_blank"
+                               href="https://github.com/jh1236/WeatherForecastVisualiser">
+                                Github
+                            </a>.
+                        </p>
+
                     </DialogDescription>
                 </DialogContent>
             </Dialog>

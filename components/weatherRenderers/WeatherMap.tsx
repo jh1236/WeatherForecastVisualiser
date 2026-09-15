@@ -153,7 +153,7 @@ export function WeatherMap({
         )}
         <MapContainer bounds={defaultBounds} scrollWheelZoom={true}
                       style={{height: '100%', width: `100%`}}>
-            {!populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
+            {!error && !populated && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
                                  style={{
                                      color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
                                      fontSize: '5em',
@@ -167,15 +167,17 @@ export function WeatherMap({
             </div>)}
             {error && (<div className={cn("leaflet-control", "leaflet-bottom", "leaflet-left")}
                             style={{
-                                color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? 'white' : 'black',
-                                fontSize: '3em',
-                                fontWeight: 400,
-                                padding: 20,
+                                color: resolvedTheme === 'dark' || settings.baseLayer === 'Satellite' ? '#AAAAAA' : '#555555',
+                                fontSize: '1.6em',
+                                backgroundColor: '#00000033',
+                                padding: 5,
+                                paddingLeft:30,
+                                paddingBottom: 0,
                                 display: 'flex',
                                 flexDirection: 'row',
                                 justifyContent: 'space-between'
                             }}>
-                <i style={{paddingLeft: 20}}>Error: {error}</i>
+                Error: {error}
             </div>)}
             <MapEventHandler
                 viewportBounds={viewportBounds}
@@ -263,7 +265,7 @@ export function WeatherMap({
                     <VelocityLayer
                         data={data?.gribFrames.filter(it => it.header.discipline === 10)}
                         maxVelocity={2}
-                        velocityScale={darkModeRender ? 0.075 : 0.125}
+                        velocityScale={0.125 * settings["currentParticles.particleMultiplier"]}
                         opacity={settings["currentParticles.opacity"]}
                         displayValues={false}
                         paneName="ocean"

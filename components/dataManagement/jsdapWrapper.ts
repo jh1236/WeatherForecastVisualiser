@@ -38,37 +38,57 @@ export async function getJsDapData<T extends string>(url: string, args?: Record<
     dds: DDSResponse,
     data: Record<T, NumberOrNDArray>
 }> {
-    let newUrl = url + ".dods"
-    if (args) {
-        newUrl += "?"
-        const entries = (Object.entries(args) as [string, string | string[]][]);
-        newUrl += entries.map(([key, value]) => `${key}${argToString(value)}`).join(",")
-    }
-    newUrl = encodeURI(newUrl)
+    try {
+        let newUrl = url + ".dods"
+        if (args) {
+            newUrl += "?"
+            const entries = (Object.entries(args) as [string, string | string[]][]);
+            newUrl += entries.map(([key, value]) => `${key}${argToString(value)}`).join(",")
+        }
+        newUrl = encodeURI(newUrl)
 
-    const json = await new Promise<DODSResponse>((resolve, reject) =>
-        jsdap.loadDataAndDDS(
-            newUrl,
-            data => {
-                resolve(data)
-            },
-            error => {
-                reject(error)
-            },
-            error => {
-                reject(error)
-            },
-            undefined,
-            error => {
-                reject(error)
+        const json = await new Promise<DODSResponse>((resolve, reject) =>
+            jsdap.loadDataAndDDS(
+                newUrl,
+                data => {
+                    resolve(data)
+                },
+                error => {
+                    reject(error)
+                },
+                error => {
+                    if (error && Object.keys(error).length > 0) {
+                        console.log(error)
+                        reject(error)
+                    } else {
+                        reject("An unknown error occurred")
+                    }
+                },
+                undefined,
+                error => {
+                    if (error && Object.keys(error).length > 0) {
+                        console.log(error)
+                        reject(error)
+                    } else {
+                        reject("An unknown error occurred")
+                    }
+                }
+            )
+        ).catch(error => {
+            if (error && Object.keys(error).length > 0) {
+                return Promise.reject(error)
+            } else {
+                return Promise.reject("An unknown error occurred")
             }
-        )
-    )
-    json.data = (fixData(json.data) as Record<T, NumberOrNDArray>)
+        })
+        json.data = (fixData(json.data) as Record<T, NumberOrNDArray>)
 
-    return json as {
-        dds: DDSResponse,
-        data: Record<T, NumberOrNDArray>
+        return json as {
+            dds: DDSResponse,
+            data: Record<T, NumberOrNDArray>
+        }
+    } catch (error) {
+        return Promise.reject(error)
     }
 }
 

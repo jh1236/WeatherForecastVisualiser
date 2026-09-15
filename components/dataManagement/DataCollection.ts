@@ -33,10 +33,15 @@ export function useDataFromSettingsSource(date: Date | undefined): DataFunctionR
             res => res.json().then((data: { data: WeatherData, error: string | undefined }) => ({...data, status: res.status}))
         ).then(({data, status, error}) => {
                 if (Math.floor(status / 100) !== 2) {
-                    setError(JSON.stringify(error))
+                    if (typeof error === "string") {
+                        setError(error)
+                    } else {
+                        setError(JSON.stringify(error))
+                    }
                 } else {
                     console.log(data)
                     setData(data)
+                    setError(null)
                     setPopulated(true)
                 }
             }

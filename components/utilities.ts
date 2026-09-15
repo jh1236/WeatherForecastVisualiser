@@ -186,3 +186,9 @@ export function clamp(value: number, min: number, max: number) {
     return value;
 }
 
+export function decimalToFraction(value: number): string {
+    if (value >= 1) return '' + value
+    const denom = Math.round(1 / value);
+    return `1/${denom}`;
+
+}

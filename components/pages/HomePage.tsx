@@ -2,7 +2,15 @@ import {WeatherMenubar} from "@/components/ui/WeatherMenubar";
 import {DatePicker} from "@/components/ui/datePicker";
 import {Slider} from "@/components/ui/slider";
 import {Button} from "@/components/ui/button";
-import {ArrowLeftIcon, ArrowRightIcon, FastForwardIcon, PauseIcon, PlayIcon, RewindIcon} from "lucide-react";
+import {
+    ArrowLeftIcon,
+    ArrowRightIcon,
+    FastForwardIcon,
+    PauseIcon,
+    PlayIcon,
+    RewindIcon,
+    TriangleAlert
+} from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
 import {useDataFromSettingsSource} from "@/components/dataManagement/DataCollection";
 
@@ -10,14 +18,19 @@ import "@/components/pages/homepage.module.css"
 import dynamic from "next/dynamic";
 import {useTimeInUserUnits} from "@/components/unitsUtils";
 import {useInterval, useSessionStorage} from "react-use";
+import {Dialog, DialogContent, DialogDescription, DialogOverlay, DialogTitle} from "@/components/ui/dialog";
+import {useTheme} from "next-themes";
 
 const WeatherMap = dynamic(
     () => import('@/components/weatherRenderers/WeatherMap').then(mod => mod.WeatherMap),
     {ssr: false}
 );
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 export function HomePage() {
     const [dateInUTC, setDateInUTC] = useSessionStorage<number | undefined>('date', undefined);
+    const [errorDismissed, setErrorDismissed] = useState(false);
     const [mounted, setMounted] = useState(false);
     //we check mounted here to save a hydration error
     const date = useMemo(() => mounted ? new Date(dateInUTC ?? 0) : new Date(0), [dateInUTC, mounted]);
@@ -29,10 +42,17 @@ export function HomePage() {
     const [currentTimeStampIndex, setCurrentTimeStampIndex] = useState(0);
     const currentTimeStamp = useMemo(() => timestamps[currentTimeStampIndex], [currentTimeStampIndex, timestamps]);
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(0);
+    const [endDate, setEndDate] = useState<Date>();
+    const {resolvedTheme} = useTheme();
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
+        const out = new Date(Date.now())
+        out.setDate(out.getDate() + 4)
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setEndDate(out)
     }, []);
 
     useEffect(() => {
@@ -58,6 +78,38 @@ export function HomePage() {
         </div>
         <div style={{flex: 1, display: 'flex', justifyContent: 'space-between', flexDirection: 'column'}}>
             <div style={{width: '100%', flex: 1, display: 'flex', flexDirection: 'row'}}>
+
+                <Dialog open={!!(error && !errorDismissed)} onOpenChange={open => open || setErrorDismissed(true)}>
+                    <DialogOverlay style={{zIndex: 99998}}></DialogOverlay>
+                    <DialogContent style={{zIndex: 99999}}>
+
+                        <DialogTitle style={{textAlign: 'center', fontSize: '1.5em'}}><TriangleAlert
+                            size={26} style={{display: 'inline', marginRight: 5, verticalAlign: 'middle'}}/>A server
+                            error has occurred</DialogTitle>
+                        <DialogDescription>
+                            <style>
+                                .visiblelink {'{'}
+                                color: {resolvedTheme === 'dark' ? 'lightblue' : '#0000AA'};
+                                text-decoration: underline;
+                                {'}'}
+                            </style>
+                            <p style={{textAlign: 'center', fontSize: '1.1em', marginBottom: 5}}><b>The
+                                backend hosted at <a className="visiblelink"
+                                                     href="http://boreas.mywire.org:8080/thredds">http://boreas.mywire.org:8080/thredds</a> is
+                                currently down! For a demonstration of the program, click <a
+                                    href="#"
+                                    className="visiblelink"
+                                    onClick={() => {
+                                        setErrorDismissed(true)
+                                        setDateInUTC(new Date(2026, 1, 2).getTime())
+                                    }}
+                                >here</a>.</b>
+                            </p>
+
+                        </DialogDescription>
+                    </DialogContent>
+                </Dialog>
+
                 <WeatherMap playbackSpeed={playbackSpeed} data={data} populated={populated} error={error}
                             currentTimeStamp={currentTimeStamp}/>
             </div>
@@ -69,7 +121,13 @@ export function HomePage() {
                 padding: '12px',
                 width: '100%'
             }}>
-                <DatePicker date={date} setDate={(date) => {
+                <DatePicker
+                    startDate={new Date(2025, 12, 8)}
+                    endDate={endDate}
+                    shouldDisableDate={
+                        day => day.getTime() - Date.now() > DAY_IN_MS * 5
+                    }
+                    date={date} setDate={(date) => {
                     reset()
                     setDateInUTC(date.getTime())
                 }}/>
