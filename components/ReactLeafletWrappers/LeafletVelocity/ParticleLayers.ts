@@ -30,27 +30,26 @@ export const defaultVelocityProps: {
     velocityType: "GBR Wind"
 }
 
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-function onDrawLayer(this: any) {
-
-    if (!this._windy) {
-        this._initWindy(this);
-        return;
-    }
-
-    if (!this.options.data) {
-        return;
-    }
-
-    if (this._timer) clearTimeout(this._timer);
-
-    this._timer = setTimeout(() => this._startWindy(), 0); // showing velocity is delayed
-}
+// /* eslint-disable  @typescript-eslint/no-explicit-any */
+// function onDrawLayer(this: any) {
+//
+//     if (!this._windy) {
+//         this._initWindy(this);
+//         return;
+//     }
+//
+//     if (!this.options.data) {
+//         return;
+//     }
+//
+//     if (this._timer) clearTimeout(this._timer);
+//
+//     this._timer = setTimeout(() => this._startWindy(), 0); // showing velocity is delayed
+// }
 
 
 function createVelocityLayer(props: VelocityLayerProps, context: LeafletContextInterface) {
-    const ret = createElementObject(L.velocityLayer(props), context)
-    return ret
+    return createElementObject(L.velocityLayer(props), context)
 }
 
 function updateVelocityLayer(instance: L.VelocityLayer, props: VelocityLayerProps, prevProps: VelocityLayerProps) {

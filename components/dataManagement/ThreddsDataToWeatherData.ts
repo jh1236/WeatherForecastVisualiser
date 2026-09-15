@@ -201,7 +201,9 @@ export async function getWeatherDataFromThredds(yearIn: number, monthIn: number,
     }
 
     const out = mergeWeatherDatas(meteoData, oceanData);
-
+    if (out === undefined) {
+        throw new Error('Server Error')
+    }
     if (!meteoData && !oceanData) {
         throw new Error('Server Error')
     }

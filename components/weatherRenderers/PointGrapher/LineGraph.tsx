@@ -8,15 +8,14 @@ import {WeatherData, WeatherDataPointKey} from "@/components/types";
 import {LatLngBounds} from "leaflet";
 import {getWeatherDataPointForPoint, WeatherDataPointValues} from "@/components/dataManagement/DataProcessing";
 import {Dispatch, ReactNode, SetStateAction, useMemo, useState} from "react";
-import {camelCaseToTitleCase, latLngToDMS, roundTo} from "@/components/utilities";
+import {camelCaseToTitleCase, latLngToDMS} from "@/components/utilities";
 import {magnitude} from "@/components/vectorUtils";
 import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import {COLORS, MapGraphPointer} from "@/components/weatherRenderers/PointGrapher/PointsGrapher";
 import {Button} from "@/components/ui/button";
 import {Minus} from "lucide-react";
-import {useTheme} from "next-themes";
-import {to12HourTime, useUserUnits, useTimeInUserUnits, useFormatUserUnits} from "@/components/unitsUtils";
+import {useFormatUserUnits, useTimeInUserUnits, useUserUnits} from "@/components/unitsUtils";
 import {useSettings} from "@/components/settings";
 
 
