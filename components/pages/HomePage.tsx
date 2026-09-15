@@ -25,7 +25,7 @@ export function HomePage() {
     const timeFormatter = useTimeInUserUnits()
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
-    const timestamps = useMemo(() => data.times ? Object.keys(data.times).map(it => Number(it)).toSorted((a, b) => a - b) : [], [data]);
+    const timestamps = useMemo(() => data?.times ? Object.keys(data.times).map(it => Number(it)).toSorted((a, b) => a - b) : [], [data]);
     const [currentTimeStampIndex, setCurrentTimeStampIndex] = useState(0);
     const currentTimeStamp = useMemo(() => timestamps[currentTimeStampIndex], [currentTimeStampIndex, timestamps]);
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(0);

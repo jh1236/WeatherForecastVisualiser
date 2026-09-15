@@ -1,6 +1,6 @@
 export * from "leaflet"
 import {VelocityLayerProps} from "@/components/ReactLeafletWrappers/LeafletVelocity/types";
-import type {FeatureCollection, GeoJsonObject} from "geojson";
+import type {GeoJsonObject} from "geojson";
 
 // this is so that TS recognises the custom types that 'leaflet-velocity' adds
 declare module "leaflet" {
